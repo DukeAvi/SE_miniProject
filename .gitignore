@@ -32,6 +32,6 @@ tmp/
 
 # Local reference material and agent/tool state
 dox/
+next_steps.md
 .agents/
-.codex/
 .aws/

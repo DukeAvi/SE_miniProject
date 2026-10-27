@@ -6,6 +6,7 @@ All work starts from a GitHub issue and reaches `main` through a reviewed pull r
 
 Keep changes in the directory that owns them:
 
+- `AGENTS.md` contains repository-wide instructions for coding agents.
 - `.github/` contains GitHub issue forms, the pull-request template, and review ownership rules.
 - `templates/` contains the reusable issue, PR, test-evidence, decision, and sprint-summary formats.
 - `backlog/` contains the stable issue manifest and planning notes used to keep GitHub work traceable.
