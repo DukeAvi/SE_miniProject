@@ -1,0 +1,34 @@
+name: Decision request
+description: Resolve a product, safety, architecture, or scope question before dependent work proceeds.
+title: "[Decision] "
+labels:
+  - "type: decision"
+body:
+  - type: textarea
+    id: context
+    attributes:
+      label: Context and risk
+      description: Describe the ambiguity, affected requirements, and consequence of delaying the decision.
+    validations:
+      required: true
+  - type: textarea
+    id: options
+    attributes:
+      label: Options considered
+      description: List viable options and their tradeoffs.
+    validations:
+      required: true
+  - type: textarea
+    id: recommendation
+    attributes:
+      label: Proposed resolution
+      description: State the recommendation and why it best fits the project.
+    validations:
+      required: true
+  - type: textarea
+    id: followup
+    attributes:
+      label: Required follow-up
+      description: Identify SRS, SAD, API, test, backlog, or migration updates after approval.
+    validations:
+      required: true

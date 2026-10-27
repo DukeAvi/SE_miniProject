@@ -1,0 +1,65 @@
+name: Implementation task
+description: Deliver a requirement, vertical slice, quality target, or planned engineering task.
+title: "[Area] "
+labels:
+  - "type: implementation"
+body:
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Explain why this work is needed and who depends on it.
+    validations:
+      required: true
+  - type: input
+    id: traceability
+    attributes:
+      label: Traceability
+      description: List the requirement, design, and test IDs.
+      placeholder: "BBMS-F-000 / DS-000 / TC-Area-00"
+    validations:
+      required: true
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      options:
+        - High
+        - Medium
+        - Low
+    validations:
+      required: true
+  - type: input
+    id: planning
+    attributes:
+      label: Sprint and story points
+      placeholder: "Sprint 1 / 3 points"
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+      description: Describe the smallest complete behavior and its important constraints.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Use a checklist of observable outcomes, including validation and authorization behavior.
+      placeholder: "- [ ] ..."
+    validations:
+      required: true
+  - type: textarea
+    id: verification
+    attributes:
+      label: Verification
+      description: List automated, manual, security, performance, accessibility, or recovery evidence required.
+    validations:
+      required: true
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies and coordination
+      description: Link blocking issues and note shared APIs, models, migrations, or configuration.

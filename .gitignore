@@ -1,0 +1,37 @@
+# Python build and test artifacts
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Project build outputs and dependency trees
+build/
+dist/
+coverage/
+node_modules/
+
+# Virtual environments and local configuration
+.venv/
+venv/
+.env
+.env.*
+!.env.example
+
+# Editor and operating-system files
+.idea/
+.vscode/
+.DS_Store
+
+# Local logs and temporary output
+*.log
+tmp/
+.tmp/
+
+# Local reference material and agent/tool state
+dox/
+.agents/
+.codex/
+.aws/

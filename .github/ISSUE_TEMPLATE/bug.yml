@@ -1,0 +1,53 @@
+name: Bug report
+description: Report a reproducible defect or regression without exposing sensitive data.
+title: "[Bug] "
+labels:
+  - "type: bug"
+body:
+  - type: dropdown
+    id: impact
+    attributes:
+      label: Impact
+      options:
+        - Critical
+        - High
+        - Medium
+        - Low
+    validations:
+      required: true
+  - type: input
+    id: traceability
+    attributes:
+      label: Related requirement and module
+      placeholder: "BBMS-F-000 / inventory"
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      placeholder: "1. Start from...\n2. Perform...\n3. Observe..."
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Sanitized evidence
+      description: Add logs, screenshots, correlation IDs, and environment details without personal, clinical, or secret data.
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Data safety
+      options:
+        - label: I removed credentials, tokens, personal data, clinical data, and production records.
+          required: true

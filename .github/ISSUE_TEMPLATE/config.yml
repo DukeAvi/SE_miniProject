@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Sensitive security concern
+    url: https://github.com/ANDYGAMER4321/SE_miniProject/security
+    about: Contact the repository owner privately before opening a sanitized tracking issue.
