@@ -2,7 +2,7 @@
 
 ## Status
 
-Demo-only software rules selected by the assigned contributor. They are not a medically approved transfusion policy and must not be used to guide real transfusions. Clinical approval remains outstanding.
+Approved for the classroom demonstration by the assigned contributor under delegated decision authority. These are software demonstration rules only, not a medically approved transfusion policy, and must not be used to guide real transfusions.
 
 ## Scope and decision
 
@@ -45,7 +45,7 @@ This application is a classroom demonstration using mock data. It is not validat
 
 ## Decision record
 
-- Decision owner: Ayushman Dey, assigned issue contributor
+- Approved by: Ayushman Dey, assigned issue contributor acting under delegated decision authority
 - Effective for the classroom demo: 2026-10-29
-- Clinical reviewer approval: Pending; not represented by this record
+- Clinical approval: Not applicable to the mock-data demonstration; required before any real-world use
 - Reference: [Australian Red Cross Lifeblood component compatibility](https://www.lifeblood.com.au/health-professionals/products/component-compatibility) and [matching blood groups](https://www.lifeblood.com.au/patients-recipients/blood-plasma-platelets/blood-for-transfusion/matching-blood-groups)
