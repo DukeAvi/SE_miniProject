@@ -195,6 +195,7 @@ LOGGING = {
 
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = os.getenv("DJANGO_TIME_ZONE", "UTC")
+NOTIFICATION_PROVIDER = os.getenv("NOTIFICATION_PROVIDER", "console")
 USE_I18N = True
 USE_TZ = True
 
