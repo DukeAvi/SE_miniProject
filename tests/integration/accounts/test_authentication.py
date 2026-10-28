@@ -55,6 +55,13 @@ def post_login(client, token, email="user@example.test", password=PASSWORD):
     )
 
 
+def authenticated_client(user):
+    client, token = csrf_client()
+    assert post_login(client, token, email=user.email).status_code == 200
+    token = client.get(CSRF_URL, secure=True).json()["csrfToken"]
+    return client, token
+
+
 @pytest.mark.parametrize(
     ("role", "redirect"),
     [
@@ -275,3 +282,96 @@ def test_csrf_cookie_is_set_by_token_endpoint():
     assert token
     assert client.cookies["csrftoken"]["secure"] is True
     assert client.cookies["csrftoken"]["samesite"] == "Lax"
+
+
+def test_idle_timeout_expires_database_session_and_records_event():
+    user = create_user()
+    client, _ = authenticated_client(user)
+    session_key = client.cookies["sessionid"].value
+    Session.objects.filter(session_key=session_key).update(
+        expire_date=timezone.now() - timedelta(seconds=1)
+    )
+
+    response = client.post(
+        LOGOUT_URL,
+        {},
+        format="json",
+        secure=True,
+        HTTP_REFERER="https://testserver/",
+    )
+
+    assert response.status_code == 401
+    assert response.json()["error"]["code"] == "session_expired"
+    assert response.cookies["sessionid"]["max-age"] == 0
+    assert AuditEvent.objects.filter(action="SESSION_EXPIRED", actor__isnull=True).exists()
+
+
+def test_authenticated_activity_slides_idle_expiration():
+    user = create_user()
+    client, _ = authenticated_client(user)
+    session_key = client.cookies["sessionid"].value
+    session = Session.objects.get(session_key=session_key)
+    Session.objects.filter(pk=session.pk).update(
+        expire_date=timezone.now() + timedelta(seconds=10)
+    )
+    near_expiry = Session.objects.get(pk=session.pk).expire_date
+
+    response = client.get(CSRF_URL, secure=True)
+
+    assert response.status_code == 200
+    renewed = Session.objects.get(session_key=session_key).expire_date
+    assert renewed > near_expiry
+
+
+@override_settings(SESSION_ABSOLUTE_TIMEOUT_SECONDS=10)
+def test_absolute_timeout_expires_active_session_and_records_actor():
+    user = create_user()
+    client, _ = authenticated_client(user)
+    session = client.session
+    session["auth_started_at"] = timezone.now().timestamp() - 11
+    session.save()
+
+    response = client.post(
+        LOGOUT_URL,
+        {},
+        format="json",
+        secure=True,
+        HTTP_REFERER="https://testserver/",
+    )
+
+    assert response.status_code == 401
+    assert response.json()["error"]["code"] == "session_expired"
+    assert AuditEvent.objects.filter(action="SESSION_EXPIRED", actor=user).exists()
+
+
+def test_concurrent_sessions_are_independent_and_disabled_account_expires():
+    user = create_user()
+    first, first_token = authenticated_client(user)
+    second, _ = authenticated_client(user)
+    first_session = first.cookies["sessionid"].value
+    second_session = second.cookies["sessionid"].value
+    assert first_session != second_session
+
+    logged_out = first.post(
+        LOGOUT_URL,
+        {},
+        format="json",
+        secure=True,
+        HTTP_REFERER="https://testserver/",
+        HTTP_X_CSRFTOKEN=first_token,
+    )
+    assert logged_out.status_code == 204
+    assert second.get(CSRF_URL, secure=True).status_code == 200
+    assert Session.objects.filter(session_key=second_session).exists()
+
+    user.is_active = False
+    user.save(update_fields=("is_active",))
+    expired = second.post(
+        LOGOUT_URL,
+        {},
+        format="json",
+        secure=True,
+        HTTP_REFERER="https://testserver/",
+    )
+    assert expired.status_code == 401
+    assert expired.json()["error"]["code"] == "session_expired"
