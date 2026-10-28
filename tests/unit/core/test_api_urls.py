@@ -8,7 +8,7 @@ def test_api_v1_exposes_application_prefixes():
     prefixes = {str(pattern.pattern) for pattern in api.url_patterns}
 
     assert prefixes == {
-        "accounts/",
+        "",
         "administration/",
         "audit/",
         "donors/",
