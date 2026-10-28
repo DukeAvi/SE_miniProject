@@ -1,4 +1,4 @@
-﻿"""Account operations and business rules."""
+"""Account operations and business rules."""
 
 import math
 from datetime import timedelta
