@@ -154,7 +154,13 @@ def test_owned_object_helper_returns_same_404_for_foreign_and_missing_records():
     missing_response = view(missing_request, event_id=999999)
 
     assert foreign_response.status_code == missing_response.status_code == status.HTTP_404_NOT_FOUND
-    assert foreign_response.data == missing_response.data
+    foreign_error = foreign_response.data["error"]
+    missing_error = missing_response.data["error"]
+    assert foreign_error["code"] == missing_error["code"]
+    assert foreign_error["message"] == missing_error["message"]
+    assert foreign_error["details"] == missing_error["details"]
+    assert foreign_error["correlation_id"]
+    assert missing_error["correlation_id"]
     assert AuditEvent.objects.filter(action="ACCESS_DENIED", actor=other).count() == 2
 
 
