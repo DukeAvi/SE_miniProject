@@ -110,6 +110,9 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework.authentication.SessionAuthentication",
     ],
+    "DEFAULT_PERMISSION_CLASSES": [
+        "apps.core.permissions.DenyByDefaultPermission",
+    ],
 }
 
 SESSION_ENGINE = "django.contrib.sessions.backends.db"
