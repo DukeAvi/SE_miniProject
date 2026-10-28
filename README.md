@@ -59,7 +59,7 @@ Account routes are mounted directly under `/api/v1/` (for example, `/auth/`). Th
 
 ## Account registration
 
-`POST /api/v1/auth/register` accepts `email`, `first_name`, `last_name`, `phone`, `password`, and `role`. The public role values are `DONOR` and `RECIPIENT`; staff and administrator accounts cannot be created through this endpoint. Email addresses and phone numbers are normalized before uniqueness checks, and password values are stored using Django's Argon2 hasher.
+`POST /api/v1/auth/register` accepts `email`, `first_name`, `last_name`, `phone`, `password`, and `role`. Email addresses support up to 254 characters and are stored separately from the opaque, framework-internal username. The public role values are `DONOR` and `RECIPIENT`; staff and administrator accounts cannot be created through this endpoint. Email addresses and phone numbers are normalized before uniqueness checks, and password values are stored using Django's Argon2 hasher.
 
 The v1.0 one-role-per-account behavior follows the SAD proposal and remains provisional pending product-owner confirmation under issue #88.
 
@@ -68,5 +68,9 @@ The v1.0 one-role-per-account behavior follows the SAD proposal and remains prov
 The API uses Django database-backed sessions. Fetch `GET /api/v1/auth/csrf` before a state-changing request and send the returned `csrfToken` in the `X-CSRFToken` header. Login is `POST /api/v1/auth/login` with `email` and `password`; successful responses include a role dashboard path. Logout is `POST /api/v1/auth/logout` and invalidates the current session. Unknown emails, incorrect passwords, disabled accounts, and accounts with no recognized role receive the same generic credential error.
 
 Login failures are throttled by account and client IP. The defaults are five failures per 900-second window and are configurable with `LOGIN_THROTTLE_ATTEMPTS` and `LOGIN_THROTTLE_WINDOW_SECONDS`. The session cookie is HttpOnly and SameSite=Lax, and defaults to Secure when DEBUG is false. The CSRF cookie is SameSite=Lax, defaults to Secure when DEBUG is false, and is readable by the browser so clients can send its token in the header. `SESSION_COOKIE_AGE` defaults to 1200 seconds pending the idle and absolute expiry behavior in issue #83.
+
+## Credential and log protection
+
+New and changed passwords use Django's Argon2 password hasher. The configured Django and application console handlers use `SensitiveDataFilter`, which redacts credential/token/session fields, contact and clinical fields, email addresses, phone numbers, and exception messages. Add the same filter to any additional log handler and avoid logging raw request bodies or user-provided values.
 
 Sprint work is assigned by the Scrum Master. Before coding, acknowledge the assigned issue, update local `main`, and create the issue branch described in `CONTRIBUTING.md`.
