@@ -18,7 +18,7 @@ Do not create parallel copies of templates or planning files in feature director
 
 ## Before starting
 
-1. Choose an unblocked issue and comment that you are taking it.
+1. Open the unblocked issue assigned to you and comment that you are starting it. Do not self-assign or change another contributor's assignment.
 2. Confirm its acceptance criteria, dependencies, and expected test evidence.
 3. Update your local `main` before creating a branch.
 4. Work on exactly one issue per branch. Do not share a working branch with another contributor.
