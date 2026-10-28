@@ -69,4 +69,8 @@ The API uses Django database-backed sessions. Fetch `GET /api/v1/auth/csrf` befo
 
 Login failures are throttled by account and client IP. The defaults are five failures per 900-second window and are configurable with `LOGIN_THROTTLE_ATTEMPTS` and `LOGIN_THROTTLE_WINDOW_SECONDS`. The session cookie is HttpOnly and SameSite=Lax, and defaults to Secure when DEBUG is false. The CSRF cookie is SameSite=Lax, defaults to Secure when DEBUG is false, and is readable by the browser so clients can send its token in the header. `SESSION_COOKIE_AGE` defaults to 1200 seconds pending the idle and absolute expiry behavior in issue #83.
 
+## Credential and log protection
+
+New and changed passwords use Django's Argon2 password hasher. The configured Django and application console handlers use `SensitiveDataFilter`, which redacts credential/token/session fields, contact and clinical fields, email addresses, phone numbers, and exception messages. Add the same filter to any additional log handler and avoid logging raw request bodies or user-provided values.
+
 Sprint work is assigned by the Scrum Master. Before coding, acknowledge the assigned issue, update local `main`, and create the issue branch described in `CONTRIBUTING.md`.
