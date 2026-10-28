@@ -1,7 +1,8 @@
-"""Account operations and business rules."""
+﻿"""Account operations and business rules."""
 
 import math
 from datetime import timedelta
+from uuid import uuid4
 
 from django.conf import settings
 from django.contrib.auth import authenticate, get_user_model, login as auth_login
@@ -32,29 +33,34 @@ class DuplicateAccountValue(Exception):
 
 def register_account(*, email: str, first_name: str, last_name: str, phone: str,
                      password: str, role: str):
-    """Create a public Donor or Recipient account atomically."""
+    """Create a public account with an opaque internal username atomically."""
     User = get_user_model()
     normalized_email = User.objects.normalize_email(email).casefold()
 
-    try:
-        with transaction.atomic():
-            return User.objects.create_user(
-                username=normalized_email,
-                email=normalized_email,
-                first_name=first_name,
-                last_name=last_name,
-                phone=phone,
-                role=role,
-                is_staff=False,
-                is_superuser=False,
-                password=password,
-            )
-    except IntegrityError as error:
-        if User.objects.filter(email__iexact=normalized_email).exists():
-            raise DuplicateAccountValue("email") from error
-        if User.objects.filter(phone=phone).exists():
-            raise DuplicateAccountValue("phone") from error
-        raise
+    for _ in range(3):
+        internal_username = uuid4().hex
+        try:
+            with transaction.atomic():
+                return User.objects.create_user(
+                    username=internal_username,
+                    email=normalized_email,
+                    first_name=first_name,
+                    last_name=last_name,
+                    phone=phone,
+                    role=role,
+                    is_staff=False,
+                    is_superuser=False,
+                    password=password,
+                )
+        except IntegrityError as error:
+            if User.objects.filter(email__iexact=normalized_email).exists():
+                raise DuplicateAccountValue("email") from error
+            if User.objects.filter(phone=phone).exists():
+                raise DuplicateAccountValue("phone") from error
+            if User.objects.filter(username=internal_username).exists():
+                continue
+            raise
+    raise RuntimeError("Unable to allocate an internal account identifier.")
 
 
 def _login_throttle_key(value: str) -> str:
