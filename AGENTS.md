@@ -7,7 +7,8 @@ These instructions apply to the entire repository. Read them before inspecting, 
 - Work only from a specific GitHub issue. If no issue is identified, ask for one before editing.
 - Read the complete issue body, including dependencies, acceptance criteria, verification requirements, requirement ID, design ID, and test ID.
 - Do not begin blocked work. Confirm that prerequisite decisions and implementation issues are resolved.
-- Keep the issue unassigned. A contributor claims work by commenting on the issue and creating the matching branch.
+- Work only on issues assigned to the contributor by the Scrum Master. Acknowledge the assignment in an issue comment before creating the matching branch.
+- Do not change issue assignments or begin an issue assigned to somebody else.
 - Treat the issue as the immediate scope. Do not include unrelated cleanup or another issue's requirements.
 
 ## Read the repository sources

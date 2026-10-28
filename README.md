@@ -42,3 +42,19 @@ git diff --check
 ```
 
 Application behavior is implemented through its linked GitHub issues. See `CONTRIBUTING.md` before starting work.
+
+## Application layout
+
+The API is mounted at `/api/v1/`. Each application owns its URL prefix and keeps the same small set of modules:
+
+- `urls.py` maps that application's endpoints.
+- `serializers.py` validates API input and shapes responses.
+- `views.py` handles HTTP concerns and calls the service layer.
+- `services.py` contains business rules and database operations.
+- `models.py` contains persisted domain state.
+
+Keep views short. Rules that need unit tests or are reused by more than one endpoint belong in `services.py` or a focused domain module. Add unit tests under `tests/unit/<app>/` and database or API-flow tests under `tests/integration/<app>/`.
+
+The current URL prefixes are `accounts/`, `donors/`, `inventory/`, `requests/`, `notifications/`, `administration/`, and `audit/`. Add a route inside the owning app instead of editing the project URL file for each feature.
+
+Sprint work is assigned by the Scrum Master. Before coding, acknowledge the assigned issue, update local `main`, and create the issue branch described in `CONTRIBUTING.md`.
