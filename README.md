@@ -59,7 +59,7 @@ Account routes are mounted directly under `/api/v1/` (for example, `/auth/`). Th
 
 ## Account registration
 
-`POST /api/v1/auth/register` accepts `email`, `first_name`, `last_name`, `phone`, `password`, and `role`. The public role values are `DONOR` and `RECIPIENT`; staff and administrator accounts cannot be created through this endpoint. Email addresses and phone numbers are normalized before uniqueness checks, and password values are stored using Django's Argon2 hasher.
+`POST /api/v1/auth/register` accepts `email`, `first_name`, `last_name`, `phone`, `password`, and `role`. Email addresses support up to 254 characters and are stored separately from the opaque, framework-internal username. The public role values are `DONOR` and `RECIPIENT`; staff and administrator accounts cannot be created through this endpoint. Email addresses and phone numbers are normalized before uniqueness checks, and password values are stored using Django's Argon2 hasher.
 
 The v1.0 one-role-per-account behavior follows the SAD proposal and remains provisional pending product-owner confirmation under issue #88.
 
