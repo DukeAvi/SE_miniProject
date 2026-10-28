@@ -375,3 +375,35 @@ def test_concurrent_sessions_are_independent_and_disabled_account_expires():
     )
     assert expired.status_code == 401
     assert expired.json()["error"]["code"] == "session_expired"
+
+
+def test_auth_endpoints_reject_unexpected_query_parameters_and_body_fields():
+    client = APIClient()
+    login = client.post(f"{LOGIN_URL}?next=https://evil.test", {"email": "x@example.test", "password": PASSWORD}, format="json")
+    csrf = client.get(f"{CSRF_URL}?token=unexpected")
+
+    assert login.status_code == 400
+    assert login.json()["error"]["code"] == "invalid_query"
+    assert csrf.status_code == 400
+    assert csrf.json()["error"]["code"] == "invalid_query"
+
+
+def test_logout_rejects_unexpected_body_fields():
+    user = create_user()
+    client, token = csrf_client()
+    assert post_login(client, token).status_code == 200
+    token = client.get(CSRF_URL, secure=True).json()["csrfToken"]
+
+    response = client.post(
+        LOGOUT_URL,
+        {"redirect": "https://evil.test"},
+        format="json",
+        secure=True,
+        HTTP_REFERER="https://testserver/",
+        HTTP_X_CSRFTOKEN=token,
+    )
+
+    assert response.status_code == 400
+    assert response.json()["error"]["details"]["non_field_errors"] == [
+        "Unexpected fields are not allowed."
+    ]

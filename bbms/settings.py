@@ -57,6 +57,7 @@ MIDDLEWARE = [
     "apps.accounts.middleware.SessionExpiryMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "apps.core.middleware.ContentSecurityPolicyMiddleware",
 ]
 CSRF_FAILURE_VIEW = "apps.core.views.csrf_failure"
 
@@ -68,6 +69,7 @@ TEMPLATES = [
         "DIRS": [],
         "APP_DIRS": True,
         "OPTIONS": {
+            "autoescape": True,
             "context_processors": [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
@@ -111,7 +113,13 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework.authentication.SessionAuthentication",
     ],
+    "EXCEPTION_HANDLER": "apps.core.exceptions.api_exception_handler",
+    "DEFAULT_PERMISSION_CLASSES": [
+        "apps.core.permissions.DenyByDefaultPermission",
+    ],
 }
+SECURE_CONTENT_TYPE_NOSNIFF = True
+DATA_UPLOAD_MAX_MEMORY_SIZE = env_positive_int("DATA_UPLOAD_MAX_MEMORY_SIZE", 1_048_576)
 
 SESSION_ENGINE = "django.contrib.sessions.backends.db"
 SESSION_IDLE_TIMEOUT_SECONDS = env_positive_int(
@@ -132,6 +140,58 @@ CSRF_COOKIE_HTTPONLY = False
 
 LOGIN_THROTTLE_ATTEMPTS = env_positive_int("LOGIN_THROTTLE_ATTEMPTS", 5)
 LOGIN_THROTTLE_WINDOW_SECONDS = env_positive_int("LOGIN_THROTTLE_WINDOW_SECONDS", 900)
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "filters": {
+        "sensitive_data": {
+            "()": "apps.core.logging.SensitiveDataFilter",
+        },
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "filters": ["sensitive_data"],
+        },
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),
+    },
+    "loggers": {
+        "django": {
+            "handlers": ["console"],
+            "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),
+            "propagate": False,
+        },
+        "django.request": {
+            "handlers": ["console"],
+            "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),
+            "propagate": False,
+        },
+        "django.security": {
+            "handlers": ["console"],
+            "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),
+            "propagate": False,
+        },
+        "django.server": {
+            "handlers": ["console"],
+            "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),
+            "propagate": False,
+        },
+        "django.db.backends": {
+            "handlers": ["console"],
+            "level": "WARNING",
+            "propagate": False,
+        },
+        "apps": {
+            "handlers": ["console"],
+            "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),
+            "propagate": False,
+        },
+    },
+}
 
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = os.getenv("DJANGO_TIME_ZONE", "UTC")

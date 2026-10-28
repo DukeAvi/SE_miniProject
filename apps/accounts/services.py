@@ -2,16 +2,18 @@
 
 import math
 from datetime import timedelta
+from uuid import uuid4
 
 from django.conf import settings
 from django.contrib.auth import authenticate, get_user_model, login as auth_login
+from django.core.exceptions import PermissionDenied
 from django.db import IntegrityError, transaction
 from django.utils import timezone
 from django.utils.crypto import salted_hmac
 
 from apps.audit.services import record_event
 
-from .models import LoginThrottle
+from .models import AccountRole, LoginThrottle
 
 
 DASHBOARD_PATHS = {
@@ -30,31 +32,73 @@ class DuplicateAccountValue(Exception):
         super().__init__(field)
 
 
-def register_account(*, email: str, first_name: str, last_name: str, phone: str,
-                     password: str, role: str):
-    """Create a public Donor or Recipient account atomically."""
-    User = get_user_model()
-    normalized_email = User.objects.normalize_email(email).casefold()
+PROFILE_WRITABLE_FIELDS = {
+    AccountRole.DONOR: frozenset({"first_name", "last_name", "phone"}),
+    AccountRole.RECIPIENT: frozenset({"first_name", "last_name", "phone"}),
+    AccountRole.STAFF: frozenset({"first_name", "last_name", "phone"}),
+    AccountRole.ADMIN: frozenset({"first_name", "last_name", "phone"}),
+}
+
+
+def update_profile(*, user, changes: dict, ip_address: str | None = None):
+    """Apply only the caller's role-approved profile fields atomically."""
+    writable_fields = PROFILE_WRITABLE_FIELDS.get(user.role, frozenset())
+    if not changes or set(changes) - writable_fields:
+        raise PermissionDenied("Profile fields are not permitted.")
 
     try:
         with transaction.atomic():
-            return User.objects.create_user(
-                username=normalized_email,
-                email=normalized_email,
-                first_name=first_name,
-                last_name=last_name,
-                phone=phone,
-                role=role,
-                is_staff=False,
-                is_superuser=False,
-                password=password,
-            )
+            for field, value in changes.items():
+                setattr(user, field, value)
+            user.save(update_fields=tuple(changes))
+            if user.role == AccountRole.DONOR:
+                record_event(action="DONOR_UPDATED", actor=user, ip_address=ip_address)
     except IntegrityError as error:
-        if User.objects.filter(email__iexact=normalized_email).exists():
-            raise DuplicateAccountValue("email") from error
-        if User.objects.filter(phone=phone).exists():
+        duplicate_phone = (
+            "phone" in changes
+            and get_user_model()
+            .objects.filter(phone=changes["phone"])
+            .exclude(pk=user.pk)
+            .exists()
+        )
+        if duplicate_phone:
             raise DuplicateAccountValue("phone") from error
         raise
+    return user
+
+
+def register_account(*, email: str, first_name: str, last_name: str, phone: str,
+                     password: str, role: str):
+    """Create a public Donor or Recipient account with an opaque username."""
+    if role not in {AccountRole.DONOR, AccountRole.RECIPIENT}:
+        raise PermissionDenied("Public registration cannot assign this role.")
+    User = get_user_model()
+    normalized_email = User.objects.normalize_email(email).casefold()
+
+    for _ in range(3):
+        internal_username = uuid4().hex
+        try:
+            with transaction.atomic():
+                return User.objects.create_user(
+                    username=internal_username,
+                    email=normalized_email,
+                    first_name=first_name,
+                    last_name=last_name,
+                    phone=phone,
+                    role=role,
+                    is_staff=False,
+                    is_superuser=False,
+                    password=password,
+                )
+        except IntegrityError as error:
+            if User.objects.filter(email__iexact=normalized_email).exists():
+                raise DuplicateAccountValue("email") from error
+            if User.objects.filter(phone=phone).exists():
+                raise DuplicateAccountValue("phone") from error
+            if User.objects.filter(username=internal_username).exists():
+                continue
+            raise
+    raise RuntimeError("Unable to allocate an internal account identifier.")
 
 
 def _login_throttle_key(value: str) -> str:
