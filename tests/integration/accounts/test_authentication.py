@@ -289,7 +289,7 @@ def test_auth_endpoints_reject_unexpected_query_parameters_and_body_fields():
 
 
 def test_logout_rejects_unexpected_body_fields():
-    user = create_user()
+    create_user()
     client, token = csrf_client()
     assert post_login(client, token).status_code == 200
     token = client.get(CSRF_URL, secure=True).json()["csrfToken"]
