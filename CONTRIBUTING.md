@@ -49,6 +49,22 @@ Commit messages should be short and action-oriented:
 
 Examples include `feat(inventory): add expiry-safe availability query` and `test(auth): cover inactive session expiry`.
 
+## Local checks
+
+Run these before opening a pull request. They mirror the CI workflow in `.github/workflows/ci.yml`, which runs on every pull request and on pushes to `main`:
+
+```text
+python -m pip install -r requirements-dev.txt
+ruff check .
+python manage.py check
+python manage.py makemigrations --check --dry-run
+python manage.py migrate --noinput
+pytest
+git diff --check
+```
+
+CI runs `migrate` against PostgreSQL. Tests use the in-memory SQLite settings in `pytest.ini`.
+
 ## Opening a pull request
 
 1. Rebase or merge the latest `main` into your branch and resolve conflicts locally.
