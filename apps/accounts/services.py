@@ -6,13 +6,14 @@ from uuid import uuid4
 
 from django.conf import settings
 from django.contrib.auth import authenticate, get_user_model, login as auth_login
+from django.core.exceptions import PermissionDenied
 from django.db import IntegrityError, transaction
 from django.utils import timezone
 from django.utils.crypto import salted_hmac
 
 from apps.audit.services import record_event
 
-from .models import LoginThrottle
+from .models import AccountRole, LoginThrottle
 
 
 DASHBOARD_PATHS = {
@@ -33,7 +34,9 @@ class DuplicateAccountValue(Exception):
 
 def register_account(*, email: str, first_name: str, last_name: str, phone: str,
                      password: str, role: str):
-    """Create a public account with an opaque internal username atomically."""
+    """Create a public Donor or Recipient account with an opaque username."""
+    if role not in {AccountRole.DONOR, AccountRole.RECIPIENT}:
+        raise PermissionDenied("Public registration cannot assign this role.")
     User = get_user_model()
     normalized_email = User.objects.normalize_email(email).casefold()
 

@@ -4,7 +4,10 @@ from uuid import UUID
 import pytest
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import check_password
+from django.core.exceptions import PermissionDenied
 from rest_framework.test import APIClient
+
+from apps.accounts.services import register_account
 
 pytestmark = pytest.mark.django_db
 
@@ -196,6 +199,21 @@ def test_missing_required_field_is_rejected_without_account(missing):
 
     assert response.status_code == 400
     assert missing in response.json()["error"]["details"]
+    assert get_user_model().objects.count() == 0
+
+
+@pytest.mark.parametrize("role", ["STAFF", "ADMIN"])
+def test_registration_service_rejects_privileged_role_even_when_called_directly(role):
+    with pytest.raises(PermissionDenied):
+        register_account(
+            email="privileged@example.test",
+            first_name="Privileged",
+            last_name="Caller",
+            phone="+12025550123",
+            password=PASSWORD,
+            role=role,
+        )
+
     assert get_user_model().objects.count() == 0
 
 
