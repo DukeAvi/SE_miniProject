@@ -7,20 +7,25 @@ from django.contrib.auth import logout as auth_logout
 from django.middleware.csrf import get_token
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_protect, ensure_csrf_cookie
-from rest_framework import generics, status
+from rest_framework import generics, serializers, status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from apps.core.permissions import RolePermission
+
 from .serializers import (
     EmptyRequestSerializer,
     LoginSerializer,
+    ProfileSerializer,
     RegistrationSerializer,
     UserPublicSerializer,
 )
 from .services import (
     DASHBOARD_PATHS,
+    DuplicateAccountValue,
     login_account,
+    update_profile,
 )
 
 
@@ -133,3 +138,29 @@ class LogoutView(APIView):
         serializer.is_valid(raise_exception=True)
         auth_logout(request)
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class CurrentProfileView(APIView):
+    permission_classes = (IsAuthenticated, RolePermission)
+    permission_code = "self_profile"
+
+    def get_authenticate_header(self, request):
+        return "Session"
+
+    def get(self, request):
+        return Response(ProfileSerializer(request.user).data)
+
+    def patch(self, request):
+        serializer = ProfileSerializer(request.user, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        try:
+            user = update_profile(
+                user=request.user,
+                changes=serializer.validated_data,
+                ip_address=request.META.get("REMOTE_ADDR"),
+            )
+        except DuplicateAccountValue as error:
+            raise serializers.ValidationError(
+                {error.field: [f"An account with this {error.field} already exists."]}
+            ) from error
+        return Response(ProfileSerializer(user).data)
