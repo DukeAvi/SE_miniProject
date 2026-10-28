@@ -45,7 +45,9 @@ class MockNotificationAdapter:
 
 def get_notification_adapter(provider: str | None = None) -> NotificationAdapter:
     """Return the configured delivery adapter; unsupported providers fail closed."""
-    selected_provider = provider or settings.NOTIFICATION_PROVIDER
+    selected_provider = (
+        provider if provider is not None else settings.NOTIFICATION_PROVIDER
+    )
     if selected_provider == "console":
         return ConsoleNotificationAdapter()
     raise ImproperlyConfigured("Unsupported notification provider")
