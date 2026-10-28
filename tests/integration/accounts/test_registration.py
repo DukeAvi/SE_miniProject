@@ -53,7 +53,7 @@ def test_email_one_character_over_supported_maximum_is_field_error_without_accou
     response = APIClient().post(REGISTER_URL, payload(email=email), format="json")
 
     assert response.status_code == 400
-    assert "email" in response.json()
+    assert "email" in response.json()["error"]["details"]
     assert get_user_model().objects.count() == 0
 
 
@@ -78,7 +78,7 @@ def test_internal_usernames_are_unique_and_duplicate_emails_remain_field_errors(
         format="json",
     )
     assert duplicate.status_code == 400
-    assert "email" in duplicate.json()
+    assert "email" in duplicate.json()["error"]["details"]
     assert get_user_model().objects.count() == 2
 
 
@@ -153,7 +153,7 @@ def test_rejects_invalid_or_privileged_registration(overrides, field):
     response = APIClient().post(REGISTER_URL, payload(**overrides), format="json")
 
     assert response.status_code == 400
-    assert field in response.json()
+    assert field in response.json()["error"]["details"]
     assert get_user_model().objects.count() == 0
 
 
@@ -168,7 +168,7 @@ def test_duplicate_email_is_case_insensitive_and_has_field_error():
     )
 
     assert response.status_code == 400
-    assert "email" in response.json()
+    assert "email" in response.json()["error"]["details"]
     assert get_user_model().objects.count() == 1
 
 
@@ -183,7 +183,7 @@ def test_duplicate_phone_is_normalized_and_has_field_error():
     )
 
     assert response.status_code == 400
-    assert "phone" in response.json()
+    assert "phone" in response.json()["error"]["details"]
     assert get_user_model().objects.count() == 1
 
 
@@ -195,5 +195,36 @@ def test_missing_required_field_is_rejected_without_account(missing):
     response = APIClient().post(REGISTER_URL, data, format="json")
 
     assert response.status_code == 400
-    assert missing in response.json()
+    assert missing in response.json()["error"]["details"]
     assert get_user_model().objects.count() == 0
+
+
+@pytest.mark.parametrize(
+    "overrides",
+    [
+        {"unexpected": "value"},
+        {"first_name": ["not", "text"]},
+        {"role": "ADMIN"},
+        {"email": "x@example.test' OR 1=1 --"},
+        {"first_name": "x" * 151},
+    ],
+)
+def test_rejects_unknown_typed_injection_and_oversized_fields(overrides):
+    response = APIClient().post(REGISTER_URL, payload(**overrides), format="json")
+
+    assert response.status_code == 400
+    assert response.json()["error"]["code"] == "validation_error"
+    assert response.json()["error"]["correlation_id"]
+    assert get_user_model().objects.count() == 0
+
+
+def test_registration_response_has_security_headers_and_template_autoescapes():
+    from django.template import Context, Template
+
+    response = APIClient().post(REGISTER_URL, payload(), format="json")
+
+    assert response["X-Content-Type-Options"] == "nosniff"
+    assert "default-src 'self'" in response["Content-Security-Policy"]
+    assert "<script>" not in Template("{{ value }}").render(
+        Context({"value": "<script>alert(1)</script>"})
+    )

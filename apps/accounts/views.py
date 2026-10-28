@@ -12,7 +12,12 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .serializers import LoginSerializer, RegistrationSerializer, UserPublicSerializer
+from .serializers import (
+    EmptyRequestSerializer,
+    LoginSerializer,
+    RegistrationSerializer,
+    UserPublicSerializer,
+)
 from .services import (
     DASHBOARD_PATHS,
     login_account,
@@ -42,6 +47,8 @@ class CsrfTokenView(APIView):
     permission_classes = (AllowAny,)
 
     def get(self, request):
+        if request.query_params:
+            return Response({"error": {"code": "invalid_query", "message": "Unexpected query parameters.", "details": {}, "correlation_id": str(uuid4())}}, status=400)
         return Response({"csrfToken": get_token(request)})
 
 
@@ -73,6 +80,8 @@ class LoginView(APIView):
     permission_classes = (AllowAny,)
 
     def post(self, request):
+        if request.query_params:
+            return Response({"error": {"code": "invalid_query", "message": "Unexpected query parameters.", "details": {}, "correlation_id": str(uuid4())}}, status=400)
         serializer = LoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         email = serializer.validated_data["email"]
@@ -118,5 +127,9 @@ class LogoutView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def post(self, request):
+        if request.query_params:
+            return Response({"error": {"code": "invalid_query", "message": "Unexpected query parameters.", "details": {}, "correlation_id": str(uuid4())}}, status=400)
+        serializer = EmptyRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
         auth_logout(request)
         return Response(status=status.HTTP_204_NO_CONTENT)
