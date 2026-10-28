@@ -94,7 +94,7 @@ def test_invalid_or_duplicate_phone_is_rejected_without_partial_save(phone):
     )
 
     assert response.status_code == 400
-    assert "phone" in response.json()
+    assert "phone" in response.json()["error"]["details"]
     user.refresh_from_db()
     assert user.first_name == "Test"
 
