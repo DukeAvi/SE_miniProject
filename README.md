@@ -63,4 +63,10 @@ Account routes are mounted directly under `/api/v1/` (for example, `/auth/`). Th
 
 The v1.0 one-role-per-account behavior follows the SAD proposal and remains provisional pending product-owner confirmation under issue #88.
 
+## Login and sessions
+
+The API uses Django database-backed sessions. Fetch `GET /api/v1/auth/csrf` before a state-changing request and send the returned `csrfToken` in the `X-CSRFToken` header. Login is `POST /api/v1/auth/login` with `email` and `password`; successful responses include a role dashboard path. Logout is `POST /api/v1/auth/logout` and invalidates the current session. Unknown emails, incorrect passwords, disabled accounts, and accounts with no recognized role receive the same generic credential error.
+
+Login failures are throttled by account and client IP. The defaults are five failures per 900-second window and are configurable with `LOGIN_THROTTLE_ATTEMPTS` and `LOGIN_THROTTLE_WINDOW_SECONDS`. The session cookie is HttpOnly and SameSite=Lax, and defaults to Secure when DEBUG is false. The CSRF cookie is SameSite=Lax, defaults to Secure when DEBUG is false, and is readable by the browser so clients can send its token in the header. `SESSION_COOKIE_AGE` defaults to 1200 seconds pending the idle and absolute expiry behavior in issue #83.
+
 Sprint work is assigned by the Scrum Master. Before coding, acknowledge the assigned issue, update local `main`, and create the issue branch described in `CONTRIBUTING.md`.

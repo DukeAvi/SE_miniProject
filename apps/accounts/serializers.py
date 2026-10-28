@@ -48,3 +48,11 @@ class UserPublicSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ("id", "email", "first_name", "last_name", "phone", "role")
+
+
+class LoginSerializer(serializers.Serializer):
+    email = serializers.EmailField(max_length=254)
+    password = serializers.CharField(write_only=True, trim_whitespace=False, max_length=128)
+
+    def validate_email(self, value):
+        return User.objects.normalize_email(value).casefold()
