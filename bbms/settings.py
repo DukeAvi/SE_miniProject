@@ -54,6 +54,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "apps.accounts.middleware.SessionExpiryMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "apps.core.middleware.ContentSecurityPolicyMiddleware",
@@ -121,7 +122,15 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 DATA_UPLOAD_MAX_MEMORY_SIZE = env_positive_int("DATA_UPLOAD_MAX_MEMORY_SIZE", 1_048_576)
 
 SESSION_ENGINE = "django.contrib.sessions.backends.db"
-SESSION_COOKIE_AGE = env_positive_int("SESSION_COOKIE_AGE", 1200)
+SESSION_IDLE_TIMEOUT_SECONDS = env_positive_int(
+    "SESSION_IDLE_TIMEOUT_SECONDS",
+    env_positive_int("SESSION_COOKIE_AGE", 1200),
+)
+SESSION_ABSOLUTE_TIMEOUT_SECONDS = env_positive_int(
+    "SESSION_ABSOLUTE_TIMEOUT_SECONDS", 28_800
+)
+SESSION_COOKIE_AGE = SESSION_IDLE_TIMEOUT_SECONDS
+SESSION_SAVE_EVERY_REQUEST = True
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SECURE = env_bool("SESSION_COOKIE_SECURE", default=not DEBUG)
 SESSION_COOKIE_SAMESITE = "Lax"

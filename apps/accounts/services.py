@@ -177,6 +177,7 @@ def login_account(*, request, email: str, password: str, ip_address: str | None)
     if user is not None and user.role in DASHBOARD_PATHS:
         clear_login_failures(email=email)
         auth_login(request, user)
+        request.session["auth_started_at"] = timezone.now().timestamp()
         record_login_event(action="LOGIN_SUCCESS", actor=user, ip_address=ip_address)
         return user, None
 
