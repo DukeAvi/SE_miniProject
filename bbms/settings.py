@@ -19,6 +19,13 @@ def env_list(name: str, default: str = "") -> list[str]:
     return [item.strip() for item in os.getenv(name, default).split(",") if item.strip()]
 
 
+def env_positive_int(name: str, default: int) -> int:
+    value = int(os.getenv(name, str(default)))
+    if value <= 0:
+        raise ValueError(f"{name} must be a positive integer")
+    return value
+
+
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "unsafe-local-development-key")
 DEBUG = env_bool("DJANGO_DEBUG", default=False)
 ALLOWED_HOSTS = env_list("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1")
@@ -50,6 +57,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
+CSRF_FAILURE_VIEW = "apps.core.views.csrf_failure"
 
 ROOT_URLCONF = "bbms.urls"
 
@@ -96,6 +104,25 @@ PASSWORD_HASHERS = [
 ]
 
 AUTH_USER_MODEL = "accounts.User"
+AUTHENTICATION_BACKENDS = ["apps.accounts.backends.EmailBackend"]
+
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.SessionAuthentication",
+    ],
+}
+
+SESSION_ENGINE = "django.contrib.sessions.backends.db"
+SESSION_COOKIE_AGE = env_positive_int("SESSION_COOKIE_AGE", 1200)
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SECURE = env_bool("SESSION_COOKIE_SECURE", default=not DEBUG)
+SESSION_COOKIE_SAMESITE = "Lax"
+CSRF_COOKIE_SECURE = env_bool("CSRF_COOKIE_SECURE", default=not DEBUG)
+CSRF_COOKIE_SAMESITE = "Lax"
+CSRF_COOKIE_HTTPONLY = False
+
+LOGIN_THROTTLE_ATTEMPTS = env_positive_int("LOGIN_THROTTLE_ATTEMPTS", 5)
+LOGIN_THROTTLE_WINDOW_SECONDS = env_positive_int("LOGIN_THROTTLE_WINDOW_SECONDS", 900)
 
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = os.getenv("DJANGO_TIME_ZONE", "UTC")
