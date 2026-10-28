@@ -55,6 +55,12 @@ The API is mounted at `/api/v1/`. Each application owns its URL prefix and keeps
 
 Keep views short. Rules that need unit tests or are reused by more than one endpoint belong in `services.py` or a focused domain module. Add unit tests under `tests/unit/<app>/` and database or API-flow tests under `tests/integration/<app>/`.
 
-The current URL prefixes are `accounts/`, `donors/`, `inventory/`, `requests/`, `notifications/`, `administration/`, and `audit/`. Add a route inside the owning app instead of editing the project URL file for each feature.
+Account routes are mounted directly under `/api/v1/` (for example, `/auth/`). The other current URL prefixes are `donors/`, `inventory/`, `requests/`, `notifications/`, `administration/`, and `audit/`. Add a route inside the owning app instead of editing the project URL file for each feature.
+
+## Account registration
+
+`POST /api/v1/auth/register` accepts `email`, `first_name`, `last_name`, `phone`, `password`, and `role`. The public role values are `DONOR` and `RECIPIENT`; staff and administrator accounts cannot be created through this endpoint. Email addresses and phone numbers are normalized before uniqueness checks, and password values are stored using Django's Argon2 hasher.
+
+The v1.0 one-role-per-account behavior follows the SAD proposal and remains provisional pending product-owner confirmation under issue #88.
 
 Sprint work is assigned by the Scrum Master. Before coding, acknowledge the assigned issue, update local `main`, and create the issue branch described in `CONTRIBUTING.md`.
