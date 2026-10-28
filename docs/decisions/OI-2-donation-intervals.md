@@ -2,7 +2,7 @@
 
 ## Status
 
-Demo-only scope selected by the assigned contributor. This is not a medical donor-selection policy. Medical and regulatory approval remains outstanding before any real-world use.
+Approved for the classroom demonstration by the assigned contributor under delegated decision authority. This is software demonstration behavior only, not a medical donor-selection policy, and must not be used to guide real donations.
 
 ## Decision
 
@@ -29,7 +29,7 @@ The 56-day value is the existing project requirement for deterministic demonstra
 
 ## Decision record
 
-- Decision owner: Ayushman Dey, assigned issue contributor
+- Approved by: Ayushman Dey, assigned issue contributor acting under delegated decision authority
 - Effective for the classroom demo: 2026-10-29
-- Medical reviewer approval: Pending; not represented by this record
+- Medical approval: Not applicable to the mock-data demonstration; required before any real-world use
 - Reference: [WHO Blood Donor Selection Guidelines](https://iris.who.int/bitstream/handle/10665/76724/9789241548519_eng.pdf?sequence=1), which describes variation between jurisdictions and donation types and recommends longer whole-blood intervals in its guidance.
