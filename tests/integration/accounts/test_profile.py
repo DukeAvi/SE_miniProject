@@ -51,6 +51,27 @@ def test_each_role_reads_and_updates_only_its_own_permitted_profile(role):
     assert user.first_name == "Updated"
 
 
+def test_profile_name_length_boundary_is_enforced_before_saving():
+    user = make_user("DONOR", 5)
+    client = APIClient()
+    client.force_authenticate(user)
+
+    at_limit = client.patch(PROFILE_URL, {"first_name": "A" * 150}, format="json")
+    beyond_limit = client.patch(
+        PROFILE_URL,
+        {"first_name": "B" * 151, "last_name": "Must Not Persist"},
+        format="json",
+    )
+
+    assert at_limit.status_code == 200
+    assert len(at_limit.json()["first_name"]) == 150
+    assert beyond_limit.status_code == 400
+    assert "first_name" in beyond_limit.json()["error"]["details"]
+    user.refresh_from_db()
+    assert user.first_name == "A" * 150
+    assert user.last_name == "Donor"
+
+
 @pytest.mark.parametrize(
     "protected_changes",
     [
@@ -132,11 +153,22 @@ def test_profile_requests_cannot_read_or_update_another_accounts_profile():
     assert login.status_code == 200
     csrf_token = client.get("/api/v1/auth/csrf", secure=True).json()["csrfToken"]
 
-    current_profile = client.get(f"{PROFILE_URL}?user_id={other.pk}", secure=True)
+    current_profile = client.get(PROFILE_URL, secure=True)
+    foreign_profile_query = client.get(
+        f"{PROFILE_URL}?user_id={other.pk}", secure=True
+    )
     foreign_profile_route = client.get(f"/api/v1/users/{other.pk}", secure=True)
     foreign_update = client.patch(
         PROFILE_URL,
         {"user_id": other.pk, "first_name": "Unauthorized"},
+        format="json",
+        secure=True,
+        HTTP_REFERER="https://testserver/",
+        HTTP_X_CSRFTOKEN=csrf_token,
+    )
+    foreign_update_query = client.patch(
+        f"{PROFILE_URL}?user_id={other.pk}",
+        {"first_name": "Unauthorized"},
         format="json",
         secure=True,
         HTTP_REFERER="https://testserver/",
@@ -147,8 +179,12 @@ def test_profile_requests_cannot_read_or_update_another_accounts_profile():
     assert current_profile.json()["id"] == owner.pk
     assert current_profile.json()["email"] == owner.email
     assert other.email not in current_profile.content.decode()
+    assert foreign_profile_query.status_code == 400
+    assert foreign_profile_query.json()["error"]["code"] == "invalid_query"
     assert foreign_profile_route.status_code == 404
     assert foreign_update.status_code == 400
+    assert foreign_update_query.status_code == 400
+    assert foreign_update_query.json()["error"]["code"] == "invalid_query"
     owner.refresh_from_db()
     other.refresh_from_db()
     assert owner.first_name == "Test"
