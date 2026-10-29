@@ -146,6 +146,7 @@ def test_only_owner_can_cancel_and_cancelled_booking_releases_capacity():
     replacement = client_for(other.user).post(APPOINTMENTS_URL, {"slot_id": str(slot.pk)}, format="json")
 
     assert foreign_cancel.status_code == 404
+    assert AuditEvent.objects.filter(action="ACCESS_DENIED", actor=other.user).count() == 1
     assert malformed_cancel.status_code == 404
     assert owner_cancel.status_code == 200
     assert owner_cancel.json()["status"] == Appointment.Status.CANCELLED

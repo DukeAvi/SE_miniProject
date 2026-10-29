@@ -121,18 +121,18 @@ def cancel_appointment(*, actor, appointment_id, ip_address=None) -> Appointment
         appointment_id = UUID(str(appointment_id))
     except (TypeError, ValueError) as exc:
         raise AppointmentRejected("appointment_not_found", "Appointment was not found.", status_code=404) from exc
-    with transaction.atomic():
-        try:
+    try:
+        with transaction.atomic():
             appointment_ref = Appointment.objects.only("slot_id").get(pk=appointment_id, donor__user=actor)
-        except Appointment.DoesNotExist as exc:
-            record_event(action="ACCESS_DENIED", actor=actor, ip_address=ip_address)
-            raise AppointmentRejected("appointment_not_found", "Appointment was not found.", status_code=404) from exc
-        DonationSlot.objects.select_for_update().get(pk=appointment_ref.slot_id)
-        appointment = Appointment.objects.select_for_update().get(pk=appointment_id, donor__user=actor)
-        if appointment.status != Appointment.Status.BOOKED:
-            raise AppointmentRejected("invalid_appointment_state", "Only booked appointments can be cancelled.", status_code=409)
-        appointment.status = Appointment.Status.CANCELLED
-        appointment.cancelled_at = timezone.now()
-        appointment.save(update_fields=("status", "cancelled_at"))
-        record_event(action="APPOINTMENT_CANCELLED", actor=actor, ip_address=ip_address)
-        return appointment
+            DonationSlot.objects.select_for_update().get(pk=appointment_ref.slot_id)
+            appointment = Appointment.objects.select_for_update().get(pk=appointment_id, donor__user=actor)
+            if appointment.status != Appointment.Status.BOOKED:
+                raise AppointmentRejected("invalid_appointment_state", "Only booked appointments can be cancelled.", status_code=409)
+            appointment.status = Appointment.Status.CANCELLED
+            appointment.cancelled_at = timezone.now()
+            appointment.save(update_fields=("status", "cancelled_at"))
+            record_event(action="APPOINTMENT_CANCELLED", actor=actor, ip_address=ip_address)
+            return appointment
+    except Appointment.DoesNotExist as exc:
+        record_event(action="ACCESS_DENIED", actor=actor, ip_address=ip_address)
+        raise AppointmentRejected("appointment_not_found", "Appointment was not found.", status_code=404) from exc
