@@ -6,7 +6,7 @@ Approved for v1.0 classroom demonstration. Product Owner Avrit Sharma recorded a
 
 ## Context
 
-Issue #87 asks whether Admin is excluded from operational work such as request review and blood-unit reservation or issuance. The SAD Section 3.9.2 permission matrix and assumption A-3 define the current least-privilege baseline and explicitly say Product Owner confirmation is required.
+Issue #87 asks whether Admin is excluded from operational work such as request review and blood-unit reservation or issuance. The SAD Section 3.9.2 permission matrix and assumption A-3 define the least-privilege baseline. The published SAD PDF says Product Owner confirmation is required; the Product Owner subsequently approved this matrix on issue #87.
 
 ## Options
 
@@ -51,3 +51,7 @@ Use option 1 for v1.0: Staff handle operational workflows; Admin handles account
 - Approval: Recorded by Avrit Sharma on issue #87
 - Date: 2026-10-29
 - Evidence or reference: SAD Section 3.9.2 and assumption A-3, plus SAD Section 4.6 OI-4 / GitHub issue #87
+
+## Published SAD source note
+
+The published SAD PDF still contains the earlier “Product Owner to confirm” wording for OI-4. The approval recorded on issue #87 supersedes that pending status for v1.0. This decision record supplements the PDF; it does not modify it. The repository contains no editable SAD source or reproducible PDF-generation workflow, so the PDF was not regenerated.

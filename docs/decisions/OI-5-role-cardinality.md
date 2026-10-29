@@ -32,3 +32,7 @@ Use one role per account in v1.0. A person acting as both Donor and Recipient us
 - Approval: Recorded by Avrit Sharma on issue #88
 - Date: 2026-10-29
 - Evidence or reference: SAD Section 4.1.1 and Section 4.6, plus GitHub issue #88
+
+## Published SAD source note
+
+The SAD PDF states that one role per account is acceptable for v1.0 and that multiple roles may be considered later. The Product Owner approval recorded on issue #88 confirms that choice. This decision record adds the approval evidence; it does not modify the published PDF. The repository contains no editable SAD source or reproducible PDF-generation workflow, so the PDF was not regenerated.

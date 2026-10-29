@@ -21,8 +21,9 @@ Use Django server-side sessions in HttpOnly, Secure, SameSite cookies, with CSRF
 
 - The authentication implementation uses Django's server-side session framework and CSRF protection.
 - Session cookie security attributes and session lifetime behavior must be configured and tested by BBMS-F-002 and BBMS-SR-005.
-- The OpenAPI security scheme and session tests must match the decision before the API contract is frozen.
-- No OpenAPI document or editable SRS/SAD source is currently checked in; the repository contains the SAD PDF only.
+- The OpenAPI security scheme is documented in `docs/api/openapi.json`; session tests cover login, CSRF, revocation, and expiry.
+- External hospital API authentication remains outside the v1.0 browser-session contract and requires a separate decision if needed.
+- No editable SRS/SAD source is checked in; the repository contains the published SAD PDF only.
 
 ## Approval
 
@@ -30,3 +31,7 @@ Use Django server-side sessions in HttpOnly, Secure, SameSite cookies, with CSRF
 - Approval: Recorded by Avrit Sharma on issue #89
 - Date: 2026-10-29
 - Evidence or reference: SAD Section 3.6 and Section 4.6 OI-6 / ADR-004, plus GitHub issue #89
+
+## Published SAD source note
+
+The published SAD PDF still says “Team to confirm” for OI-6. The Product Owner approval recorded on issue #89 supersedes that pending status for v1.0. This decision record supplements the PDF; it does not modify it. The repository contains no editable SAD source or reproducible PDF-generation workflow, so the PDF was not regenerated.
