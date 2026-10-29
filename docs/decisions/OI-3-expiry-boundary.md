@@ -2,7 +2,9 @@
 
 ## Status
 
-Proposed; Product Owner and medical reviewer confirmation is outstanding.
+Approved for the Sprint 1 classroom demo on 2026-10-29. This mock-data
+behavior is not a clinical or production policy; medical validation is required
+before any non-demo use.
 
 ## Context
 
@@ -15,13 +17,16 @@ Issue #86 asks whether a blood unit becomes unavailable at the start of its expi
 
 ## Decision
 
-For implementation planning, use option 1 as the provisional baseline, following the SAD. This is not formally approved.
+Use option 1 for the Sprint 1 classroom demo, following the SAD. Product Owner
+Avrit Sharma (`@DukeAvi`) approved this demo behavior on 2026-10-29.
 
 A unit is expired when `expiry_date <= today`, where today is the current calendar date in the blood bank's configured time zone (see OI-8), not UTC. Availability queries and reservation apply this rule at query time, independent of the daily job. The daily job (00:05 local time) marks affected units `EXPIRED` and is idempotent.
 
 ## Boundary examples
 
-Assumes `expiry_date = 2026-11-10` and the time zone Asia/Kolkata (UTC+05:30), the offset used in the SAD examples. The time zone is pending OI-8.
+Assumes `expiry_date = 2026-11-10` and the approved demo time zone
+Asia/Kolkata (UTC+05:30), the offset used in the SAD examples and approved
+under OI-8.
 
 | Moment | Result |
 | --- | --- |
@@ -35,13 +40,15 @@ Assumes `expiry_date = 2026-11-10` and the time zone Asia/Kolkata (UTC+05:30), t
 
 - BBMS-F-023 search returns units with status AVAILABLE and `expiry_date > today` (DS-023).
 - BBMS-F-024 job selects AVAILABLE and RESERVED units with `expiry_date <= today` and accepts an `as_of_date` so tests need not wait for real time (SAD Figure 8, STP Section 5.2).
+- Issue #59 owns inventory-field and date validation, #61 owns expiry-safe availability search, and #62 owns the idempotent daily expiry job.
 - Issuing a reserved unit whose expiry date has been reached returns 409 `unit_unavailable` (SAD Section 4.3).
 - TC-Inv-04 and TC-Inv-05 must cover before, exactly-at, and after the boundary, plus a job failure mid-run.
-- If option 2 is chosen instead, the SAD rule, the availability and job queries, and the boundary tests change together.
-- SRS F-024 wording and the STP boundary cases need to be updated to match the approved rule. Those documents are not in this repository.
+- Traceability remains BBMS-F-023 to DS-023 and TC-Inv-04, and BBMS-F-024 to DS-024 and TC-Inv-05.
+- Live data, clinical deployment, and any resulting change to this date rule are deferred beyond the Sprint 1 demo. If a validated production policy selects option 2, the SAD rule, availability and job queries, and boundary tests must change together.
 
 ## Approval
 
-- Decision owner: Product Owner (confirmation pending)
-- Date: Pending
-- Evidence or reference: SRS BBMS-F-023 and BBMS-F-024; SAD Section 3.7 R9, Section 4.1.3, Section 4.6 OI-3; STP Section 5.2; GitHub issue #86
+- Decision owner and approver: Product Owner Avrit Sharma (`@DukeAvi`)
+- Effective date: 2026-10-29 for the Sprint 1 classroom demo
+- Implementation owners: #59 (validation), #61 (search), and #62 (expiry job)
+- Evidence or reference: SRS BBMS-F-023 and BBMS-F-024; SAD Section 3.7 R9, Section 4.1.3, Section 4.6 OI-3; STP Section 5.2; GitHub issues #86 and #91
