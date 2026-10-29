@@ -92,12 +92,13 @@
     "dependencies": ["BBMS-F-002", "BBMS-F-013"],
     "scope": "Create donation slots with capacity and donor endpoints to list slots, book an available slot under a row lock, view appointment history, and cancel a booked appointment.",
     "acceptance": [
+      "Booking calls the shared eligibility engine and rejects an ineligible donor without changing capacity.",
       "An eligible donor can book an available slot and see it in appointment history.",
       "Concurrent bookings cannot exceed slot capacity.",
       "A donor can cancel only their own booked appointment through a valid state transition.",
       "Full, missing, ineligible, duplicate, and forbidden cases return the documented error codes."
     ],
-    "verification": ["Automate TC-Don-01 including capacity-boundary and concurrent-booking scenarios.", "Exercise booking and cancellation through the donor UI with keyboard navigation."]
+    "verification": ["Automate TC-Don-01 including eligibility integration, capacity-boundary, and concurrent-booking scenarios.", "Exercise booking and cancellation through the donor UI with keyboard navigation."]
   },
   {
     "key": "BBMS-F-011",
@@ -113,11 +114,12 @@
     "scope": "Allow Staff to record a completed donation with donor, date, blood group, quantity or component, status, and screening weight while updating the donor's last-donation date in the same transaction.",
     "acceptance": [
       "Only Staff can create a completed donation record with all mandatory validated fields.",
+      "Recording calls the shared eligibility engine and rejects an ineligible donor without partial changes.",
       "The record is immutable through the API; corrections use compensating records rather than update or delete.",
       "The donor's last-donation date and DONATION_RECORDED audit event commit with the donation.",
       "The donation appears accurately in the donor's own history."
     ],
-    "verification": ["Automate TC-Don-02 for authorization, valid creation, rollback, immutability, and history visibility.", "Confirm a failed transaction leaves no donation, date update, or audit fragment."]
+    "verification": ["Automate TC-Don-02 for authorization, eligibility integration, valid creation, rollback, immutability, and history visibility.", "Confirm a failed transaction leaves no donation, date update, or audit fragment."]
   },
   {
     "key": "BBMS-F-012",
@@ -150,14 +152,14 @@
     "design": "DS-013",
     "test": "TC-Don-04",
     "dependencies": ["OI-2"],
-    "scope": "Implement eligibility as a pure domain function using age at least 18, weight at least 50 kg, and the approved minimum donation interval. Evaluate it during booking and again during donation recording.",
+    "scope": "Implement eligibility as a shared pure domain function using age at least 18, weight at least 50 kg, and the approved minimum donation interval. Booking and recording integrations are owned by BBMS-F-010 and BBMS-F-011.",
     "acceptance": [
-      "All eligibility rules are evaluated against the appointment or screening date using the configured blood-bank time zone.",
-      "An ineligible donor cannot book or complete a donation.",
-      "The response lists every failed rule with readable reasons and includes the next eligible date for interval failures.",
+      "All eligibility rules are evaluated against the supplied appointment or screening date using the configured blood-bank time zone.",
+      "Unsupported donation types fail closed.",
+      "The result lists every failed rule with readable reasons and includes the next eligible date for interval failures.",
       "Boundary values for age, weight, and interval follow the approved policy exactly."
     ],
-    "verification": ["Automate TC-Don-04 as table-driven pure-function tests including every boundary and multiple simultaneous failures.", "Verify both booking and recording call the same eligibility engine."]
+    "verification": ["Automate TC-Don-04 as table-driven pure-function tests including every boundary, unsupported donation types, and multiple simultaneous failures."]
   },
   {
     "key": "BBMS-F-020",
@@ -312,8 +314,8 @@
     "dependencies": ["BBMS-F-022", "BBMS-F-031", "BBMS-F-034"],
     "scope": "Reserve and issue compatible available units for an approved request using FEFO with exact-group preference, row-level locks, one active allocation per unit, transactional state changes, and an Idempotency-Key on issue.",
     "acceptance": [
-      "Reservation selects sufficient compatible AVAILABLE and unexpired units using FEFO and exact-group preference.",
-      "Issue rechecks state, availability, expiry, and compatibility inside the locked transaction before fulfillment.",
+      "Reservation uses the shared compatibility engine to select sufficient compatible AVAILABLE and unexpired units using FEFO and exact-group preference.",
+      "Issue uses the same engine to recheck state, availability, expiry, and compatibility inside the locked transaction before fulfillment.",
       "Concurrent requests cannot reserve or issue the same unit, and a repeated idempotency key returns the original result without changing stock twice.",
       "Insufficient stock, incompatibility, invalid state, or unavailable units roll back all allocations, states, ledger, audit, and notifications."
     ],
@@ -350,14 +352,14 @@
     "design": "DS-034",
     "test": "TC-Req-05",
     "dependencies": ["OI-1"],
-    "scope": "Implement component-aware acceptable_donor_groups and is_compatible pure functions and apply them during candidate selection and again before reservation or issue.",
+    "scope": "Implement shared component-aware acceptable_donor_groups and is_compatible pure functions for the approved compatibility matrix. Fulfillment integration is owned by BBMS-F-032.",
     "acceptance": [
       "The approved compatibility matrix is represented in one lookup-driven domain engine parameterized by component.",
       "Every incompatible pairing is rejected and every compatible pairing is accepted for each approved component rule set.",
-      "Compatibility is checked during selection and rechecked inside the locked fulfillment transaction.",
-      "An incompatibility produces 422 incompatible_blood_type and rolls back the complete action."
+      "Invalid blood groups and components fail closed.",
+      "The reusable guard produces the documented 422 incompatible_blood_type error."
     ],
-    "verification": ["Automate TC-Req-05 over the full 8 by 8 donor-recipient matrix for each supported component.", "Include explicit universal-donor, universal-recipient, and Rh-negative boundary assertions."]
+    "verification": ["Automate TC-Req-05 over the full 8 by 8 donor-recipient matrix for each supported component.", "Include explicit universal-donor, universal-recipient, Rh-negative, and invalid-input assertions."]
   },
   {
     "key": "BBMS-F-040",
@@ -691,7 +693,7 @@
     "test": "TC-Req-05",
     "dependencies": [],
     "scope": "Obtain an approved rule set for RBC or whole blood, plasma, and platelets because the SRS currently states red-cell-style ABO and Rh rules for every component.",
-    "acceptance": ["The approved donor-recipient matrix is documented for every supported component.", "The SRS, SAD compatibility table, API behavior, and TC-Req-05 matrix are updated consistently.", "The decision identifies who approved the safety rule and its effective date."],
+    "acceptance": ["The approved donor-recipient matrix is documented for every supported component.", "The decision identifies who approved the demo safety rule and its effective date.", "Implementation and transactional integration ownership is recorded under BBMS-F-034 and BBMS-F-032."],
     "verification": ["Review the resulting matrices for complete coverage of all eight blood groups and supported components."]
   },
   {
@@ -706,7 +708,7 @@
     "test": "TC-Don-04",
     "dependencies": [],
     "scope": "Confirm whether the 56-day minimum applies only to whole blood and define configurable intervals for every donation type included in version 1.0.",
-    "acceptance": ["Each supported donation type has an approved minimum interval or is explicitly excluded from version 1.0.", "The eligibility configuration, SRS, SAD, and boundary tests are updated together.", "A safe default and change owner are documented."],
+    "acceptance": ["Each supported donation type has an approved minimum interval or is explicitly excluded from version 1.0.", "The exact boundary, safe default, change owner, approver, and effective date are documented.", "Engine and call-site implementation ownership is recorded under BBMS-F-013, BBMS-F-010, and BBMS-F-011."],
     "verification": ["Review TC-Don-04 boundary cases against every approved interval."]
   },
   {
@@ -721,7 +723,7 @@
     "test": "TC-Inv-05",
     "dependencies": [],
     "scope": "Confirm whether a unit is unavailable at the start of its expiry date or only after that date, including the blood-bank time zone used at the boundary.",
-    "acceptance": ["One unambiguous date and time-zone rule is approved.", "Availability search, the expiry job, SRS wording, SAD domain rules, and TC-Inv-05 use the same rule.", "Exact-boundary examples are documented."],
+    "acceptance": ["One unambiguous date and time-zone rule is approved.", "Exact-boundary examples, approver, and effective date are documented.", "Inventory validation, search, and expiry-job ownership is recorded under BBMS-F-021, BBMS-F-023, and BBMS-F-024."],
     "verification": ["Review before, exactly-at, and after-boundary test cases."]
   },
   {
@@ -796,8 +798,8 @@
     "test": "TC-Notif-02, TC-DR-01",
     "dependencies": [],
     "scope": "Approve initial stock thresholds, donation-slot capacities, blood-bank time zone, and backup retention values while keeping the documented settings configurable by authorized roles or deployment configuration.",
-    "acceptance": ["Each required default has an approved value, unit, owner, and configuration location.", "Unsafe or nonsensical values are rejected by validation.", "The SAD, seed data, environment example, operational runbook, and relevant tests use the approved defaults."],
-    "verification": ["Review threshold, capacity, time-zone boundary, retention, and authorization tests."]
+    "acceptance": ["Each required default has an approved value, unit, owner, configuration location, approver, and effective date.", "Allowed ranges and fail-closed validation requirements are documented.", "Implementation ownership is recorded for appointments, low-stock alerts, backups, and seed data."],
+    "verification": ["Review threshold, capacity, time-zone boundary, retention, ownership, and validation requirements."]
   },
   {
     "key": "PROC-001",
