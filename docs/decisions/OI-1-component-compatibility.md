@@ -2,7 +2,7 @@
 
 ## Status
 
-Approved for the classroom demonstration by the assigned contributor under delegated decision authority. These are software demonstration rules only, not a medically approved transfusion policy, and must not be used to guide real transfusions.
+Approved for the classroom demonstration by Product Owner Avrit Sharma, recorded on issue #84 on 2026-10-29. These are software demonstration rules only, not a medically approved transfusion policy, and must not be used to guide real transfusions.
 
 ## Scope and decision
 
@@ -41,11 +41,13 @@ This application is a classroom demonstration using mock data. It is not validat
 - Requirements: BBMS-F-034
 - Design: DS-034; SAD Section 4.6, OI-1
 - Verification: TC-Req-05, full 8 by 8 group matrix for each component
-- GitHub: issue #84; implementation: issue #67
+- API contract: DOC-001 / issue #94 documents the component fields and the compatibility error on the request and fulfillment operations.
+- Ownership: issue #67 owns the pure compatibility engine; issue #65 owns selection, locked-transaction recheck, and rollback integration.
+- GitHub: decision issue #84; implementation issues #67 and #65
 
 ## Decision record
 
-- Approved by: Ayushman Dey, assigned issue contributor acting under delegated decision authority
+- Approved by: Avrit Sharma, Product Owner (approval recorded on issue #84)
 - Effective for the classroom demo: 2026-10-29
-- Clinical approval: Not applicable to the mock-data demonstration; required before any real-world use
+- Clinical approval: This mock-data decision is not a clinical approval; a transfusion-medicine reviewer must validate the complete policy before any real-world use.
 - Reference: [Australian Red Cross Lifeblood component compatibility](https://www.lifeblood.com.au/health-professionals/products/component-compatibility) and [matching blood groups](https://www.lifeblood.com.au/patients-recipients/blood-plasma-platelets/blood-for-transfusion/matching-blood-groups)
