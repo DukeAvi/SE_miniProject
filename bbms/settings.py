@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from dotenv import load_dotenv
 
@@ -23,6 +24,15 @@ def env_positive_int(name: str, default: int) -> int:
     value = int(os.getenv(name, str(default)))
     if value <= 0:
         raise ValueError(f"{name} must be a positive integer")
+    return value
+
+
+def env_time_zone(name: str, default: str) -> str:
+    value = os.getenv(name, default)
+    try:
+        ZoneInfo(value)
+    except (ZoneInfoNotFoundError, ValueError) as exc:
+        raise ValueError(f"{name} must be a valid IANA time zone name") from exc
     return value
 
 
@@ -195,8 +205,10 @@ LOGGING = {
 
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = os.getenv("DJANGO_TIME_ZONE", "UTC")
-BLOOD_BANK_TIME_ZONE = os.getenv("BLOOD_BANK_TIME_ZONE", "Asia/Kolkata")
+BLOOD_BANK_TIME_ZONE = env_time_zone("BLOOD_BANK_TIME_ZONE", "Asia/Kolkata")
 DONATION_SLOT_CAPACITY = env_positive_int("DONATION_SLOT_CAPACITY", 10)
+DEFAULT_STOCK_THRESHOLD = env_positive_int("DEFAULT_STOCK_THRESHOLD", 5)
+BACKUP_RETENTION_DAYS = env_positive_int("BACKUP_RETENTION_DAYS", 7)
 NOTIFICATION_PROVIDER = os.getenv("NOTIFICATION_PROVIDER", "console")
 USE_I18N = True
 USE_TZ = True
