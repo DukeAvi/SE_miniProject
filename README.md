@@ -74,3 +74,7 @@ Login failures are throttled by account and client IP. The defaults are five fai
 New and changed passwords use Django's Argon2 password hasher. The configured Django and application console handlers use `SensitiveDataFilter`, which redacts credential/token/session fields, contact and clinical fields, email addresses, phone numbers, and exception messages. Add the same filter to any additional log handler and avoid logging raw request bodies or user-provided values.
 
 Sprint work is assigned by the Scrum Master. Before coding, acknowledge the assigned issue, update local `main`, and create the issue branch described in `CONTRIBUTING.md`.
+
+## Notifications
+
+The classroom demo uses `NOTIFICATION_PROVIDER=console` and does not send email or SMS. Automated tests use a deterministic mock adapter. Do not add provider credentials for the demo. Console output must omit message content, contact details, tokens, and clinical information. See `docs/decisions/OI-7-notification-provider.md` for the provider decision and failure-handling contract.
