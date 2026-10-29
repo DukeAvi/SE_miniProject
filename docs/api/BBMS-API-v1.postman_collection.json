@@ -68,6 +68,10 @@
     {
       "key": "action",
       "value": "LOGIN_SUCCESS"
+    },
+    {
+      "key": "donorId",
+      "value": "101"
     }
   ],
   "item": [
@@ -461,7 +465,7 @@
         },
         {
           "name": "List the current donor donation history",
-          "description": "Allowed roles: DONOR. Implementation status: planned.",
+          "description": "Allowed roles: DONOR. Implementation status: implemented. Synthetic demo data only.",
           "request": {
             "method": "GET",
             "header": [
@@ -470,7 +474,7 @@
                 "value": "application/json"
               }
             ],
-            "url": "{{baseUrl}}/api/v1/donors/me/donations?page={{page}}&page_size={{pageSize}}"
+            "url": "{{baseUrl}}/api/v1/donors/me/donations?page={{page}}"
           },
           "event": [
             {
@@ -511,7 +515,7 @@
         },
         {
           "name": "Record a completed donation",
-          "description": "Allowed roles: STAFF. Implementation status: planned.",
+          "description": "Allowed roles: STAFF. Implementation status: implemented. Synthetic demo data only; requires an existing donor profile.",
           "request": {
             "method": "POST",
             "header": [
@@ -531,7 +535,7 @@
             "url": "{{baseUrl}}/api/v1/donations",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"donor_id\": \"101\",\n  \"donation_date\": \"2026-10-29\",\n  \"blood_group\": \"O+\",\n  \"component\": \"WHOLE_BLOOD\",\n  \"units\": 1,\n  \"status\": \"COMPLETED\",\n  \"screening_weight_kg\": 58\n}",
+              "raw": "{\n  \"donor_id\": {{donorId}},\n  \"donation_date\": \"2026-10-29\",\n  \"blood_group\": \"O+\",\n  \"component\": \"WHOLE_BLOOD\",\n  \"quantity_units\": 1,\n  \"status\": \"COMPLETED\",\n  \"screening_weight_kg\": 58\n}",
               "options": {
                 "raw": {
                   "language": "json"

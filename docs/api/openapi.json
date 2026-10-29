@@ -2608,14 +2608,14 @@
       "get": {
         "operationId": "listMyDonations",
         "summary": "List the current donor donation history",
-        "description": "Allowed roles: DONOR.",
+        "description": "Allowed roles: DONOR. Uses synthetic demo data only. Blood-bank date rules use Asia/Kolkata.",
         "tags": [
           "donors"
         ],
         "x-allowed-roles": [
           "DONOR"
         ],
-        "x-implementation-status": "planned",
+        "x-implementation-status": "implemented",
         "responses": {
           "200": {
             "description": "Successful response",
@@ -2630,13 +2630,15 @@
                   "page_size": 20,
                   "results": [
                     {
-                      "donation_id": "don-demo-001",
-                      "donor_id": "101",
+                      "id": "00000000-0000-4000-8000-000000000055",
+                      "donor_id": 101,
                       "donation_date": "2026-10-29",
                       "blood_group": "O+",
                       "component": "WHOLE_BLOOD",
-                      "units": 1,
-                      "status": "COMPLETED"
+                      "quantity_units": 1,
+                      "status": "COMPLETED",
+                      "screening_weight_kg": 58,
+                      "created_at": "2026-10-29T10:00:00Z"
                     }
                   ]
                 }
@@ -3139,14 +3141,14 @@
       "post": {
         "operationId": "recordDonation",
         "summary": "Record a completed donation",
-        "description": "Allowed roles: STAFF.",
+        "description": "Allowed roles: STAFF. Uses synthetic demo data only. Blood-bank date rules use Asia/Kolkata.",
         "tags": [
           "donations"
         ],
         "x-allowed-roles": [
           "STAFF"
         ],
-        "x-implementation-status": "planned",
+        "x-implementation-status": "implemented",
         "responses": {
           "201": {
             "description": "Successful response",
@@ -3156,13 +3158,15 @@
                   "$ref": "#/components/schemas/Donation"
                 },
                 "example": {
-                  "donation_id": "don-demo-001",
-                  "donor_id": "101",
+                  "id": "00000000-0000-4000-8000-000000000055",
+                  "donor_id": 101,
                   "donation_date": "2026-10-29",
                   "blood_group": "O+",
                   "component": "WHOLE_BLOOD",
-                  "units": 1,
-                  "status": "COMPLETED"
+                  "quantity_units": 1,
+                  "status": "COMPLETED",
+                  "screening_weight_kg": 58,
+                  "created_at": "2026-10-29T10:00:00Z"
                 }
               }
             }
@@ -3382,11 +3386,11 @@
                 "$ref": "#/components/schemas/DonationCreate"
               },
               "example": {
-                "donor_id": "101",
+                "donor_id": 101,
                 "donation_date": "2026-10-29",
                 "blood_group": "O+",
                 "component": "WHOLE_BLOOD",
-                "units": 1,
+                "quantity_units": 1,
                 "status": "COMPLETED",
                 "screening_weight_kg": 58
               }
@@ -9405,7 +9409,8 @@
         "type": "object",
         "properties": {
           "donor_id": {
-            "type": "string"
+            "type": "integer",
+            "minimum": 1
           },
           "donation_date": {
             "type": "string",
@@ -9427,13 +9432,59 @@
           "component": {
             "type": "string",
             "enum": [
-              "WHOLE_BLOOD",
-              "RBC",
-              "PLASMA",
-              "PLATELETS"
+              "WHOLE_BLOOD"
             ]
           },
-          "units": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "COMPLETED"
+            ]
+          },
+          "screening_weight_kg": {
+            "type": "number",
+            "minimum": 0
+          },
+          "quantity_units": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "donor_id",
+          "donation_date",
+          "blood_group",
+          "component",
+          "quantity_units",
+          "status",
+          "screening_weight_kg"
+        ],
+        "additionalProperties": false
+      },
+      "Donation": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "donor_id": {
+            "type": "integer"
+          },
+          "donation_date": {
+            "type": "string",
+            "format": "date"
+          },
+          "blood_group": {
+            "type": "string"
+          },
+          "component": {
+            "type": "string",
+            "enum": [
+              "WHOLE_BLOOD"
+            ]
+          },
+          "quantity_units": {
             "type": "integer",
             "minimum": 1
           },
@@ -9446,53 +9497,22 @@
           "screening_weight_kg": {
             "type": "number",
             "minimum": 0
-          }
-        },
-        "required": [
-          "donor_id",
-          "donation_date",
-          "blood_group",
-          "component",
-          "units",
-          "status",
-          "screening_weight_kg"
-        ],
-        "additionalProperties": false
-      },
-      "Donation": {
-        "type": "object",
-        "properties": {
-          "donation_id": {
-            "type": "string"
           },
-          "donor_id": {
-            "type": "string"
-          },
-          "donation_date": {
+          "created_at": {
             "type": "string",
-            "format": "date"
-          },
-          "blood_group": {
-            "type": "string"
-          },
-          "component": {
-            "type": "string"
-          },
-          "units": {
-            "type": "integer"
-          },
-          "status": {
-            "type": "string"
+            "format": "date-time"
           }
         },
         "required": [
-          "donation_id",
+          "id",
           "donor_id",
           "donation_date",
           "blood_group",
           "component",
-          "units",
-          "status"
+          "quantity_units",
+          "status",
+          "screening_weight_kg",
+          "created_at"
         ],
         "additionalProperties": false
       },
