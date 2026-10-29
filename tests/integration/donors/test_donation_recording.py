@@ -2,10 +2,13 @@ from datetime import date, timedelta
 from decimal import Decimal
 
 import pytest
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db.utils import NotSupportedError
+from django.utils import timezone
 from rest_framework.test import APIClient
+from zoneinfo import ZoneInfo
 
 from apps.audit.models import AuditEvent
 from apps.donors.models import Donation, DonorProfile
@@ -127,6 +130,30 @@ def test_invalid_or_ineligible_record_is_rejected_without_changes(changes):
     assert not AuditEvent.objects.filter(action="DONATION_RECORDED").exists()
 
 
+@pytest.mark.parametrize(
+    "changes",
+    [
+        {"donor_id": "1 OR 1=1"},
+        {"blood_group": "<script>alert(1)</script>"},
+        {"component": "WHOLE_BLOOD'; DROP TABLE donors_donation; --"},
+        {"screening_weight_kg": "999999999999999999999"},
+        {"unexpected": "{{7*7}}"},
+    ],
+)
+def test_injection_shaped_or_oversized_donation_input_is_rejected(changes):
+    donor = profile(30)
+    staff = user("STAFF", 31)
+
+    response = client_as(staff).post(URL, payload(donor, **changes), format="json")
+
+    assert response.status_code == 400
+    assert response.json()["error"]["code"] == "validation_error"
+    assert Donation.objects.count() == 0
+    donor.refresh_from_db()
+    assert donor.last_donation_date is None
+    assert not AuditEvent.objects.filter(action="DONATION_RECORDED").exists()
+
+
 def test_donation_interval_rejects_day_55_and_accepts_day_56():
     donor = profile(7, last_donation_date=date.today() - timedelta(days=55))
     staff = user("STAFF", 8)
@@ -141,7 +168,8 @@ def test_donation_interval_rejects_day_55_and_accepts_day_56():
 def test_future_date_and_missing_donor_are_rejected():
     donor = profile(9)
     staff = user("STAFF", 10)
-    future = client_as(staff).post(URL, payload(donor, donation_date=date.today() + timedelta(days=1)), format="json")
+    blood_bank_today = timezone.now().astimezone(ZoneInfo(settings.BLOOD_BANK_TIME_ZONE)).date()
+    future = client_as(staff).post(URL, payload(donor, donation_date=blood_bank_today + timedelta(days=1)), format="json")
     missing = client_as(staff).post(URL, {**payload(donor), "donor_id": donor.pk + 999}, format="json")
     assert future.status_code == 422
     assert missing.status_code == 404

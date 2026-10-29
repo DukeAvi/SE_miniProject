@@ -103,8 +103,9 @@ def test_eligible_donor_books_and_sees_appointment_and_audit_event():
 
 
 def test_ineligible_donor_does_not_consume_capacity():
-    donor = make_donor(4, last_donation_date=timezone.localdate() - timedelta(days=52))
     slot = make_slot(capacity=1)
+    slot_local_date = slot.starts_at.astimezone(ZoneInfo("Asia/Kolkata")).date()
+    donor = make_donor(4, last_donation_date=slot_local_date - timedelta(days=55))
     response = client_for(donor.user).post(APPOINTMENTS_URL, {"slot_id": str(slot.pk)}, format="json")
     assert response.status_code == 422
     assert response.json()["error"]["code"] == "donor_ineligible"
@@ -177,6 +178,35 @@ def test_missing_slot_and_donor_profile_return_not_found():
     assert missing.status_code == 404
     assert missing.json()["error"]["code"] == "slot_not_found"
     assert no_profile.status_code == 404
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        {"slot_id": "1 OR 1=1"},
+        {"slot_id": "00000000-0000-4000-8000-000000000001", "owner_id": 99},
+        {"slot_id": ["00000000-0000-4000-8000-000000000001"]},
+    ],
+)
+def test_malformed_or_injection_shaped_appointment_input_is_rejected(payload):
+    donor = make_donor(30)
+    response = client_for(donor.user).post(APPOINTMENTS_URL, payload, format="json")
+
+    assert response.status_code == 400
+    assert response.json()["error"]["code"] == "validation_error"
+    assert Appointment.objects.count() == 0
+
+
+def test_donor_endpoints_apply_browser_security_headers():
+    donor = make_donor(31)
+    slot = make_slot()
+    date_value = slot.starts_at.astimezone(ZoneInfo("Asia/Kolkata")).date().isoformat()
+
+    response = client_for(donor.user).get(SLOTS_URL, {"date": date_value})
+
+    assert response.status_code == 200
+    assert response["Content-Security-Policy"].startswith("default-src 'self'")
+    assert response["X-Content-Type-Options"] == "nosniff"
 
 
 def test_only_owner_can_cancel_and_cancelled_booking_releases_capacity():
