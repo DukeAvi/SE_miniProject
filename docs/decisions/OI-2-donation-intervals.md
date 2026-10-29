@@ -2,7 +2,7 @@
 
 ## Status
 
-Approved for the classroom demonstration by the assigned contributor under delegated decision authority. This is software demonstration behavior only, not a medical donor-selection policy, and must not be used to guide real donations.
+Approved for the classroom demonstration by Product Owner Avrit Sharma, recorded on issue #85 on 2026-10-29. This is software demonstration behavior only, not a medical donor-selection policy, and must not be used to guide real donations.
 
 ## Decision
 
@@ -14,9 +14,10 @@ The 56-day value is the existing project requirement for deterministic demonstra
 
 ## Configuration and ownership
 
-- Demo default: 56 days for whole blood; unsupported donation types fail closed.
-- Change owner: Product Owner with the blood-bank medical reviewer; developers may implement an approved change but do not approve clinical policy.
+- Demo defaults: only whole blood is supported; its interval is 56 full days; unsupported donation types fail closed. Eligibility dates use Asia/Kolkata as approved for the mock-data demo under OI-8 (#91).
+- Change owner: Product Owner for demo behavior; a qualified medical reviewer must approve any clinical policy before real-world use. Developers implement approved demo changes and do not approve clinical policy.
 - Boundary: A donor at exactly 56 full days is interval-eligible; fewer than 56 days is not.
+- Safe default: If the donation type is absent or unsupported, reject eligibility rather than applying the whole-blood interval to it.
 - Other eligibility checks (age at least 18 and screening weight at least 50 kg) remain separate rules and are evaluated on the appointment or screening date.
 
 ## Traceability
@@ -24,12 +25,13 @@ The 56-day value is the existing project requirement for deterministic demonstra
 - Requirements: BBMS-F-013
 - Design: DS-013; SAD Section 4.6, OI-2
 - Verification: TC-Don-04
-- GitHub: issue #85; implementation: issue #57
+- Ownership: issue #57 owns the pure eligibility engine; #54 owns appointment booking integration; #55 owns completed-donation integration.
+- GitHub: decision issue #85; implementation issues #57, #54, and #55
 - Source: Blood Bank Management System SRS, donor eligibility requirements; SAD Sections 4.1.2 and 4.6.
 
 ## Decision record
 
-- Approved by: Ayushman Dey, assigned issue contributor acting under delegated decision authority
+- Approved by: Avrit Sharma, Product Owner (approval recorded on issue #85)
 - Effective for the classroom demo: 2026-10-29
-- Medical approval: Not applicable to the mock-data demonstration; required before any real-world use
+- Medical approval: This mock-data decision is not medical approval; a qualified reviewer must approve before any real-world use.
 - Reference: [WHO Blood Donor Selection Guidelines](https://iris.who.int/bitstream/handle/10665/76724/9789241548519_eng.pdf?sequence=1), which describes variation between jurisdictions and donation types and recommends longer whole-blood intervals in its guidance.
