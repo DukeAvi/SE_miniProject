@@ -80,6 +80,20 @@ def _authentication_error(
     return response
 
 
+def _invalid_query_response():
+    return Response(
+        {
+            "error": {
+                "code": "invalid_query",
+                "message": "Unexpected query parameters.",
+                "details": {},
+                "correlation_id": str(uuid4()),
+            }
+        },
+        status=status.HTTP_400_BAD_REQUEST,
+    )
+
+
 @method_decorator(csrf_protect, name="dispatch")
 class LoginView(APIView):
     permission_classes = (AllowAny,)
@@ -148,9 +162,13 @@ class CurrentProfileView(APIView):
         return "Session"
 
     def get(self, request):
+        if request.query_params:
+            return _invalid_query_response()
         return Response(ProfileSerializer(request.user).data)
 
     def patch(self, request):
+        if request.query_params:
+            return _invalid_query_response()
         serializer = ProfileSerializer(request.user, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         try:
