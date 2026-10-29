@@ -2,7 +2,7 @@
 
 ## Status
 
-Proposed; team confirmation is outstanding.
+Approved for v1.0 classroom demonstration. Product Owner Avrit Sharma recorded approval of option 1 on issue #89 on 2026-10-29.
 
 ## Context
 
@@ -15,7 +15,7 @@ Issue #89 asks the team to choose server-side cookie sessions or JWT for v1.0 be
 
 ## Decision
 
-For implementation planning, use option 1 as the provisional v1.0 browser authentication mechanism, following SAD ADR-004. This is not formally approved. External hospital API authentication remains out of scope unless separately approved; adding such a client requires revisiting this decision.
+Use Django server-side sessions in HttpOnly, Secure, SameSite cookies, with CSRF protection for state-changing requests, following SAD ADR-004. External hospital API authentication remains out of scope; adding such a client requires a separate decision.
 
 ## Consequences
 
@@ -26,6 +26,7 @@ For implementation planning, use option 1 as the provisional v1.0 browser authen
 
 ## Approval
 
-- Decision owner: Project team (confirmation pending)
-- Date: Pending
+- Decision owner: Avrit Sharma, Product Owner
+- Approval: Recorded by Avrit Sharma on issue #89
+- Date: 2026-10-29
 - Evidence or reference: SAD Section 3.6 and Section 4.6 OI-6 / ADR-004, plus GitHub issue #89

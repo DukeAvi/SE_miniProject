@@ -2,7 +2,7 @@
 
 ## Status
 
-Proposed; Product Owner confirmation is outstanding.
+Approved for v1.0 classroom demonstration. Product Owner Avrit Sharma recorded approval of option 1 on issue #88 on 2026-10-29.
 
 ## Context
 
@@ -17,7 +17,7 @@ The SAD's Section 4.6 lists "One role per account. A person who is both donor an
 
 ## Decision
 
-For implementation planning, use option 1 as the provisional v1.0 baseline, following the SAD proposal. This is not formally approved. The Product Owner must confirm the role cardinality before the account and permission contract is treated as frozen.
+Use one role per account in v1.0. A person acting as both Donor and Recipient uses two accounts. Multiple roles on one account remain future scope.
 
 ## Consequences
 
@@ -28,6 +28,7 @@ For implementation planning, use option 1 as the provisional v1.0 baseline, foll
 
 ## Approval
 
-- Decision owner: Product Owner (confirmation pending)
-- Date: Pending
+- Decision owner: Avrit Sharma, Product Owner
+- Approval: Recorded by Avrit Sharma on issue #88
+- Date: 2026-10-29
 - Evidence or reference: SAD Section 4.1.1 and Section 4.6, plus GitHub issue #88
