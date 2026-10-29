@@ -1,2 +1,6 @@
+from django.urls import path
+
+from .views import MyDonationHistoryView
+
 app_name = "donors"
-urlpatterns: list = []
+urlpatterns = [path("me/donations", MyDonationHistoryView.as_view(), name="my-donations")]
