@@ -39,6 +39,7 @@ def test_each_role_reads_and_updates_only_its_own_permitted_profile(role):
         {"first_name": "Updated", "phone": "+12025550999"},
         format="json",
     )
+    read_back = client.get(PROFILE_URL)
 
     assert initial.status_code == 200
     assert initial.json()["id"] == user.pk
@@ -47,6 +48,9 @@ def test_each_role_reads_and_updates_only_its_own_permitted_profile(role):
     assert updated.status_code == 200
     assert updated.json()["first_name"] == "Updated"
     assert updated.json()["phone"] == "+12025550999"
+    assert read_back.status_code == 200
+    assert read_back.json()["first_name"] == "Updated"
+    assert read_back.json()["phone"] == "+12025550999"
     user.refresh_from_db()
     assert user.first_name == "Updated"
 
@@ -80,6 +84,8 @@ def test_profile_name_length_boundary_is_enforced_before_saving():
         {"email": "attacker@example.test"},
         {"password": "Compromised-Password-1!"},
         {"date_of_birth": "2000-01-01"},
+        {"blood_group": "A+"},
+        {"medical_verified": True},
         {"unknown": "value"},
     ],
 )
