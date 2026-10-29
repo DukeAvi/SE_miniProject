@@ -67,6 +67,18 @@ def test_staff_records_completed_donation_and_updates_profile_and_audit_atomical
     assert AuditEvent.objects.filter(action="DONATION_RECORDED", actor=staff).count() == 1
 
 
+def test_recording_resolves_donor_id_as_the_account_id():
+    user("RECIPIENT", 17)
+    donor = profile(18)
+    assert donor.pk != donor.user_id
+    staff = user("STAFF", 19)
+
+    response = client_as(staff).post(URL, payload(donor), format="json")
+
+    assert response.status_code == 201
+    assert response.json()["donor_id"] == donor.user_id
+
+
 @pytest.mark.parametrize("role", ["DONOR", "RECIPIENT", "ADMIN"])
 def test_non_staff_cannot_record_donations(role):
     donor = profile(3)

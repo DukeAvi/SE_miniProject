@@ -39,7 +39,7 @@ def record_completed_donation(*, actor, donor_id: int, donation_date: date,
 
     with transaction.atomic():
         try:
-            profile = DonorProfile.objects.select_for_update().select_related("user").get(pk=donor_id)
+            profile = DonorProfile.objects.select_for_update().select_related("user").get(user_id=donor_id)
         except DonorProfile.DoesNotExist as exc:
             raise DonationRejected("donor_not_found", "Donor was not found.") from exc
         if profile.user.role != AccountRole.DONOR:
