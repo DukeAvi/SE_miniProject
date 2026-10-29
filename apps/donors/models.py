@@ -100,3 +100,10 @@ class Appointment(models.Model):
     class Meta:
         ordering = ("-slot__starts_at", "-booked_at")
         indexes = [models.Index(fields=("slot", "status"))]
+        constraints = [
+            models.UniqueConstraint(
+                fields=("donor", "slot"),
+                condition=models.Q(status="BOOKED"),
+                name="donors_appointment_one_active_per_slot",
+            ),
+        ]

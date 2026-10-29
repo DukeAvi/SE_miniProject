@@ -5,7 +5,7 @@ from zoneinfo import ZoneInfo
 
 import pytest
 from django.contrib.auth import get_user_model
-from django.db import close_old_connections, connection
+from django.db import IntegrityError, close_old_connections, connection, transaction
 from django.utils import timezone
 from rest_framework.test import APIClient
 
@@ -118,6 +118,36 @@ def test_full_slot_and_duplicate_booking_return_conflicts():
     assert full.status_code == 409
     assert full.json()["error"]["code"] == "slot_full"
     assert Appointment.objects.filter(slot=slot, status=Appointment.Status.BOOKED).count() == 1
+
+
+def test_partial_database_constraint_rejects_duplicate_active_appointment():
+    donor = make_donor(23)
+    slot = make_slot(capacity=2)
+    Appointment.objects.create(donor=donor, slot=slot)
+    with pytest.raises(IntegrityError):
+        with transaction.atomic():
+            Appointment.objects.create(donor=donor, slot=slot)
+
+
+@pytest.mark.skipif(connection.vendor != "postgresql", reason="PostgreSQL row-lock behavior is not available on SQLite")
+@pytest.mark.django_db(transaction=True)
+def test_concurrent_duplicate_requests_create_at_most_one_active_appointment():
+    donor = make_donor(24)
+    slot = make_slot(capacity=2)
+    barrier = Barrier(2)
+
+    def attempt(_):
+        close_old_connections()
+        user = get_user_model().objects.get(pk=donor.user_id)
+        barrier.wait()
+        response = client_for(user).post(APPOINTMENTS_URL, {"slot_id": str(slot.pk)}, format="json")
+        close_old_connections()
+        return response.status_code
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        results = list(pool.map(attempt, range(2)))
+    assert sorted(results) == [201, 409]
+    assert Appointment.objects.filter(donor=donor, slot=slot, status=Appointment.Status.BOOKED).count() == 1
 
 
 def test_missing_slot_and_donor_profile_return_not_found():
