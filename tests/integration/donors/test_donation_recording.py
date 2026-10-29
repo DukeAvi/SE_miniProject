@@ -106,6 +106,30 @@ def test_invalid_or_ineligible_record_is_rejected_without_changes(changes):
     assert not AuditEvent.objects.filter(action="DONATION_RECORDED").exists()
 
 
+@pytest.mark.parametrize(
+    "changes",
+    [
+        {"donor_id": "1 OR 1=1"},
+        {"blood_group": "<script>alert(1)</script>"},
+        {"component": "WHOLE_BLOOD'; DROP TABLE donors_donation; --"},
+        {"screening_weight_kg": "999999999999999999999"},
+        {"unexpected": "{{7*7}}"},
+    ],
+)
+def test_injection_shaped_or_oversized_donation_input_is_rejected(changes):
+    donor = profile(30)
+    staff = user("STAFF", 31)
+
+    response = client_as(staff).post(URL, payload(donor, **changes), format="json")
+
+    assert response.status_code == 400
+    assert response.json()["error"]["code"] == "validation_error"
+    assert Donation.objects.count() == 0
+    donor.refresh_from_db()
+    assert donor.last_donation_date is None
+    assert not AuditEvent.objects.filter(action="DONATION_RECORDED").exists()
+
+
 def test_donation_interval_rejects_day_55_and_accepts_day_56():
     donor = profile(7, last_donation_date=date.today() - timedelta(days=55))
     staff = user("STAFF", 8)
