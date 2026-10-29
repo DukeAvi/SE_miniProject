@@ -693,7 +693,7 @@
     "test": "TC-Req-05",
     "dependencies": [],
     "scope": "Obtain an approved rule set for RBC or whole blood, plasma, and platelets because the SRS currently states red-cell-style ABO and Rh rules for every component.",
-    "acceptance": ["The approved donor-recipient matrix is documented for every supported component.", "The SRS, SAD compatibility table, API behavior, and TC-Req-05 matrix are updated consistently.", "The decision identifies who approved the safety rule and its effective date."],
+    "acceptance": ["The approved donor-recipient matrix is documented for every supported component.", "The decision identifies who approved the demo safety rule and its effective date.", "Implementation and transactional integration ownership is recorded under BBMS-F-034 and BBMS-F-032."],
     "verification": ["Review the resulting matrices for complete coverage of all eight blood groups and supported components."]
   },
   {
@@ -708,7 +708,7 @@
     "test": "TC-Don-04",
     "dependencies": [],
     "scope": "Confirm whether the 56-day minimum applies only to whole blood and define configurable intervals for every donation type included in version 1.0.",
-    "acceptance": ["Each supported donation type has an approved minimum interval or is explicitly excluded from version 1.0.", "The eligibility configuration, SRS, SAD, and boundary tests are updated together.", "A safe default and change owner are documented."],
+    "acceptance": ["Each supported donation type has an approved minimum interval or is explicitly excluded from version 1.0.", "The exact boundary, safe default, change owner, approver, and effective date are documented.", "Engine and call-site implementation ownership is recorded under BBMS-F-013, BBMS-F-010, and BBMS-F-011."],
     "verification": ["Review TC-Don-04 boundary cases against every approved interval."]
   },
   {
@@ -723,7 +723,7 @@
     "test": "TC-Inv-05",
     "dependencies": [],
     "scope": "Confirm whether a unit is unavailable at the start of its expiry date or only after that date, including the blood-bank time zone used at the boundary.",
-    "acceptance": ["One unambiguous date and time-zone rule is approved.", "Availability search, the expiry job, SRS wording, SAD domain rules, and TC-Inv-05 use the same rule.", "Exact-boundary examples are documented."],
+    "acceptance": ["One unambiguous date and time-zone rule is approved.", "Exact-boundary examples, approver, and effective date are documented.", "Inventory validation, search, and expiry-job ownership is recorded under BBMS-F-021, BBMS-F-023, and BBMS-F-024."],
     "verification": ["Review before, exactly-at, and after-boundary test cases."]
   },
   {
@@ -798,8 +798,8 @@
     "test": "TC-Notif-02, TC-DR-01",
     "dependencies": [],
     "scope": "Approve initial stock thresholds, donation-slot capacities, blood-bank time zone, and backup retention values while keeping the documented settings configurable by authorized roles or deployment configuration.",
-    "acceptance": ["Each required default has an approved value, unit, owner, and configuration location.", "Unsafe or nonsensical values are rejected by validation.", "The SAD, seed data, environment example, operational runbook, and relevant tests use the approved defaults."],
-    "verification": ["Review threshold, capacity, time-zone boundary, retention, and authorization tests."]
+    "acceptance": ["Each required default has an approved value, unit, owner, configuration location, approver, and effective date.", "Allowed ranges and fail-closed validation requirements are documented.", "Implementation ownership is recorded for appointments, low-stock alerts, backups, and seed data."],
+    "verification": ["Review threshold, capacity, time-zone boundary, retention, ownership, and validation requirements."]
   },
   {
     "key": "PROC-001",
