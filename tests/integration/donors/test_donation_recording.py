@@ -9,7 +9,7 @@ from rest_framework.test import APIClient
 
 from apps.audit.models import AuditEvent
 from apps.donors.models import Donation, DonorProfile
-from apps.donors.services import record_completed_donation
+from apps.donors.services import DonationRejected, record_completed_donation
 
 
 pytestmark = pytest.mark.django_db
@@ -89,6 +89,27 @@ def test_non_staff_cannot_record_donations(role):
     assert donor.last_donation_date is None
 
 
+def test_donation_service_rechecks_role_when_called_directly():
+    donor = profile(32)
+    recipient = user("RECIPIENT", 33)
+
+    with pytest.raises(DonationRejected) as rejected:
+        record_completed_donation(
+            actor=recipient,
+            donor_id=donor.user_id,
+            donation_date=date.today(),
+            blood_group="O+",
+            component="WHOLE_BLOOD",
+            quantity_units=1,
+            screening_weight_kg=Decimal("62.00"),
+        )
+
+    assert rejected.value.code == "forbidden"
+    assert Donation.objects.count() == 0
+    donor.refresh_from_db()
+    assert donor.last_donation_date is None
+
+
 @pytest.mark.parametrize("changes", [
     {"component": "PLASMA"},
     {"blood_group": "A+"},
@@ -136,6 +157,20 @@ def test_donor_history_is_owned_and_staff_cannot_view_it():
     assert history.status_code == 200
     assert len(history.json()["results"]) == 1
     assert client_as(staff).get(HISTORY_URL).status_code == 403
+
+
+def test_donor_history_never_returns_another_donors_records():
+    owner = profile(34)
+    other = profile(35)
+    staff = user("STAFF", 36)
+    assert client_as(staff).post(URL, payload(owner), format="json").status_code == 201
+
+    owner_history = client_as(owner.user).get(HISTORY_URL)
+    other_history = client_as(other.user).get(HISTORY_URL)
+
+    assert owner_history.status_code == other_history.status_code == 200
+    assert len(owner_history.json()["results"]) == 1
+    assert other_history.json()["results"] == []
 
 
 def test_donation_records_cannot_be_updated_or_deleted():
