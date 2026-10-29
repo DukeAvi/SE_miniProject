@@ -116,6 +116,45 @@ def test_profile_requires_authentication():
     assert response.status_code == 401
 
 
+def test_profile_requests_cannot_read_or_update_another_accounts_profile():
+    owner = make_user("DONOR", 50)
+    other = make_user("RECIPIENT", 51)
+    client = APIClient(enforce_csrf_checks=True)
+    csrf_token = client.get("/api/v1/auth/csrf", secure=True).json()["csrfToken"]
+    login = client.post(
+        "/api/v1/auth/login",
+        {"email": owner.email, "password": PASSWORD},
+        format="json",
+        secure=True,
+        HTTP_REFERER="https://testserver/",
+        HTTP_X_CSRFTOKEN=csrf_token,
+    )
+    assert login.status_code == 200
+    csrf_token = client.get("/api/v1/auth/csrf", secure=True).json()["csrfToken"]
+
+    current_profile = client.get(f"{PROFILE_URL}?user_id={other.pk}", secure=True)
+    foreign_profile_route = client.get(f"/api/v1/users/{other.pk}", secure=True)
+    foreign_update = client.patch(
+        PROFILE_URL,
+        {"user_id": other.pk, "first_name": "Unauthorized"},
+        format="json",
+        secure=True,
+        HTTP_REFERER="https://testserver/",
+        HTTP_X_CSRFTOKEN=csrf_token,
+    )
+
+    assert current_profile.status_code == 200
+    assert current_profile.json()["id"] == owner.pk
+    assert current_profile.json()["email"] == owner.email
+    assert other.email not in current_profile.content.decode()
+    assert foreign_profile_route.status_code == 404
+    assert foreign_update.status_code == 400
+    owner.refresh_from_db()
+    other.refresh_from_db()
+    assert owner.first_name == "Test"
+    assert other.first_name == "Test"
+
+
 def test_profile_patch_requires_csrf_for_session_authenticated_user():
     user = make_user("DONOR", 40)
     client = APIClient(enforce_csrf_checks=True)

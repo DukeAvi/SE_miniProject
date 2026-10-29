@@ -2,11 +2,11 @@
 
 ## Status
 
-Proposed; Product Owner confirmation is outstanding.
+Approved for v1.0 classroom demonstration. Product Owner Avrit Sharma recorded approval of option 1 on issue #87 on 2026-10-29.
 
 ## Context
 
-Issue #87 asks whether Admin is excluded from operational work such as request review and blood-unit reservation or issuance. The SAD Section 3.9.2 permission matrix and assumption A-3 define the current least-privilege baseline and explicitly say Product Owner confirmation is required.
+Issue #87 asks whether Admin is excluded from operational work such as request review and blood-unit reservation or issuance. The SAD Section 3.9.2 permission matrix and assumption A-3 define the least-privilege baseline. The published SAD PDF says Product Owner confirmation is required; the Product Owner subsequently approved this matrix on issue #87.
 
 ## Options
 
@@ -15,7 +15,7 @@ Issue #87 asks whether Admin is excluded from operational work such as request r
 
 ## Decision
 
-For implementation planning, use option 1 as the provisional baseline. This record transcribes the SAD matrix; it does not add privileges or represent Product Owner approval.
+Use option 1 for v1.0: Staff handle operational workflows; Admin handles account/role management, configuration, reports, and audit oversight. This record transcribes the SAD matrix and adds no privileges.
 
 | Operation | Donor | Recipient | Staff | Admin |
 | --- | --- | --- | --- | --- |
@@ -40,13 +40,18 @@ For implementation planning, use option 1 as the provisional baseline. This reco
 
 ## Consequences
 
-- Admin does not approve, reserve, or issue operational blood requests under this provisional baseline.
+- Admin does not approve, reserve, or issue operational blood requests under this v1.0 decision.
 - Staff cannot manage accounts, roles, thresholds, audit logs, or notification failure administration unless a separate approved requirement grants that access.
-- BBMS-F-003 and BBMS-SR-002 authorization tests must use this matrix as their oracle unless the Product Owner approves a documented change.
+- BBMS-F-003 and BBMS-SR-002 authorization tests use this matrix as their oracle unless a separately documented change is approved.
 - The SAD PDF is not edited; this record provides an editable repository copy of its current matrix.
 
 ## Approval
 
-- Decision owner: Product Owner (confirmation pending)
-- Date: Pending
+- Decision owner: Avrit Sharma, Product Owner
+- Approval: Recorded by Avrit Sharma on issue #87
+- Date: 2026-10-29
 - Evidence or reference: SAD Section 3.9.2 and assumption A-3, plus SAD Section 4.6 OI-4 / GitHub issue #87
+
+## Published SAD source note
+
+The published SAD PDF still contains the earlier “Product Owner to confirm” wording for OI-4. The approval recorded on issue #87 supersedes that pending status for v1.0. This decision record supplements the PDF; it does not modify it. The repository contains no editable SAD source or reproducible PDF-generation workflow, so the PDF was not regenerated.
