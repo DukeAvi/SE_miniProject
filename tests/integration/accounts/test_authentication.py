@@ -172,6 +172,24 @@ def test_login_uses_email_even_when_username_is_different():
     assert response.json()["user"]["id"] == user.pk
 
 
+def test_login_rotates_a_preexisting_anonymous_session_key():
+    user = create_user()
+    client, token = csrf_client()
+    client.session["untrusted_marker"] = "anonymous-session"
+    client.session.save()
+    anonymous_session_key = client.session.session_key
+    assert Session.objects.filter(session_key=anonymous_session_key).exists()
+
+    response = post_login(client, token)
+
+    assert response.status_code == 200
+    authenticated_session_key = client.cookies["sessionid"].value
+    assert authenticated_session_key != anonymous_session_key
+    assert not Session.objects.filter(session_key=anonymous_session_key).exists()
+    authenticated_session = Session.objects.get(session_key=authenticated_session_key)
+    assert authenticated_session.get_decoded()["_auth_user_id"] == str(user.pk)
+
+
 def test_logout_requires_csrf_and_invalidates_active_session():
     user = create_user()
     client, token = csrf_client()
