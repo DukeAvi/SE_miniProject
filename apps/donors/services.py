@@ -5,7 +5,7 @@ from uuid import UUID, uuid4
 from zoneinfo import ZoneInfo
 
 from django.conf import settings
-from django.db import transaction
+from django.db import IntegrityError, transaction
 from django.utils import timezone
 
 from apps.accounts.models import AccountRole
@@ -108,7 +108,17 @@ def book_appointment(*, actor, slot_id, ip_address=None) -> Appointment:
             raise AppointmentRejected("duplicate_appointment", "Donor already has an active booking for this slot.", status_code=409)
         if active.count() >= slot.capacity:
             raise AppointmentRejected("slot_full", "Donation slot is full.", status_code=409)
-        appointment = Appointment.objects.create(donor=profile, slot=slot)
+        try:
+            with transaction.atomic():
+                appointment = Appointment.objects.create(donor=profile, slot=slot)
+        except IntegrityError as exc:
+            if "donors_appointment_one_active_per_slot" in str(exc):
+                raise AppointmentRejected(
+                    "duplicate_appointment",
+                    "Donor already has an active booking for this slot.",
+                    status_code=409,
+                ) from exc
+            raise
         record_event(action="APPOINTMENT_BOOKED", actor=actor, ip_address=ip_address)
         return appointment
 
