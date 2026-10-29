@@ -5,10 +5,11 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
 from django.http import Http404
 from rest_framework import status
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.test import APIRequestFactory, force_authenticate
 from rest_framework.views import APIView
+from django.urls import URLPattern, URLResolver, get_resolver
 
 from apps.audit.models import AuditEvent
 from apps.core.ownership import get_owned_object_or_404
@@ -132,6 +133,37 @@ def test_api_view_without_explicit_permission_is_denied_by_default():
 
     assert response.status_code == status.HTTP_403_FORBIDDEN
     assert AuditEvent.objects.filter(action="ACCESS_DENIED", actor=user).count() == 1
+
+
+def test_every_mounted_api_view_declares_an_explicit_permission_policy():
+    public_views = {"RegistrationView", "CsrfTokenView", "LoginView"}
+    discovered = []
+
+    def collect(patterns, prefix=""):
+        for pattern in patterns:
+            route = prefix + str(pattern.pattern)
+            if isinstance(pattern, URLResolver):
+                collect(pattern.url_patterns, route)
+            elif isinstance(pattern, URLPattern) and route.startswith("api/v1/"):
+                view_class = getattr(pattern.callback, "cls", None)
+                if view_class is not None:
+                    discovered.append((route, view_class))
+
+    collect(get_resolver().url_patterns)
+
+    assert discovered
+    for route, view_class in discovered:
+        declared_permissions = view_class.__dict__.get("permission_classes")
+        assert declared_permissions is not None, route
+        if view_class.__name__ in public_views:
+            assert AllowAny in declared_permissions, route
+            continue
+        if view_class.__name__ == "LogoutView":
+            assert IsAuthenticated in declared_permissions, route
+            continue
+        assert IsAuthenticated in declared_permissions, route
+        assert RolePermission in declared_permissions, route
+        assert view_class.permission_code in ROLE_PERMISSION_MATRIX, route
 
 
 def test_owned_object_helper_returns_same_404_for_foreign_and_missing_records():

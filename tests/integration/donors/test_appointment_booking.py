@@ -11,6 +11,7 @@ from rest_framework.test import APIClient
 
 from apps.audit.models import AuditEvent
 from apps.donors.models import Appointment, DonationSlot, DonorProfile
+from apps.donors.services import AppointmentRejected, book_appointment, cancel_appointment
 
 
 pytestmark = pytest.mark.django_db
@@ -69,6 +70,23 @@ def test_staff_can_list_slots_but_cannot_book_for_a_donor():
     assert listed.status_code == 200
     assert booking.status_code == 403
     assert Appointment.objects.count() == 0
+
+
+def test_appointment_services_recheck_roles_when_called_directly():
+    slot = make_slot()
+    donor = make_donor(32)
+    recipient = make_user("RECIPIENT", 33)
+
+    with pytest.raises(AppointmentRejected) as booking_error:
+        book_appointment(actor=recipient, slot_id=slot.pk)
+    assert booking_error.value.code == "forbidden"
+    assert Appointment.objects.count() == 0
+
+    appointment = book_appointment(actor=donor.user, slot_id=slot.pk)
+    with pytest.raises(AppointmentRejected) as cancellation_error:
+        cancel_appointment(actor=recipient, appointment_id=appointment.pk)
+    assert cancellation_error.value.code == "forbidden"
+    assert Appointment.objects.get(pk=appointment.pk).status == Appointment.Status.BOOKED
 
 
 def test_eligible_donor_books_and_sees_appointment_and_audit_event():
