@@ -5,7 +5,7 @@ from collections.abc import Mapping
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from .models import Donation
+from .models import Appointment, Donation, DonationSlot
 
 
 class StrictInputSerializer(serializers.Serializer):
@@ -35,3 +35,29 @@ class DonationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Donation
         fields = ("id", "donor_id", "donation_date", "blood_group", "component", "quantity_units", "status", "screening_weight_kg", "created_at")
+
+
+class AppointmentCreateSerializer(StrictInputSerializer):
+    slot_id = serializers.UUIDField()
+
+
+class AppointmentSerializer(serializers.ModelSerializer):
+    appointment_id = serializers.UUIDField(source="id", read_only=True)
+    slot_id = serializers.UUIDField(read_only=True)
+    starts_at = serializers.DateTimeField(source="slot.starts_at", read_only=True)
+
+    class Meta:
+        model = Appointment
+        fields = ("appointment_id", "slot_id", "starts_at", "status")
+
+
+class DonationSlotSerializer(serializers.ModelSerializer):
+    slot_id = serializers.UUIDField(source="id", read_only=True)
+    available_capacity = serializers.SerializerMethodField()
+
+    def get_available_capacity(self, obj):
+        return max(0, obj.capacity - getattr(obj, "active_bookings", 0))
+
+    class Meta:
+        model = DonationSlot
+        fields = ("slot_id", "starts_at", "capacity", "available_capacity")

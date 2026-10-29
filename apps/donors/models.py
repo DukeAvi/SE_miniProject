@@ -1,10 +1,11 @@
 """Donor profiles and append-only completed donation records."""
 
+from uuid import uuid4
+
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.utils import NotSupportedError
-from uuid import uuid4
 
 
 class AppendOnlyQuerySet(models.QuerySet):
@@ -68,3 +69,34 @@ class Donation(models.Model):
 
     def delete(self, *args, **kwargs):
         raise ValidationError("Donation records are append-only.")
+
+
+class DonationSlot(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
+    starts_at = models.DateTimeField(db_index=True)
+    capacity = models.PositiveSmallIntegerField(default=settings.DONATION_SLOT_CAPACITY)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ("starts_at", "id")
+        constraints = [
+            models.CheckConstraint(condition=models.Q(capacity__gte=1), name="donors_slot_capacity_positive"),
+        ]
+
+
+class Appointment(models.Model):
+    class Status(models.TextChoices):
+        BOOKED = "BOOKED", "Booked"
+        CANCELLED = "CANCELLED", "Cancelled"
+        COMPLETED = "COMPLETED", "Completed"
+
+    id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
+    donor = models.ForeignKey(DonorProfile, on_delete=models.PROTECT, related_name="appointments")
+    slot = models.ForeignKey(DonationSlot, on_delete=models.PROTECT, related_name="appointments")
+    status = models.CharField(max_length=12, choices=Status.choices, default=Status.BOOKED)
+    booked_at = models.DateTimeField(auto_now_add=True)
+    cancelled_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ("-slot__starts_at", "-booked_at")
+        indexes = [models.Index(fields=("slot", "status"))]

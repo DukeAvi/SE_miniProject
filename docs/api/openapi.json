@@ -1543,7 +1543,7 @@
       "get": {
         "operationId": "listDonationSlots",
         "summary": "List donation slots for a date",
-        "description": "Paginated slot list.",
+        "description": "Paginated slot list. Uses synthetic demo slots and accounts only.",
         "tags": [
           "donation-slots"
         ],
@@ -1551,14 +1551,14 @@
           "DONOR",
           "STAFF"
         ],
-        "x-implementation-status": "planned",
+        "x-implementation-status": "implemented",
         "responses": {
           "200": {
             "description": "Successful response",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PageOfAppointments"
+                  "$ref": "#/components/schemas/PageOfDonationSlots"
                 },
                 "example": {
                   "count": 1,
@@ -1566,10 +1566,10 @@
                   "page_size": 20,
                   "results": [
                     {
-                      "appointment_id": "apt-demo-001",
-                      "slot_id": "slot-demo-001",
+                      "slot_id": "00000000-0000-4000-8000-000000000054",
                       "starts_at": "2026-11-05T09:30:00+05:30",
-                      "status": "BOOKED"
+                      "capacity": 10,
+                      "available_capacity": 10
                     }
                   ]
                 }
@@ -1826,14 +1826,14 @@
       "post": {
         "operationId": "bookAppointment",
         "summary": "Book a donation slot",
-        "description": "The donor must be eligible; concurrent bookings must not exceed slot capacity.",
+        "description": "The donor must be eligible; concurrent bookings must not exceed slot capacity. Uses synthetic demo slots and accounts only.",
         "tags": [
           "donors"
         ],
         "x-allowed-roles": [
           "DONOR"
         ],
-        "x-implementation-status": "planned",
+        "x-implementation-status": "implemented",
         "responses": {
           "201": {
             "description": "Successful response",
@@ -1843,8 +1843,8 @@
                   "$ref": "#/components/schemas/Appointment"
                 },
                 "example": {
-                  "appointment_id": "apt-demo-001",
-                  "slot_id": "slot-demo-001",
+                  "appointment_id": "00000000-0000-4000-8000-000000000054",
+                  "slot_id": "00000000-0000-4000-8000-000000000055",
                   "starts_at": "2026-11-05T09:30:00+05:30",
                   "status": "BOOKED"
                 }
@@ -2081,14 +2081,14 @@
       "get": {
         "operationId": "listMyAppointments",
         "summary": "List the current donor appointments",
-        "description": "Allowed roles: DONOR.",
+        "description": "Allowed roles: DONOR. Uses synthetic demo slots and accounts only.",
         "tags": [
           "donors"
         ],
         "x-allowed-roles": [
           "DONOR"
         ],
-        "x-implementation-status": "planned",
+        "x-implementation-status": "implemented",
         "responses": {
           "200": {
             "description": "Successful response",
@@ -2354,14 +2354,14 @@
       "post": {
         "operationId": "cancelAppointment",
         "summary": "Cancel a booked appointment",
-        "description": "Only the appointment owner may cancel it.",
+        "description": "Only the appointment owner may cancel it. Uses synthetic demo slots and accounts only.",
         "tags": [
           "donors"
         ],
         "x-allowed-roles": [
           "DONOR"
         ],
-        "x-implementation-status": "planned",
+        "x-implementation-status": "implemented",
         "responses": {
           "200": {
             "description": "Successful response",
@@ -2371,10 +2371,10 @@
                   "$ref": "#/components/schemas/Appointment"
                 },
                 "example": {
-                  "appointment_id": "apt-demo-001",
-                  "slot_id": "slot-demo-001",
+                  "appointment_id": "00000000-0000-4000-8000-000000000054",
+                  "slot_id": "00000000-0000-4000-8000-000000000055",
                   "starts_at": "2026-11-05T09:30:00+05:30",
-                  "status": "BOOKED"
+                  "status": "CANCELLED"
                 }
               }
             }
@@ -2592,7 +2592,8 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "format": "uuid"
             }
           }
         ],
@@ -9367,7 +9368,8 @@
         "type": "object",
         "properties": {
           "slot_id": {
-            "type": "string"
+            "type": "string",
+            "format": "uuid"
           }
         },
         "required": [
@@ -9379,10 +9381,12 @@
         "type": "object",
         "properties": {
           "appointment_id": {
-            "type": "string"
+            "type": "string",
+            "format": "uuid"
           },
           "slot_id": {
-            "type": "string"
+            "type": "string",
+            "format": "uuid"
           },
           "starts_at": {
             "type": "string",
@@ -10266,6 +10270,61 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/NotificationFailure"
+            }
+          }
+        },
+        "required": [
+          "count",
+          "page",
+          "page_size",
+          "results"
+        ],
+        "additionalProperties": false
+      },
+      "DonationSlot": {
+        "type": "object",
+        "properties": {
+          "slot_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "starts_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "capacity": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "available_capacity": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "slot_id",
+          "starts_at",
+          "capacity",
+          "available_capacity"
+        ],
+        "additionalProperties": false
+      },
+      "PageOfDonationSlots": {
+        "type": "object",
+        "properties": {
+          "count": {
+            "type": "integer"
+          },
+          "page": {
+            "type": "integer"
+          },
+          "page_size": {
+            "type": "integer"
+          },
+          "results": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DonationSlot"
             }
           }
         },

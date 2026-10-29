@@ -23,7 +23,7 @@
     },
     {
       "key": "id",
-      "value": "demo-id"
+      "value": "00000000-0000-4000-8000-000000000054"
     },
     {
       "key": "resource",
@@ -72,6 +72,10 @@
     {
       "key": "donorId",
       "value": "101"
+    },
+    {
+      "key": "slotId",
+      "value": "00000000-0000-4000-8000-000000000055"
     }
   ],
   "item": [
@@ -339,12 +343,12 @@
       ]
     },
     {
-      "name": "Planned endpoints",
-      "description": "Contract operations from SAD Section 4.3 that are not mounted in Django yet.",
+      "name": "API operations",
+      "description": "Contract requests for the API; some operations require seeded demo accounts and records.",
       "item": [
         {
           "name": "List donation slots for a date",
-          "description": "Allowed roles: DONOR, STAFF. Implementation status: planned.",
+          "description": "Allowed roles: DONOR, STAFF. Implementation status: implemented. Synthetic demo data only.",
           "request": {
             "method": "GET",
             "header": [
@@ -369,7 +373,7 @@
         },
         {
           "name": "Book a donation slot",
-          "description": "Allowed roles: DONOR. Implementation status: planned.",
+          "description": "Allowed roles: DONOR. Implementation status: implemented. Synthetic demo data only.",
           "request": {
             "method": "POST",
             "header": [
@@ -389,7 +393,7 @@
             "url": "{{baseUrl}}/api/v1/donors/me/appointments",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"slot_id\": \"slot-demo-001\"\n}",
+              "raw": "{\n  \"slot_id\": \"{{slotId}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -411,7 +415,7 @@
         },
         {
           "name": "List the current donor appointments",
-          "description": "Allowed roles: DONOR. Implementation status: planned.",
+          "description": "Allowed roles: DONOR. Implementation status: implemented. Synthetic demo data only.",
           "request": {
             "method": "GET",
             "header": [
@@ -436,7 +440,7 @@
         },
         {
           "name": "Cancel a booked appointment",
-          "description": "Allowed roles: DONOR. Implementation status: planned.",
+          "description": "Allowed roles: DONOR. Implementation status: implemented. Synthetic demo data only.",
           "request": {
             "method": "POST",
             "header": [
