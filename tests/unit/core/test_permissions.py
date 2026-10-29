@@ -24,6 +24,7 @@ pytestmark = pytest.mark.django_db
 EXPECTED_MATRIX = {
     "self_profile": {"DONOR", "RECIPIENT", "STAFF", "ADMIN"},
     "appointments": {"DONOR"},
+    "donation_slot_list": {"DONOR", "STAFF"},
     "own_donation_history": {"DONOR"},
     "donor_detail": {"STAFF"},
     "donation_record": {"STAFF"},

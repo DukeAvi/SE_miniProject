@@ -8,6 +8,7 @@ from apps.audit.services import record_event
 ROLE_PERMISSION_MATRIX = {
     "self_profile": frozenset({"DONOR", "RECIPIENT", "STAFF", "ADMIN"}),
     "appointments": frozenset({"DONOR"}),
+    "donation_slot_list": frozenset({"DONOR", "STAFF"}),
     "own_donation_history": frozenset({"DONOR"}),
     "donor_detail": frozenset({"STAFF"}),
     "donation_record": frozenset({"STAFF"}),
