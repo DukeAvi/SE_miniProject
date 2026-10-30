@@ -25,3 +25,5 @@ npm exec --yes --package=newman -- newman run docs/api/BBMS-API-v1.postman_colle
 ```
 
 The current application implements the health, auth/CSRF, profile, donation slot listing, appointment booking/history/cancellation, and donation-recording/history routes. The database enforces at most one active booking per donor and slot; cancelling an appointment releases that unique active-booking key. Donation operations use synthetic demo data, `BLOOD_BANK_TIME_ZONE` (default `Asia/Kolkata`), and `DONATION_SLOT_CAPACITY` (default 10). Booking and cancellation require a seeded donor profile and slot; staff donation recording requires a seeded staff account and donor profile. The complete repeatable setup is tracked in QA-001 (#95).
+
+The profile endpoint `/api/v1/users/me` always uses the signed-in account. Its GET and PATCH methods reject query parameters, including `user_id`, with `400 invalid_query`; PATCH also rejects protected or unknown body fields without saving a partial update (BBMS-F-004 / DS-004 / TC-Profile-01).
