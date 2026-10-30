@@ -7,13 +7,12 @@ Demonstrate the working donor-to-inventory API path: secure session login, appoi
 ## Completed
 
 - Merged foundations used by the demo include account registration/authentication and role-based access (#50-#58), the API contract (#94), and CI validation (#93). #58 is closed through merged PR #134.
-- The exact demonstrated revision `bfd2cec4a88b3f60856293247e6c8b7d038d02ba` contains the BBMS-F-021 validation work from PR #136 and BBMS-F-023 search work from the original PR #138. PR #136 is merged; the search change is under replacement PR #142 after GitHub closed #138 when its base branch was deleted. The demo branch is based on the updated search branch, while this PR's diff contains only the demonstration command and artifacts.
+- The exact demonstrated revision `bfd2cec4a88b3f60856293247e6c8b7d038d02ba` contains the BBMS-F-021 validation work from PR #136 and BBMS-F-023 search work from the original PR #138. Both changes are merged; search was merged through replacement PR #142 after GitHub closed #138 when its base branch was deleted.
 - BBMS-F-022 and BBMS-F-024 are merged through PRs #141 and #139.
 - The demo creates synthetic accounts and exercises CSRF-protected login/logout, future appointment search and booking, staff donation recording, verified blood-unit creation, staff search, and recipient aggregate availability. It uses a fresh local SQLite database and fake `example.test` identities.
 
 ## Not completed
 
-- BBMS-F-023 #61 remains open in PR #142; its CI is rerunning after the branch was rebased onto the updated `main`.
 - PROC-001 #92 remains open for the Scrum Master’s project-owner audit; PR #135 contains the board configuration and audit evidence.
 - QA-001 #95 and security follow-ups #80, #81, and #83 remain open in the Sprint 1 milestone.
 
@@ -39,7 +38,6 @@ Demonstrate the working donor-to-inventory API path: secure session login, appoi
 
 ## Next sprint or release actions
 
-1. Review and merge replacement PR #142; then retarget demo PR #140 to `main` and review it.
-2. Complete the project-owner audit on #92 and merge #135 when accepted.
-3. Finish QA seed data #95 and the open security stories #80, #81, and #83.
-4. Decide whether a browser UI is part of the product scope before planning any UI demonstration or accessibility work.
+1. Complete the project-owner audit on #92 and merge #135 when accepted.
+2. Finish QA seed data #95 and the open security stories #80, #81, and #83.
+3. Decide whether a browser UI is part of the product scope before planning any UI demonstration or accessibility work.
