@@ -35,6 +35,10 @@ class BloodUnitCreateSerializer(StrictInputSerializer):
         return value.upper()
 
 
+class BloodUnitTransitionSerializer(StrictInputSerializer):
+    reason = serializers.CharField(max_length=500, trim_whitespace=True)
+
+
 class BloodUnitSerializer(serializers.ModelSerializer):
     donation_id = serializers.UUIDField(read_only=True)
 

@@ -673,7 +673,7 @@
             "url": "{{baseUrl}}/api/v1/inventory/units/{{id}}/discard",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"reason\": \"Demo expiry simulation\"\n}",
+              "raw": "{\n  \"reason\": \"Packaging damaged\"\n}",
               "options": {
                 "raw": {
                   "language": "json"

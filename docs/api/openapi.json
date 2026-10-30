@@ -4293,14 +4293,14 @@
       "post": {
         "operationId": "discardBloodUnit",
         "summary": "Discard a blood unit",
-        "description": "Allowed roles: STAFF.",
+        "description": "Allowed roles: STAFF. The state update, inventory ledger entry, and audit event are atomic.",
         "tags": [
           "inventory"
         ],
         "x-allowed-roles": [
           "STAFF"
         ],
-        "x-implementation-status": "planned",
+        "x-implementation-status": "implemented",
         "responses": {
           "200": {
             "description": "Successful response",
@@ -4313,7 +4313,7 @@
                   "unit_code": "unit-demo-001",
                   "blood_group": "O+",
                   "component": "RBC",
-                  "status": "AVAILABLE",
+                  "status": "DISCARDED",
                   "collected_at": "2026-10-29T10:00:00Z",
                   "expiry_date": "2026-11-26",
                   "id": "00000000-0000-4000-8000-000000000002",
@@ -4565,14 +4565,14 @@
       "post": {
         "operationId": "returnBloodUnit",
         "summary": "Accept return of a blood unit",
-        "description": "Allowed roles: STAFF.",
+        "description": "Allowed roles: STAFF. The state update, inventory ledger entry, and audit event are atomic.",
         "tags": [
           "inventory"
         ],
         "x-allowed-roles": [
           "STAFF"
         ],
-        "x-implementation-status": "planned",
+        "x-implementation-status": "implemented",
         "responses": {
           "200": {
             "description": "Successful response",
@@ -4585,7 +4585,7 @@
                   "unit_code": "unit-demo-001",
                   "blood_group": "O+",
                   "component": "RBC",
-                  "status": "AVAILABLE",
+                  "status": "RETURNED",
                   "collected_at": "2026-10-29T10:00:00Z",
                   "expiry_date": "2026-11-26",
                   "id": "00000000-0000-4000-8000-000000000002",
