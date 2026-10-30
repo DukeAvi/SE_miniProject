@@ -22,7 +22,8 @@ class BloodUnitRejected(Exception):
 
 
 def create_verified_blood_unit(*, actor, donation_id, unit_code, blood_group,
-                               component, collected_at, expiry_date, ip_address=None):
+                               component, collected_at, expiry_date, quantity_units,
+                               ip_address=None):
     """Create a unit for a completed donation and audit it in the same transaction."""
     if not actor.is_authenticated or actor.role != AccountRole.STAFF:
         raise BloodUnitRejected("forbidden", "Only Staff can create blood units.", status_code=403)
@@ -39,6 +40,13 @@ def create_verified_blood_unit(*, actor, donation_id, unit_code, blood_group,
         collection_date = collected_at.astimezone(ZoneInfo(settings.BLOOD_BANK_TIME_ZONE)).date()
         if donation.donation_date != collection_date:
             raise BloodUnitRejected("collection_date_mismatch", "Collection date must match the donation date.", status_code=422)
+        if expiry_date <= collection_date:
+            raise BloodUnitRejected(
+                "invalid_expiry_date",
+                "Expiry date must be after the collection date.",
+                status_code=422,
+                details={"expiry_date": ["Must be after the collection date."]},
+            )
 
         try:
             with transaction.atomic():
@@ -49,6 +57,7 @@ def create_verified_blood_unit(*, actor, donation_id, unit_code, blood_group,
                     component=component,
                     collected_at=collected_at,
                     expiry_date=expiry_date,
+                    quantity_units=quantity_units,
                     status=BloodUnit.Status.AVAILABLE,
                 )
         except IntegrityError as exc:

@@ -5,6 +5,7 @@ from uuid import uuid4
 
 import pytest
 from django.contrib.auth import get_user_model
+from django.db import IntegrityError, transaction
 from rest_framework.test import APIClient
 
 from apps.audit.models import AuditEvent
@@ -23,18 +24,18 @@ def user(role, suffix):
     )
 
 
-def completed_donation(suffix=1, *, status=Donation.Status.COMPLETED):
+def completed_donation(suffix=1, *, status=Donation.Status.COMPLETED, blood_group="O+"):
     donor = user("DONOR", suffix)
     profile = DonorProfile.objects.create(
         user=donor,
         birth_date=date(1990, 1, 1),
         weight_kg=Decimal("62.00"),
-        blood_group="O+",
+        blood_group=blood_group,
     )
     return Donation.objects.create(
         donor=profile,
         donation_date=date(2026, 10, 29),
-        blood_group="O+",
+        blood_group=blood_group,
         component=Donation.Component.WHOLE_BLOOD,
         quantity_units=1,
         status=status,
@@ -50,6 +51,7 @@ def payload(donation, **changes):
         "component": "RBC",
         "collected_at": datetime.combine(donation.donation_date, time(10), tzinfo=timezone.utc).isoformat(),
         "expiry_date": "2026-11-26",
+        "quantity_units": 1,
     }
     data.update(changes)
     return data
@@ -72,6 +74,7 @@ def test_staff_creates_unit_linked_to_completed_donation_with_audit():
     assert unit.donation_id == donation.pk
     assert unit.unit_code == "BB-20261029-0001"
     assert unit.status == BloodUnit.Status.AVAILABLE
+    assert unit.quantity_units == 1
     assert response.json()["donation_id"] == str(donation.pk)
     assert AuditEvent.objects.filter(action="UNIT_CREATED", actor=staff).count() == 1
 
@@ -151,3 +154,114 @@ def test_audit_failure_rolls_back_unit_creation():
 
     assert BloodUnit.objects.count() == 0
     assert not AuditEvent.objects.filter(action="UNIT_CREATED").exists()
+
+
+@pytest.mark.parametrize("blood_group", ["O-", "O+", "A-", "A+", "B-", "B+", "AB-", "AB+"])
+@pytest.mark.parametrize("component", ["WHOLE_BLOOD", "RBC", "PLASMA", "PLATELETS"])
+def test_all_supported_blood_groups_and_components_are_accepted(blood_group, component):
+    donation = completed_donation(100 + len(blood_group), blood_group=blood_group)
+    data = payload(
+        donation,
+        unit_code=f"BB-{blood_group.replace('+', 'P').replace('-', 'N')}-{component.replace('_', '-')}",
+        blood_group=blood_group,
+        component=component,
+    )
+
+    response = client_as(user("STAFF", 200 + len(component))).post(URL, data, format="json")
+
+    assert response.status_code == 201
+    assert response.json()["blood_group"] == blood_group
+    assert response.json()["component"] == component
+
+
+@pytest.mark.parametrize("expiry_date", ["2026-10-28", "2026-10-29"])
+def test_expiry_must_be_after_collection_date(expiry_date):
+    donation = completed_donation(20)
+    data = payload(donation, expiry_date=expiry_date)
+
+    response = client_as(user("STAFF", 21)).post(URL, data, format="json")
+
+    assert response.status_code == 422
+    assert response.json()["error"]["details"]["expiry_date"]
+    assert BloodUnit.objects.count() == 0
+    assert not AuditEvent.objects.filter(action="UNIT_CREATED").exists()
+
+
+def test_next_day_expiry_and_minimum_positive_quantity_are_accepted():
+    donation = completed_donation(22)
+    response = client_as(user("STAFF", 23)).post(
+        URL, payload(donation, expiry_date="2026-10-30", quantity_units=1), format="json"
+    )
+
+    assert response.status_code == 201
+    assert response.json()["quantity_units"] == 1
+
+
+@pytest.mark.parametrize("quantity", [0, -1])
+def test_non_positive_quantity_is_rejected_without_partial_records(quantity):
+    donation = completed_donation(24)
+
+    response = client_as(user("STAFF", 25)).post(
+        URL, payload(donation, quantity_units=quantity), format="json"
+    )
+
+    assert response.status_code == 400
+    assert "quantity_units" in response.json()["error"]["details"]
+    assert BloodUnit.objects.count() == 0
+    assert not AuditEvent.objects.filter(action="UNIT_CREATED").exists()
+
+
+def test_missing_quantity_is_rejected_without_partial_records():
+    donation = completed_donation(26)
+    data = payload(donation)
+    del data["quantity_units"]
+
+    response = client_as(user("STAFF", 27)).post(URL, data, format="json")
+
+    assert response.status_code == 400
+    assert "quantity_units" in response.json()["error"]["details"]
+    assert BloodUnit.objects.count() == 0
+
+
+@pytest.mark.parametrize("changes", [
+    {"blood_group": "X+"},
+    {"component": "SERUM"},
+    {"status": "NOT_A_STATUS"},
+])
+def test_database_constraints_reject_invalid_fixed_enumerations(changes):
+    donation = completed_donation(28)
+    values = {
+        "donation": donation,
+        "unit_code": f"DB-ENUM-{uuid4().hex[:12]}",
+        "blood_group": "O+",
+        "component": "RBC",
+        "collected_at": datetime.combine(donation.donation_date, time(10), tzinfo=timezone.utc),
+        "expiry_date": date(2026, 11, 1),
+        "quantity_units": 1,
+    }
+    values.update(changes)
+
+    with pytest.raises(IntegrityError), transaction.atomic():
+        BloodUnit.objects.create(**values)
+
+
+@pytest.mark.parametrize("changes", [
+    {"quantity_units": 0},
+    {"expiry_date": date(2026, 10, 29)},
+    {"expiry_date": date(2026, 10, 28)},
+])
+def test_database_constraints_reject_invalid_quantity_and_date(changes):
+    donation = completed_donation(30)
+    values = {
+        "donation": donation,
+        "unit_code": f"DB-RANGE-{uuid4().hex[:12]}",
+        "blood_group": "O+",
+        "component": "RBC",
+        "collected_at": datetime.combine(donation.donation_date, time(10), tzinfo=timezone.utc),
+        "expiry_date": date(2026, 11, 1),
+        "quantity_units": 1,
+    }
+    values.update(changes)
+
+    with pytest.raises(IntegrityError), transaction.atomic():
+        BloodUnit.objects.create(**values)
