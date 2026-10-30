@@ -3417,10 +3417,10 @@
         "x-allowed-roles": [
           "STAFF"
         ],
-        "x-implementation-status": "planned",
+        "x-implementation-status": "implemented",
         "responses": {
           "201": {
-            "description": "Successful response",
+            "description": "Successful response for blood-unit creation.",
             "content": {
               "application/json": {
                 "schema": {
@@ -3432,13 +3432,15 @@
                   "component": "RBC",
                   "status": "AVAILABLE",
                   "collected_at": "2026-10-29T10:00:00Z",
-                  "expiry_date": "2026-11-26"
+                  "expiry_date": "2026-11-26",
+                  "id": "00000000-0000-4000-8000-000000000002",
+                  "donation_id": "00000000-0000-4000-8000-000000000001"
                 }
               }
             }
           },
           "400": {
-            "description": "Invalid input or validation failure",
+            "description": "Invalid input or validation failure for blood-unit creation.",
             "content": {
               "application/json": {
                 "schema": {
@@ -3460,7 +3462,7 @@
             }
           },
           "401": {
-            "description": "Unauthenticated or session expired",
+            "description": "Unauthenticated or session expired for blood-unit creation.",
             "content": {
               "application/json": {
                 "schema": {
@@ -3482,7 +3484,7 @@
             }
           },
           "403": {
-            "description": "Role not permitted",
+            "description": "Role not permitted for blood-unit creation.",
             "content": {
               "application/json": {
                 "schema": {
@@ -3504,7 +3506,7 @@
             }
           },
           "404": {
-            "description": "Resource not found or not owned",
+            "description": "Resource not found or not owned for blood-unit creation.",
             "content": {
               "application/json": {
                 "schema": {
@@ -3526,7 +3528,7 @@
             }
           },
           "409": {
-            "description": "Conflict or invalid state transition",
+            "description": "Conflict or invalid state transition for blood-unit creation.",
             "content": {
               "application/json": {
                 "schema": {
@@ -3548,7 +3550,7 @@
             }
           },
           "422": {
-            "description": "Business rule failed",
+            "description": "Business rule failed for blood-unit creation.",
             "content": {
               "application/json": {
                 "schema": {
@@ -3653,11 +3655,11 @@
               },
               "example": {
                 "unit_code": "unit-demo-002",
-                "donor_id": "101",
                 "blood_group": "O+",
                 "component": "RBC",
                 "collected_at": "2026-10-29T10:00:00Z",
-                "expiry_date": "2026-11-26"
+                "expiry_date": "2026-11-26",
+                "donation_id": "00000000-0000-4000-8000-000000000001"
               }
             }
           }
@@ -3699,7 +3701,9 @@
                       "component": "RBC",
                       "status": "AVAILABLE",
                       "collected_at": "2026-10-29T10:00:00Z",
-                      "expiry_date": "2026-11-26"
+                      "expiry_date": "2026-11-26",
+                      "id": "00000000-0000-4000-8000-000000000002",
+                      "donation_id": "00000000-0000-4000-8000-000000000001"
                     }
                   ]
                 }
@@ -4308,7 +4312,9 @@
                   "component": "RBC",
                   "status": "AVAILABLE",
                   "collected_at": "2026-10-29T10:00:00Z",
-                  "expiry_date": "2026-11-26"
+                  "expiry_date": "2026-11-26",
+                  "id": "00000000-0000-4000-8000-000000000002",
+                  "donation_id": "00000000-0000-4000-8000-000000000001"
                 }
               }
             }
@@ -4577,7 +4583,9 @@
                   "component": "RBC",
                   "status": "AVAILABLE",
                   "collected_at": "2026-10-29T10:00:00Z",
-                  "expiry_date": "2026-11-26"
+                  "expiry_date": "2026-11-26",
+                  "id": "00000000-0000-4000-8000-000000000002",
+                  "donation_id": "00000000-0000-4000-8000-000000000001"
                 }
               }
             }
@@ -5919,7 +5927,9 @@
                       "component": "RBC",
                       "status": "RESERVED",
                       "collected_at": "2026-10-29T10:00:00Z",
-                      "expiry_date": "2026-11-26"
+                      "expiry_date": "2026-11-26",
+                      "id": "00000000-0000-4000-8000-000000000002",
+                      "donation_id": "00000000-0000-4000-8000-000000000001"
                     }
                   ]
                 }
@@ -6181,7 +6191,9 @@
                       "component": "RBC",
                       "status": "ISSUED",
                       "collected_at": "2026-10-29T10:00:00Z",
-                      "expiry_date": "2026-11-26"
+                      "expiry_date": "2026-11-26",
+                      "id": "00000000-0000-4000-8000-000000000002",
+                      "donation_id": "00000000-0000-4000-8000-000000000001"
                     }
                   ]
                 }
@@ -9524,10 +9536,9 @@
         "type": "object",
         "properties": {
           "unit_code": {
-            "type": "string"
-          },
-          "donor_id": {
-            "type": "string"
+            "type": "string",
+            "maxLength": 64,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9-]{0,63}$"
           },
           "blood_group": {
             "type": "string",
@@ -9558,11 +9569,15 @@
           "expiry_date": {
             "type": "string",
             "format": "date"
+          },
+          "donation_id": {
+            "type": "string",
+            "format": "uuid"
           }
         },
         "required": [
           "unit_code",
-          "donor_id",
+          "donation_id",
           "blood_group",
           "component",
           "collected_at",
@@ -9600,6 +9615,14 @@
           "expiry_date": {
             "type": "string",
             "format": "date"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "donation_id": {
+            "type": "string",
+            "format": "uuid"
           }
         },
         "required": [
@@ -9608,7 +9631,9 @@
           "component",
           "status",
           "collected_at",
-          "expiry_date"
+          "expiry_date",
+          "id",
+          "donation_id"
         ],
         "additionalProperties": false
       },
