@@ -362,6 +362,24 @@ def test_absolute_timeout_expires_active_session_and_records_actor():
     assert AuditEvent.objects.filter(action="SESSION_EXPIRED", actor=user).exists()
 
 
+@pytest.mark.parametrize("role", ["DONOR", "RECIPIENT", "STAFF", "ADMIN"])
+@override_settings(SESSION_ABSOLUTE_TIMEOUT_SECONDS=10)
+def test_every_role_receives_readable_expiry_response_on_protected_api(role):
+    user = create_user(email=f"expired-{role.lower()}@example.test", role=role)
+    client, _ = authenticated_client(user)
+    session = client.session
+    session["auth_started_at"] = timezone.now().timestamp() - 11
+    session.save()
+
+    response = client.get("/api/v1/users/me", secure=True)
+
+    assert response.status_code == 401
+    assert response.json()["error"]["code"] == "session_expired"
+    assert response.json()["error"]["message"] == "Your session expired. Please sign in again."
+    assert response.cookies["sessionid"]["max-age"] == 0
+    assert AuditEvent.objects.filter(action="SESSION_EXPIRED", actor=user).count() == 1
+
+
 def test_concurrent_sessions_are_independent_and_disabled_account_expires():
     user = create_user()
     first, first_token = authenticated_client(user)
