@@ -42,6 +42,8 @@ PROFILE_WRITABLE_FIELDS = {
 
 def update_profile(*, user, changes: dict, ip_address: str | None = None):
     """Apply only the caller's role-approved profile fields atomically."""
+    if not user.is_authenticated or not user.is_active:
+        raise PermissionDenied("Profile access is not permitted.")
     writable_fields = PROFILE_WRITABLE_FIELDS.get(user.role, frozenset())
     if not changes or set(changes) - writable_fields:
         raise PermissionDenied("Profile fields are not permitted.")

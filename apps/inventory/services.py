@@ -139,7 +139,7 @@ def run_inventory_expiry_job(*, as_of_date=None, batch_size=None):
 
 def transition_blood_unit(*, actor, unit_id, action, reason, ip_address=None, as_of_date=None):
     """Lock a unit and append its ledger and audit records atomically."""
-    if actor is not None and (not actor.is_authenticated or actor.role != AccountRole.STAFF):
+    if actor is not None and (not actor.is_authenticated or not actor.is_active or actor.role != AccountRole.STAFF):
         raise BloodUnitRejected("forbidden", "Only Staff can change inventory status.", status_code=403)
     if actor is None and action != InventoryTransaction.Action.EXPIRE:
         raise BloodUnitRejected("forbidden", "An actor is required for this inventory action.", status_code=403)
@@ -196,7 +196,7 @@ def create_verified_blood_unit(*, actor, donation_id, unit_code, blood_group,
                                component, collected_at, expiry_date, quantity_units,
                                ip_address=None):
     """Create a unit for a completed donation and audit it in the same transaction."""
-    if not actor.is_authenticated or actor.role != AccountRole.STAFF:
+    if not actor.is_authenticated or not actor.is_active or actor.role != AccountRole.STAFF:
         raise BloodUnitRejected("forbidden", "Only Staff can create blood units.", status_code=403)
 
     with transaction.atomic():
