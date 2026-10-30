@@ -27,6 +27,7 @@ class BloodUnitCreateSerializer(StrictInputSerializer):
     component = serializers.ChoiceField(choices=BloodUnit.Component.choices)
     collected_at = serializers.DateTimeField()
     expiry_date = serializers.DateField()
+    quantity_units = serializers.IntegerField(min_value=1)
 
     def validate_unit_code(self, value):
         if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9-]{0,63}", value):
@@ -39,4 +40,7 @@ class BloodUnitSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = BloodUnit
-        fields = ("id", "unit_code", "donation_id", "blood_group", "component", "status", "collected_at", "expiry_date")
+        fields = (
+            "id", "unit_code", "donation_id", "blood_group", "component",
+            "status", "collected_at", "expiry_date", "quantity_units",
+        )

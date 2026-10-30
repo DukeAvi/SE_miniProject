@@ -3434,7 +3434,8 @@
                   "collected_at": "2026-10-29T10:00:00Z",
                   "expiry_date": "2026-11-26",
                   "id": "00000000-0000-4000-8000-000000000002",
-                  "donation_id": "00000000-0000-4000-8000-000000000001"
+                  "donation_id": "00000000-0000-4000-8000-000000000001",
+                  "quantity_units": 1
                 }
               }
             }
@@ -3659,7 +3660,8 @@
                 "component": "RBC",
                 "collected_at": "2026-10-29T10:00:00Z",
                 "expiry_date": "2026-11-26",
-                "donation_id": "00000000-0000-4000-8000-000000000001"
+                "donation_id": "00000000-0000-4000-8000-000000000001",
+                "quantity_units": 1
               }
             }
           }
@@ -3703,7 +3705,8 @@
                       "collected_at": "2026-10-29T10:00:00Z",
                       "expiry_date": "2026-11-26",
                       "id": "00000000-0000-4000-8000-000000000002",
-                      "donation_id": "00000000-0000-4000-8000-000000000001"
+                      "donation_id": "00000000-0000-4000-8000-000000000001",
+                      "quantity_units": 1
                     }
                   ]
                 }
@@ -4314,7 +4317,8 @@
                   "collected_at": "2026-10-29T10:00:00Z",
                   "expiry_date": "2026-11-26",
                   "id": "00000000-0000-4000-8000-000000000002",
-                  "donation_id": "00000000-0000-4000-8000-000000000001"
+                  "donation_id": "00000000-0000-4000-8000-000000000001",
+                  "quantity_units": 1
                 }
               }
             }
@@ -4585,7 +4589,8 @@
                   "collected_at": "2026-10-29T10:00:00Z",
                   "expiry_date": "2026-11-26",
                   "id": "00000000-0000-4000-8000-000000000002",
-                  "donation_id": "00000000-0000-4000-8000-000000000001"
+                  "donation_id": "00000000-0000-4000-8000-000000000001",
+                  "quantity_units": 1
                 }
               }
             }
@@ -5929,7 +5934,8 @@
                       "collected_at": "2026-10-29T10:00:00Z",
                       "expiry_date": "2026-11-26",
                       "id": "00000000-0000-4000-8000-000000000002",
-                      "donation_id": "00000000-0000-4000-8000-000000000001"
+                      "donation_id": "00000000-0000-4000-8000-000000000001",
+                      "quantity_units": 1
                     }
                   ]
                 }
@@ -6193,7 +6199,8 @@
                       "collected_at": "2026-10-29T10:00:00Z",
                       "expiry_date": "2026-11-26",
                       "id": "00000000-0000-4000-8000-000000000002",
-                      "donation_id": "00000000-0000-4000-8000-000000000001"
+                      "donation_id": "00000000-0000-4000-8000-000000000001",
+                      "quantity_units": 1
                     }
                   ]
                 }
@@ -9573,6 +9580,10 @@
           "donation_id": {
             "type": "string",
             "format": "uuid"
+          },
+          "quantity_units": {
+            "type": "integer",
+            "minimum": 1
           }
         },
         "required": [
@@ -9581,7 +9592,8 @@
           "blood_group",
           "component",
           "collected_at",
-          "expiry_date"
+          "expiry_date",
+          "quantity_units"
         ],
         "additionalProperties": false
       },
@@ -9623,6 +9635,10 @@
           "donation_id": {
             "type": "string",
             "format": "uuid"
+          },
+          "quantity_units": {
+            "type": "integer",
+            "minimum": 1
           }
         },
         "required": [
@@ -9633,7 +9649,8 @@
           "collected_at",
           "expiry_date",
           "id",
-          "donation_id"
+          "donation_id",
+          "quantity_units"
         ],
         "additionalProperties": false
       },
