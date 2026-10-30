@@ -1,42 +1,65 @@
 # Blood Bank Management System
 
-The project uses Python 3.12+, Django 5.2, Django REST Framework, and PostgreSQL.
+The project is an API-only Django application using Python 3.12+, Django 5.2, Django REST Framework, PostgreSQL, and Celery for scheduled inventory expiry. There is no frontend build step. Use the local SQLite demo for a quick start, or PostgreSQL and Redis for the full runtime.
 
-## Local setup
+## Install dependencies
 
-Create and activate a virtual environment, then install the pinned dependencies:
+From the repository root, create a virtual environment and install the pinned application and development tools:
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-python -m pip install -r requirements.txt
+python -m pip install -r requirements-dev.txt
 ```
 
-Copy the environment template and update the local PostgreSQL credentials:
+For runtime-only dependencies, install `requirements.txt` instead. The commands below assume the virtual environment is active.
+
+## Quick local demo (SQLite)
+
+The `bbms.settings_seed` settings use a disposable, Git-ignored SQLite database with DEBUG enabled. Migrate it, create synthetic Sprint 1 records, and start the API:
+
+```bash
+python manage.py migrate --noinput --settings=bbms.settings_seed
+python manage.py seed_test_data --settings=bbms.settings_seed --as-of-date 2026-10-30
+python manage.py runserver --settings=bbms.settings_seed
+```
+
+In another terminal, check `http://127.0.0.1:8000/healthz`. API routes are under `/api/v1/`; see the [API contract and Postman collection](docs/api/README.md). The seed accounts have unusable passwords. For a repeatable authenticated workflow using separate synthetic accounts, run:
+
+```bash
+DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,testserver python manage.py demo_sprint_one --settings=bbms.settings_seed
+```
+
+The seed command is safe to repeat with the same date. Its record counts and in-memory request/notification mocks are documented in the [seed-data guide](docs/qa/seed-test-data.md). The demo database does not require PostgreSQL or Redis.
+
+## PostgreSQL runtime
+
+Create a PostgreSQL database and user matching the `POSTGRES_*` values in `.env.example`. Copy the template to `.env` and set a local database password and Django secret key; `.env` is ignored by Git. Then migrate and start the API:
 
 ```bash
 cp .env.example .env
-```
-
-Create the configured PostgreSQL database, then initialize it:
-
-```bash
-python manage.py migrate
-```
-
-Start the development server with:
-
-```bash
+python manage.py migrate --noinput
 python manage.py runserver
 ```
 
-The health endpoint is available at `http://127.0.0.1:8000/healthz`.
+The API runs without Redis, but the daily inventory expiry job needs Redis at `CELERY_BROKER_URL`. With Redis running, start a Celery worker and Beat in separate terminals using the same `.env`:
+
+```bash
+celery -A bbms worker --loglevel=INFO
+celery -A bbms beat --loglevel=INFO
+```
+
+Beat schedules expiry at 00:05 in `BLOOD_BANK_TIME_ZONE`. See the [expiry operations guide](docs/operations/inventory-expiry.md) for monitoring, retries, and the test-only manual trigger. The demo notification provider writes sanitized console events; it does not send email or SMS.
 
 ## Checks
 
+The test suite uses its own SQLite settings. Run these checks from the repository root:
+
 ```bash
-python manage.py check
-python manage.py makemigrations --check --dry-run
+ruff check .
+python manage.py check --settings=bbms.settings_test
+python manage.py makemigrations --check --dry-run --settings=bbms.settings_test
+python scripts/validate_api_contract.py
 pytest
 git diff --check
 ```
