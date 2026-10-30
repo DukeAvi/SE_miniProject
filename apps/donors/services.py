@@ -27,7 +27,7 @@ def record_completed_donation(*, actor, donor_id: int, donation_date: date,
                               blood_group: str, component: str, quantity_units: int,
                               screening_weight_kg, ip_address=None) -> Donation:
     """Record a completed, eligible donation with its profile and audit update atomically."""
-    if not actor.is_authenticated or actor.role != AccountRole.STAFF:
+    if not actor.is_authenticated or not actor.is_active or actor.role != AccountRole.STAFF:
         raise DonationRejected("forbidden", "Only Staff can record donations.")
     if component != Donation.Component.WHOLE_BLOOD:
         raise DonationRejected("donation_type_unsupported", "Only whole-blood donations are supported.")
@@ -79,7 +79,7 @@ class AppointmentRejected(Exception):
 
 def book_appointment(*, actor, slot_id, ip_address=None) -> Appointment:
     """Book an available slot after checking the donor with the shared engine."""
-    if not actor.is_authenticated or actor.role != AccountRole.DONOR:
+    if not actor.is_authenticated or not actor.is_active or actor.role != AccountRole.DONOR:
         raise AppointmentRejected("forbidden", "Only Donors can book appointments.", status_code=403)
     zone = ZoneInfo(getattr(settings, "BLOOD_BANK_TIME_ZONE", "Asia/Kolkata"))
     with transaction.atomic():
@@ -125,7 +125,7 @@ def book_appointment(*, actor, slot_id, ip_address=None) -> Appointment:
 
 def cancel_appointment(*, actor, appointment_id, ip_address=None) -> Appointment:
     """Cancel an owned BOOKED appointment, retaining the appointment history."""
-    if not actor.is_authenticated or actor.role != AccountRole.DONOR:
+    if not actor.is_authenticated or not actor.is_active or actor.role != AccountRole.DONOR:
         raise AppointmentRejected("forbidden", "Only Donors can cancel appointments.", status_code=403)
     try:
         appointment_id = UUID(str(appointment_id))

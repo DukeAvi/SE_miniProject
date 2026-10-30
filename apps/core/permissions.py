@@ -56,6 +56,7 @@ class RolePermission(BasePermission):
         user = request.user
         allowed = bool(
             user.is_authenticated
+            and user.is_active
             and getattr(user, "role", None) in allowed_roles
         )
         if not allowed:
