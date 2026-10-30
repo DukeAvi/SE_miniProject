@@ -3676,14 +3676,14 @@
       "get": {
         "operationId": "listBloodUnits",
         "summary": "List blood units",
-        "description": "Allowed roles: STAFF.",
+        "description": "Staff-only paginated unit search. Every result is unexpired at the current date in the configured blood-bank timezone; the optional status filter is applied independently.",
         "tags": [
           "inventory"
         ],
         "x-allowed-roles": [
           "STAFF"
         ],
-        "x-implementation-status": "planned",
+        "x-implementation-status": "implemented",
         "responses": {
           "200": {
             "description": "Successful response",
@@ -3958,7 +3958,16 @@
             "in": "query",
             "required": false,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "enum": [
+                "AVAILABLE",
+                "RESERVED",
+                "ISSUED",
+                "DISCARDED",
+                "RETURNED",
+                "EXPIRED"
+              ],
+              "default": "AVAILABLE"
             }
           },
           {
@@ -3994,15 +4003,14 @@
       "get": {
         "operationId": "getAvailability",
         "summary": "Search aggregate available blood",
-        "description": "Recipients receive aggregate counts; Staff may receive unit-level detail through the units endpoint.",
+        "description": "Recipient-only aggregate availability. Counts include only AVAILABLE units whose expiry date is after today in the configured blood-bank timezone; no unit-level data is returned.",
         "tags": [
           "inventory"
         ],
         "x-allowed-roles": [
-          "STAFF",
           "RECIPIENT"
         ],
-        "x-implementation-status": "planned",
+        "x-implementation-status": "implemented",
         "responses": {
           "200": {
             "description": "Successful response",
@@ -4258,27 +4266,6 @@
                 "PLASMA",
                 "PLATELETS"
               ]
-            }
-          },
-          {
-            "name": "page",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "minimum": 1,
-              "default": 1
-            }
-          },
-          {
-            "name": "page_size",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 100,
-              "default": 20
             }
           }
         ],
@@ -9681,7 +9668,8 @@
           },
           "nearest_expiry": {
             "type": "string",
-            "format": "date"
+            "format": "date",
+            "nullable": true
           }
         },
         "required": [
