@@ -151,8 +151,11 @@ def main() -> None:
         if operation.get("x-implementation-status") == "implemented"
     ]
     for method, path in implemented:
+        # Django's UUID path converter rejects the literal OpenAPI `{id}` marker.
+        # Resolve a representative UUID while keeping the OpenAPI path as-is.
+        resolvable_path = path.replace("{id}", "00000000-0000-4000-8000-000000000000")
         try:
-            match = resolve(path)
+            match = resolve(resolvable_path)
         except Exception as error:  # Django raises Resolver404 for an absent route.
             fail(f"Documented implemented route does not resolve: {method} {path}: {error}")
         view_class = getattr(match.func, "cls", None)
