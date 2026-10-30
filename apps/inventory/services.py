@@ -1,5 +1,7 @@
-"""Transactional blood-unit inventory operations."""
+"""Transactional blood-unit inventory operations and expiry job."""
 
+import logging
+from datetime import date
 from zoneinfo import ZoneInfo
 
 from django.conf import settings
@@ -10,7 +12,15 @@ from apps.accounts.models import AccountRole
 from apps.audit.services import record_event
 from apps.donors.models import Donation
 
-from .models import BloodUnit, InventoryTransaction
+from .models import BloodUnit, InventoryJobRun, InventoryTransaction
+
+
+logger = logging.getLogger(__name__)
+EXPIRY_JOB_NAME = "inventory_expiry"
+
+
+class InventoryExpiryJobFailed(Exception):
+    """Raised after a failed run is recorded with sanitized error text."""
 
 
 class BloodUnitRejected(Exception):
@@ -44,6 +54,87 @@ def available_stock_count(*, blood_group, component, as_of_date=None):
         status=BloodUnit.Status.AVAILABLE,
         expiry_date__gt=as_of_date,
     ).count()
+
+
+def _expire_units_batch(unit_ids, *, run, as_of_date):
+    expired_count = 0
+    with transaction.atomic():
+        for unit_id in unit_ids:
+            try:
+                transition_blood_unit(
+                    actor=None,
+                    unit_id=unit_id,
+                    action=InventoryTransaction.Action.EXPIRE,
+                    reason=f"Scheduled expiry on {as_of_date.isoformat()}",
+                    as_of_date=as_of_date,
+                )
+            except BloodUnitRejected as exc:
+                if exc.code != "invalid_state_transition":
+                    raise
+            else:
+                expired_count += 1
+        run.processed_count += len(unit_ids)
+        run.expired_count += expired_count
+        run.save(update_fields=("processed_count", "expired_count"))
+    return expired_count
+
+
+def run_inventory_expiry_job(*, as_of_date=None, batch_size=None):
+    """Expire eligible units in independently committed, rerunnable batches."""
+    if isinstance(as_of_date, str):
+        as_of_date = date.fromisoformat(as_of_date)
+    as_of_date = as_of_date or blood_bank_today()
+    batch_size = batch_size or settings.INVENTORY_EXPIRY_BATCH_SIZE
+    if batch_size <= 0:
+        raise ValueError("batch_size must be positive")
+    now = timezone.now()
+    with transaction.atomic():
+        run, created = InventoryJobRun.objects.select_for_update().get_or_create(
+            job_name=EXPIRY_JOB_NAME,
+            run_date=as_of_date,
+            defaults={
+                "status": InventoryJobRun.Status.RUNNING,
+                "started_at": now,
+            },
+        )
+        if not created:
+            if run.status in (InventoryJobRun.Status.RUNNING, InventoryJobRun.Status.SUCCEEDED):
+                return run
+            run.status = InventoryJobRun.Status.RUNNING
+            run.started_at = now
+            run.finished_at = None
+            run.attempt_count += 1
+            run.error_text = None
+            run.save(update_fields=("status", "started_at", "finished_at", "attempt_count", "error_text"))
+
+    try:
+        while True:
+            unit_ids = list(
+                BloodUnit.objects.filter(
+                    status__in=(BloodUnit.Status.AVAILABLE, BloodUnit.Status.RESERVED),
+                    expiry_date__lte=as_of_date,
+                )
+                .order_by("pk")
+                .values_list("pk", flat=True)[:batch_size]
+            )
+            if not unit_ids:
+                break
+            _expire_units_batch(unit_ids, run=run, as_of_date=as_of_date)
+        run.status = InventoryJobRun.Status.SUCCEEDED
+        run.finished_at = timezone.now()
+        run.error_text = None
+        run.save(update_fields=("status", "finished_at", "error_text"))
+        return run
+    except Exception as exc:
+        run.status = InventoryJobRun.Status.FAILED
+        run.finished_at = timezone.now()
+        run.error_text = "Expiry batch failed; retry is safe."
+        run.save(update_fields=("status", "finished_at", "error_text"))
+        logger.error(
+            "Inventory expiry job failed",
+            extra={"job_name": EXPIRY_JOB_NAME, "run_date": as_of_date.isoformat(), "exception_type": type(exc).__name__},
+        )
+        raise InventoryExpiryJobFailed("Inventory expiry job failed; inspect the run record and retry.") from None
 
 
 def transition_blood_unit(*, actor, unit_id, action, reason, ip_address=None, as_of_date=None):
