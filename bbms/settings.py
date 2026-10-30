@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
+from celery.schedules import crontab
 from dotenv import load_dotenv
 
 
@@ -209,9 +210,25 @@ BLOOD_BANK_TIME_ZONE = env_time_zone("BLOOD_BANK_TIME_ZONE", "Asia/Kolkata")
 DONATION_SLOT_CAPACITY = env_positive_int("DONATION_SLOT_CAPACITY", 10)
 DEFAULT_STOCK_THRESHOLD = env_positive_int("DEFAULT_STOCK_THRESHOLD", 5)
 BACKUP_RETENTION_DAYS = env_positive_int("BACKUP_RETENTION_DAYS", 7)
+INVENTORY_EXPIRY_BATCH_SIZE = env_positive_int("INVENTORY_EXPIRY_BATCH_SIZE", 100)
 NOTIFICATION_PROVIDER = os.getenv("NOTIFICATION_PROVIDER", "console")
 USE_I18N = True
 USE_TZ = True
+
+CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", "redis://localhost:6379/0")
+CELERY_TIMEZONE = BLOOD_BANK_TIME_ZONE
+CELERY_ENABLE_UTC = True
+CELERY_TASK_SERIALIZER = "json"
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_IGNORE_RESULT = True
+CELERY_TASK_ACKS_LATE = True
+CELERY_TASK_REJECT_ON_WORKER_LOST = True
+CELERY_BEAT_SCHEDULE = {
+    "expire-blood-units-daily": {
+        "task": "apps.inventory.tasks.expire_eligible_blood_units",
+        "schedule": crontab(hour=0, minute=5),
+    },
+}
 
 STATIC_URL = "static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

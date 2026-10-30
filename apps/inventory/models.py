@@ -124,3 +124,33 @@ class InventoryTransaction(models.Model):
 
     def delete(self, *args, **kwargs):
         raise ValidationError("Inventory transactions are append-only.")
+
+
+class InventoryJobRun(models.Model):
+    """Run state and sanitized counts for a once-per-day inventory job."""
+
+    class Status(models.TextChoices):
+        RUNNING = "RUNNING", "Running"
+        SUCCEEDED = "SUCCEEDED", "Succeeded"
+        FAILED = "FAILED", "Failed"
+
+    id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
+    job_name = models.CharField(max_length=64)
+    run_date = models.DateField()
+    status = models.CharField(max_length=9, choices=Status.choices)
+    started_at = models.DateTimeField()
+    finished_at = models.DateTimeField(null=True, blank=True)
+    processed_count = models.PositiveIntegerField(default=0)
+    expired_count = models.PositiveIntegerField(default=0)
+    attempt_count = models.PositiveSmallIntegerField(default=1)
+    error_text = models.CharField(max_length=500, null=True, blank=True)
+
+    class Meta:
+        ordering = ("-run_date", "-started_at")
+        constraints = [
+            models.UniqueConstraint(fields=("job_name", "run_date"), name="inv_job_run_unique_date"),
+            models.CheckConstraint(
+                condition=models.Q(status__in=("RUNNING", "SUCCEEDED", "FAILED")),
+                name="inv_job_run_status_valid",
+            ),
+        ]
