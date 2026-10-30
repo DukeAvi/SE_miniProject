@@ -603,7 +603,7 @@
         },
         {
           "name": "List blood units",
-          "description": "Allowed roles: STAFF. Implementation status: planned.",
+          "description": "Allowed roles: STAFF. Implementation status: implemented.",
           "request": {
             "method": "GET",
             "header": [
@@ -628,7 +628,7 @@
         },
         {
           "name": "Search aggregate available blood",
-          "description": "Allowed roles: STAFF, RECIPIENT. Implementation status: planned.",
+          "description": "Allowed roles: RECIPIENT. Implementation status: implemented.",
           "request": {
             "method": "GET",
             "header": [
@@ -637,7 +637,7 @@
                 "value": "application/json"
               }
             ],
-            "url": "{{baseUrl}}/api/v1/inventory/availability?blood_group={{bloodGroup}}&component={{component}}&page={{page}}&page_size={{pageSize}}"
+            "url": "{{baseUrl}}/api/v1/inventory/availability?blood_group={{bloodGroup}}&component={{component}}"
           },
           "event": [
             {
