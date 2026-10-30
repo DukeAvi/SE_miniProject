@@ -561,7 +561,7 @@
         },
         {
           "name": "Create a verified blood-unit record",
-          "description": "Allowed roles: STAFF. Implementation status: planned.",
+          "description": "Allowed roles: STAFF. Implementation status: implemented.",
           "request": {
             "method": "POST",
             "header": [
@@ -581,7 +581,7 @@
             "url": "{{baseUrl}}/api/v1/inventory/units",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"unit_code\": \"unit-demo-002\",\n  \"donor_id\": \"101\",\n  \"blood_group\": \"O+\",\n  \"component\": \"RBC\",\n  \"collected_at\": \"2026-10-29T10:00:00Z\",\n  \"expiry_date\": \"2026-11-26\"\n}",
+              "raw": "{\n  \"unit_code\": \"unit-demo-002\",\n  \"donation_id\": \"{{donationId}}\",\n  \"blood_group\": \"O+\",\n  \"component\": \"RBC\",\n  \"collected_at\": \"2026-10-29T10:00:00Z\",\n  \"expiry_date\": \"2026-11-26\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
