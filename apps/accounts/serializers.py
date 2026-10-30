@@ -7,31 +7,20 @@ from django.contrib.auth.password_validation import validate_password
 from rest_framework.exceptions import ValidationError
 from rest_framework import serializers
 
+from apps.core.validation import strict_json_type_errors
+
 from .models import AccountRole, User
 from .services import DuplicateAccountValue, PROFILE_WRITABLE_FIELDS, register_account
 
 
 class StrictInputSerializer(serializers.Serializer):
-    """Reject undeclared fields and non-string JSON values for text fields."""
+    """Reject undeclared fields and invalid JSON value types."""
 
     def to_internal_value(self, data):
         if not isinstance(data, Mapping):
             return super().to_internal_value(data)
 
-        errors = {}
-        unknown_fields = set(data) - set(self.fields)
-        if unknown_fields:
-            errors["non_field_errors"] = ["Unexpected fields are not allowed."]
-
-        for field_name, field in self.fields.items():
-            value = data.get(field_name)
-            if (
-                field_name in data
-                and value is not None
-                and isinstance(field, serializers.CharField)
-                and not isinstance(value, str)
-            ):
-                errors[field_name] = ["Not a valid string."]
+        errors = strict_json_type_errors(self.fields, data)
 
         if errors:
             raise ValidationError(errors)

@@ -5,17 +5,17 @@ from collections.abc import Mapping
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
+from apps.core.validation import strict_json_type_errors
+
 from .models import Appointment, Donation, DonationSlot
 
 
 class StrictInputSerializer(serializers.Serializer):
     def to_internal_value(self, data):
         if isinstance(data, Mapping):
-            if set(data) - set(self.fields):
-                raise ValidationError({"non_field_errors": ["Unexpected fields are not allowed."]})
-            for name, field in self.fields.items():
-                if name in data and isinstance(field, serializers.CharField) and not isinstance(data[name], str):
-                    raise ValidationError({name: ["Not a valid string."]})
+            errors = strict_json_type_errors(self.fields, data)
+            if errors:
+                raise ValidationError(errors)
         return super().to_internal_value(data)
 
 
