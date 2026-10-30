@@ -2,7 +2,7 @@
 
 ## Status
 
-Selected for the version 1.0 classroom demonstration. All values are configurable through deployment configuration; none is hard-coded.
+Approved by Product Owner Avrit Sharma (`@DukeAvi`) on 2026-10-29 for the version 1.0 classroom demonstration. These synthetic defaults are configurable through deployment configuration and are not clinical or production operating values.
 
 ## Decision
 
@@ -25,6 +25,7 @@ Use the defaults below for the version 1.0 demonstration. An invalid value stops
 
 - Seed data (QA-001, issue #95) and the operational runbook must use these values. No runbook exists in the repository yet.
 - The low-stock alert (F-041) and the backup job (NF-006) are not implemented yet; this record fixes their defaults only.
+- Issue #54 owns appointment capacity, #69 owns low-stock alert thresholds, #78 owns backup retention, and #95 owns synthetic seed data.
 - A deployment that needs different values changes the environment variables; no code change is needed.
 
 ## Traceability
@@ -35,6 +36,7 @@ Use the defaults below for the version 1.0 demonstration. An invalid value stops
 
 ## Decision record
 
-- Decision owner: Avaneesh Aroor, assigned issue contributor
+- Decision owner and approver: Avrit Sharma, Product Owner (`@DukeAvi`)
+- Record contributor: Avaneesh Aroor (`@avaneesh1830`)
 - Effective for the classroom demo: 2026-10-29
 - References: SAD Sections 3.7 and 4.6; BBMS-NF-004 and BBMS-NF-006; issue #91 comments
