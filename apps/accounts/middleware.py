@@ -55,6 +55,7 @@ class SessionExpiryMiddleware:
             entity_type="USER" if actor is not None else None,
             entity_id=actor.pk if actor is not None else None,
             ip_address=request.META.get("REMOTE_ADDR"),
+            outcome="FAILURE",
         )
 
     @staticmethod

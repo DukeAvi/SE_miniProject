@@ -33,3 +33,12 @@ class LoginThrottle(models.Model):
 
     class Meta:
         indexes = [models.Index(fields=("blocked_until",))]
+
+
+class FailedLoginAlertWindow(models.Model):
+    """Per-address failed-login count stored under a one-way keyed hash."""
+
+    address_key_hash = models.CharField(max_length=64, unique=True)
+    failed_attempts = models.PositiveIntegerField(default=0)
+    window_started_at = models.DateTimeField()
+    alerted_at = models.DateTimeField(null=True, blank=True)
