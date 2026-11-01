@@ -15,7 +15,10 @@ def strict_json_type_errors(fields, data):
         if name not in data or data[name] is None:
             continue
         value = data[name]
-        if isinstance(field, serializers.IntegerField):
+        if isinstance(field, serializers.BooleanField):
+            valid = type(value) is bool
+            message = "Not a valid boolean."
+        elif isinstance(field, serializers.IntegerField):
             valid = type(value) is int
             message = "Not a valid integer."
         elif isinstance(field, serializers.DecimalField):

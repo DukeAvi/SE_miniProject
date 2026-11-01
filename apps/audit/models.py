@@ -13,6 +13,10 @@ class AppendOnlyQuerySet(models.QuerySet):
 
 
 class AuditEvent(models.Model):
+    class Outcome(models.TextChoices):
+        SUCCESS = "SUCCESS", "Success"
+        FAILURE = "FAILURE", "Failure"
+
     actor = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.PROTECT,
@@ -21,6 +25,14 @@ class AuditEvent(models.Model):
         related_name="audit_events",
     )
     action = models.CharField(max_length=64)
+    actor_role = models.CharField(max_length=10, null=True, blank=True)
+    entity_type = models.CharField(max_length=64, null=True, blank=True)
+    entity_id = models.CharField(max_length=64, null=True, blank=True)
+    outcome = models.CharField(
+        max_length=7,
+        choices=Outcome.choices,
+        default=Outcome.SUCCESS,
+    )
     ip_address = models.GenericIPAddressField(null=True, blank=True)
     occurred_at = models.DateTimeField(auto_now_add=True, db_index=True)
 

@@ -6994,7 +6994,7 @@
         "x-allowed-roles": [
           "ADMIN"
         ],
-        "x-implementation-status": "planned",
+        "x-implementation-status": "implemented",
         "responses": {
           "200": {
             "description": "Successful response",
@@ -7267,7 +7267,7 @@
         "x-allowed-roles": [
           "ADMIN"
         ],
-        "x-implementation-status": "planned",
+        "x-implementation-status": "implemented",
         "responses": {
           "201": {
             "description": "Successful response",
@@ -7531,7 +7531,7 @@
         "x-allowed-roles": [
           "ADMIN"
         ],
-        "x-implementation-status": "planned",
+        "x-implementation-status": "implemented",
         "responses": {
           "200": {
             "description": "Successful response",
