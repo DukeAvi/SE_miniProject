@@ -38,9 +38,12 @@ def test_event_catalogue_contains_every_required_sad_action():
         "USER_DISABLED",
         "ROLE_CHANGED",
         "DONOR_UPDATED",
+        "APPOINTMENT_BOOKED",
+        "APPOINTMENT_CANCELLED",
         "DONATION_RECORDED",
         "UNIT_CREATED",
         "UNIT_RESERVED",
+        "UNIT_RELEASED",
         "UNIT_ISSUED",
         "UNIT_EXPIRED",
         "UNIT_DISCARDED",
@@ -52,9 +55,10 @@ def test_event_catalogue_contains_every_required_sad_action():
         "REQUEST_FULFILLED",
         "THRESHOLD_CHANGED",
         "ACCESS_DENIED",
+        "USER_ENABLED",
     }
 
-    assert required <= set(AuditEvent.Action.values)
+    assert required == set(AuditEvent.Action.values)
 
 
 def test_record_helper_captures_protected_metadata_and_utc_time():

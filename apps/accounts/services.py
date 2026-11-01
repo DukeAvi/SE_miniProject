@@ -1,5 +1,6 @@
 """Account operations and business rules."""
 
+import logging
 import math
 from datetime import timedelta
 from uuid import uuid4
@@ -13,7 +14,7 @@ from django.utils.crypto import salted_hmac
 
 from apps.audit.services import record_event
 
-from .models import AccountRole, LoginThrottle
+from .models import AccountRole, FailedLoginAlertWindow, LoginThrottle
 
 
 DASHBOARD_PATHS = {
@@ -22,6 +23,7 @@ DASHBOARD_PATHS = {
     "STAFF": "/staff/dashboard",
     "ADMIN": "/admin/dashboard",
 }
+security_alert_logger = logging.getLogger("apps.security.alerts")
 
 
 class DuplicateAccountValue(Exception):
@@ -125,6 +127,49 @@ def _login_throttle_keys(email: str, ip_address: str) -> tuple[str, str]:
     )
 
 
+def _failed_login_alert_key(ip_address: str) -> str:
+    return _login_throttle_key(f"failed-login-alert:{ip_address or 'unknown'}")
+
+
+def track_failed_login_alert(*, ip_address: str, now=None) -> bool:
+    """Count one failed attempt and emit one sanitized alert per address window."""
+    now = now or timezone.now()
+    window_seconds = settings.FAILED_LOGIN_ALERT_WINDOW_SECONDS
+    threshold = settings.FAILED_LOGIN_ALERT_THRESHOLD
+    with transaction.atomic():
+        record, created = (
+            FailedLoginAlertWindow.objects.select_for_update().get_or_create(
+                address_key_hash=_failed_login_alert_key(ip_address),
+                defaults={"failed_attempts": 0, "window_started_at": now},
+            )
+        )
+        if not created and (now - record.window_started_at).total_seconds() >= window_seconds:
+            record.failed_attempts = 0
+            record.window_started_at = now
+            record.alerted_at = None
+        record.failed_attempts += 1
+        should_alert = record.failed_attempts > threshold and record.alerted_at is None
+        if should_alert:
+            record.alerted_at = now
+        record.save(
+            update_fields=(
+                "failed_attempts",
+                "window_started_at",
+                "alerted_at",
+            )
+        )
+
+    if should_alert:
+        security_alert_logger.warning(
+            "Failed-login rate threshold exceeded",
+            extra={
+                "failed_attempts": record.failed_attempts,
+                "window_seconds": window_seconds,
+            },
+        )
+    return should_alert
+
+
 def login_retry_after(*, email: str, ip_address: str, now=None) -> int | None:
     now = now or timezone.now()
     blocked_until = (
@@ -177,6 +222,7 @@ def record_login_event(*, action: str, actor=None, ip_address: str | None = None
         entity_type="USER" if actor is not None else None,
         entity_id=actor.pk if actor is not None else None,
         ip_address=ip_address,
+        outcome="FAILURE" if action == "LOGIN_FAILED" else "SUCCESS",
     )
 
 
@@ -184,6 +230,7 @@ def login_account(*, request, email: str, password: str, ip_address: str | None)
     """Authenticate, throttle and audit a login attempt; return (user, retry_after)."""
     retry_after = login_retry_after(email=email, ip_address=ip_address or "")
     if retry_after is not None:
+        track_failed_login_alert(ip_address=ip_address or "")
         record_login_event(action="LOGIN_FAILED", ip_address=ip_address)
         return None, retry_after
 
@@ -197,5 +244,6 @@ def login_account(*, request, email: str, password: str, ip_address: str | None)
 
     candidate = get_user_model().objects.filter(email__iexact=email).first()
     record_failed_login(email=email, ip_address=ip_address or "")
+    track_failed_login_alert(ip_address=ip_address or "")
     record_login_event(action="LOGIN_FAILED", actor=candidate, ip_address=ip_address)
     return None, None
