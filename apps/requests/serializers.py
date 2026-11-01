@@ -43,6 +43,16 @@ class BloodRequestCreateSerializer(StrictInputSerializer):
         return normalized
 
 
+class BloodRequestDecisionSerializer(StrictInputSerializer):
+    decision = serializers.ChoiceField(choices=("APPROVE", "REJECT", "HOLD"))
+    reason = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        max_length=500,
+        trim_whitespace=True,
+    )
+
+
 class BloodRequestSerializer(serializers.ModelSerializer):
     class Meta:
         model = BloodRequest

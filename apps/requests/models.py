@@ -45,6 +45,15 @@ class BloodRequest(models.Model):
         choices=Status.choices,
         default=Status.PENDING,
     )
+    reviewer = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="reviewed_blood_requests",
+    )
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+    decision_reason = models.CharField(max_length=500, blank=True, default="")
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -84,5 +93,27 @@ class BloodRequest(models.Model):
             models.CheckConstraint(
                 condition=models.Q(required_by__gt=models.F("created_at")),
                 name="request_required_by_after_creation",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    models.Q(
+                        status="PENDING",
+                        reviewer__isnull=True,
+                        reviewed_at__isnull=True,
+                        decision_reason="",
+                    )
+                    | (
+                        ~models.Q(status="PENDING")
+                        & models.Q(reviewer__isnull=False, reviewed_at__isnull=False)
+                    )
+                ),
+                name="request_review_metadata_matches_status",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    ~models.Q(status__in=("REJECTED", "ON_HOLD"))
+                    | ~models.Q(decision_reason="")
+                ),
+                name="request_reject_hold_reason_required",
             ),
         ]
