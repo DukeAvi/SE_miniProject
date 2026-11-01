@@ -13,5 +13,6 @@ urlpatterns = [
     path("notifications/", include("apps.notifications.urls")),
     path("", include("apps.adminops.root_urls")),
     path("administration/", include("apps.adminops.urls")),
+    path("", include("apps.audit.root_urls")),
     path("audit/", include("apps.audit.urls")),
 ]
