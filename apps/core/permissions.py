@@ -35,6 +35,7 @@ def _record_denial(request) -> None:
     record_event(
         action="ACCESS_DENIED",
         actor=actor,
+        outcome="FAILURE",
         ip_address=request.META.get("REMOTE_ADDR"),
     )
 

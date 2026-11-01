@@ -54,7 +54,13 @@ def update_profile(*, user, changes: dict, ip_address: str | None = None):
                 setattr(user, field, value)
             user.save(update_fields=tuple(changes))
             if user.role == AccountRole.DONOR:
-                record_event(action="DONOR_UPDATED", actor=user, ip_address=ip_address)
+                record_event(
+                    action="DONOR_UPDATED",
+                    actor=user,
+                    entity_type="USER",
+                    entity_id=user.pk,
+                    ip_address=ip_address,
+                )
     except IntegrityError as error:
         duplicate_phone = (
             "phone" in changes
@@ -165,7 +171,13 @@ def clear_login_failures(*, email: str) -> None:
 
 
 def record_login_event(*, action: str, actor=None, ip_address: str | None = None) -> None:
-    record_event(action=action, actor=actor, ip_address=ip_address)
+    record_event(
+        action=action,
+        actor=actor,
+        entity_type="USER" if actor is not None else None,
+        entity_id=actor.pk if actor is not None else None,
+        ip_address=ip_address,
+    )
 
 
 def login_account(*, request, email: str, password: str, ip_address: str | None):

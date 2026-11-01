@@ -188,7 +188,13 @@ def transition_blood_unit(*, actor, unit_id, action, reason, ip_address=None, as
             InventoryTransaction.Action.DISCARD: "UNIT_DISCARDED",
             InventoryTransaction.Action.RETURN: "UNIT_RETURNED",
         }[action]
-        record_event(action=event_action, actor=actor, ip_address=ip_address)
+        record_event(
+            action=event_action,
+            actor=actor,
+            entity_type="BLOOD_UNIT",
+            entity_id=unit.pk,
+            ip_address=ip_address,
+        )
         return unit
 
 
@@ -235,5 +241,11 @@ def create_verified_blood_unit(*, actor, donation_id, unit_code, blood_group,
             if "unit_code" in str(exc).lower():
                 raise BloodUnitRejected("duplicate_unit_code", "Unit code already exists.", status_code=409, details={"unit_code": ["Already in use."]}) from exc
             raise
-        record_event(action="UNIT_CREATED", actor=actor, ip_address=ip_address)
+        record_event(
+            action="UNIT_CREATED",
+            actor=actor,
+            entity_type="BLOOD_UNIT",
+            entity_id=unit.pk,
+            ip_address=ip_address,
+        )
         return unit

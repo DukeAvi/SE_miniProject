@@ -52,6 +52,8 @@ class SessionExpiryMiddleware:
         record_event(
             action="SESSION_EXPIRED",
             actor=actor,
+            entity_type="USER" if actor is not None else None,
+            entity_id=actor.pk if actor is not None else None,
             ip_address=request.META.get("REMOTE_ADDR"),
         )
 

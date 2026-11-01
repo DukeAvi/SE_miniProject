@@ -64,7 +64,13 @@ def record_completed_donation(*, actor, donor_id: int, donation_date: date,
         )
         profile.last_donation_date = donation_date
         profile.save(update_fields=("last_donation_date", "updated_at"))
-        record_event(action="DONATION_RECORDED", actor=actor, ip_address=ip_address)
+        record_event(
+            action="DONATION_RECORDED",
+            actor=actor,
+            entity_type="DONATION",
+            entity_id=donation.pk,
+            ip_address=ip_address,
+        )
         return donation
 
 
@@ -119,7 +125,13 @@ def book_appointment(*, actor, slot_id, ip_address=None) -> Appointment:
                     status_code=409,
                 ) from exc
             raise
-        record_event(action="APPOINTMENT_BOOKED", actor=actor, ip_address=ip_address)
+        record_event(
+            action="APPOINTMENT_BOOKED",
+            actor=actor,
+            entity_type="APPOINTMENT",
+            entity_id=appointment.pk,
+            ip_address=ip_address,
+        )
         return appointment
 
 
@@ -141,8 +153,19 @@ def cancel_appointment(*, actor, appointment_id, ip_address=None) -> Appointment
             appointment.status = Appointment.Status.CANCELLED
             appointment.cancelled_at = timezone.now()
             appointment.save(update_fields=("status", "cancelled_at"))
-            record_event(action="APPOINTMENT_CANCELLED", actor=actor, ip_address=ip_address)
+            record_event(
+                action="APPOINTMENT_CANCELLED",
+                actor=actor,
+                entity_type="APPOINTMENT",
+                entity_id=appointment.pk,
+                ip_address=ip_address,
+            )
             return appointment
     except Appointment.DoesNotExist as exc:
-        record_event(action="ACCESS_DENIED", actor=actor, ip_address=ip_address)
+        record_event(
+            action="ACCESS_DENIED",
+            actor=actor,
+            outcome="FAILURE",
+            ip_address=ip_address,
+        )
         raise AppointmentRejected("appointment_not_found", "Appointment was not found.", status_code=404) from exc

@@ -62,6 +62,8 @@ def submit_blood_request(*, actor, patient_name, patient_blood_group, component,
         record_event(
             action="REQUEST_SUBMITTED",
             actor=actor,
+            entity_type="BLOOD_REQUEST",
+            entity_id=blood_request.pk,
             ip_address=ip_address,
         )
         return blood_request

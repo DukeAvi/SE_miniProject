@@ -21,6 +21,7 @@ def get_owned_object_or_404(queryset, *, request, lookup: dict, owner_field: str
         record_event(
             action="ACCESS_DENIED",
             actor=user,
+            outcome="FAILURE",
             ip_address=request.META.get("REMOTE_ADDR"),
         )
         raise
