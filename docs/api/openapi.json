@@ -4831,7 +4831,7 @@
         "x-allowed-roles": [
           "RECIPIENT"
         ],
-        "x-implementation-status": "planned",
+        "x-implementation-status": "implemented",
         "responses": {
           "201": {
             "description": "Successful response",
