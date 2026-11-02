@@ -2,14 +2,18 @@
 
 from uuid import uuid4
 
-from django.db import transaction
+from django.db import IntegrityError, transaction
 from django.utils import timezone
 
 from apps.accounts.models import AccountRole
 from apps.audit.services import record_event
+from apps.inventory.models import BloodUnit, InventoryTransaction
+from apps.inventory.serializers import BloodUnitSerializer
+from apps.inventory.services import BloodUnitRejected, blood_bank_today, transition_blood_unit
 from apps.notifications.models import Notification
 
-from .models import BloodRequest
+from .compatibility import is_compatible, select_compatible_units
+from .models import BloodAllocation, BloodRequest, IssueIdempotency
 
 
 class BloodRequestRejected(Exception):
@@ -170,3 +174,275 @@ def submit_blood_request(*, actor, patient_name, patient_blood_group, component,
             ip_address=ip_address,
         )
         return blood_request
+
+
+def _require_staff(actor):
+    if (
+        not actor.is_authenticated
+        or not actor.is_active
+        or actor.role != AccountRole.STAFF
+    ):
+        raise BloodRequestRejected(
+            "forbidden",
+            "Only Staff can reserve or issue blood units.",
+            status_code=403,
+        )
+
+
+def _as_request_rejection(exc):
+    return BloodRequestRejected(
+        exc.code,
+        exc.message,
+        status_code=exc.status_code,
+        details=exc.details,
+    )
+
+
+def _unit_response(unit):
+    return dict(BloodUnitSerializer(unit).data)
+
+
+def _lock_request(request_id):
+    try:
+        return (
+            BloodRequest.objects.select_for_update()
+            .select_related("requester")
+            .get(request_id=request_id)
+        )
+    except (BloodRequest.DoesNotExist, ValueError, TypeError) as exc:
+        raise BloodRequestRejected(
+            "request_not_found",
+            "Blood request was not found.",
+            status_code=404,
+        ) from exc
+
+
+def reserve_blood_request(*, actor, request_id, ip_address=None):
+    """Atomically reserve a sufficient, compatible FEFO set for an approved request."""
+    _require_staff(actor)
+    try:
+        with transaction.atomic():
+            blood_request = _lock_request(request_id)
+            if blood_request.status != BloodRequest.Status.APPROVED:
+                raise BloodRequestRejected(
+                    "invalid_state_transition",
+                    "Only an approved blood request can be reserved.",
+                    status_code=409,
+                )
+
+            # Lock candidates in a stable order to reduce deadlocks between requests.
+            today = blood_bank_today()
+            candidates = list(
+                BloodUnit.objects.select_for_update()
+                .filter(
+                    component=blood_request.component,
+                    status=BloodUnit.Status.AVAILABLE,
+                    expiry_date__gt=today,
+                )
+                .order_by("pk")
+            )
+            compatible = select_compatible_units(
+                candidates,
+                recipient_group=blood_request.patient_blood_group,
+                component=blood_request.component,
+                donor_group_for=lambda unit: unit.blood_group,
+            )
+            compatible.sort(
+                key=lambda unit: (
+                    unit.blood_group != blood_request.patient_blood_group,
+                    unit.expiry_date,
+                    unit.collected_at,
+                    str(unit.pk),
+                )
+            )
+
+            selected = []
+            available_quantity = 0
+            for unit in compatible:
+                selected.append(unit)
+                available_quantity += unit.quantity_units
+                if available_quantity >= blood_request.units_needed:
+                    break
+            if available_quantity < blood_request.units_needed:
+                if candidates and not compatible:
+                    raise BloodRequestRejected(
+                        "incompatible_blood_type",
+                        "No available units are compatible with this request.",
+                        status_code=422,
+                    )
+                raise BloodRequestRejected(
+                    "insufficient_stock",
+                    "There are not enough compatible, unexpired units to reserve this request.",
+                    status_code=409,
+                    details={"units_needed": ["Insufficient compatible stock."]},
+                )
+
+            for unit in selected:
+                # Recheck compatibility after acquiring the row lock and before writing.
+                if not is_compatible(
+                    unit.blood_group,
+                    blood_request.patient_blood_group,
+                    blood_request.component,
+                ):
+                    raise BloodRequestRejected(
+                        "incompatible_blood_type",
+                        "A selected unit is incompatible with this request.",
+                        status_code=422,
+                    )
+                try:
+                    transition_blood_unit(
+                        actor=actor,
+                        unit_id=unit.pk,
+                        action=InventoryTransaction.Action.RESERVE,
+                        reason=f"Blood request {blood_request.request_id}",
+                        ip_address=ip_address,
+                        as_of_date=today,
+                    )
+                except BloodUnitRejected as exc:
+                    raise _as_request_rejection(exc) from exc
+                unit.status = BloodUnit.Status.RESERVED
+                BloodAllocation.objects.create(
+                    blood_request=blood_request,
+                    blood_unit=unit,
+                    status=BloodAllocation.Status.RESERVED,
+                )
+
+            blood_request.status = BloodRequest.Status.RESERVED
+            blood_request.save(update_fields=("status",))
+            record_event(
+                action="REQUEST_RESERVED",
+                actor=actor,
+                entity_type="BLOOD_REQUEST",
+                entity_id=blood_request.pk,
+                ip_address=ip_address,
+            )
+            Notification.objects.create(
+                recipient=blood_request.requester,
+                blood_request=blood_request,
+                type=Notification.Type.REQUEST_RESERVED,
+            )
+            return {
+                "request_id": blood_request.request_id,
+                "reserved_units": [_unit_response(unit) for unit in selected],
+            }
+    except IntegrityError as exc:
+        raise BloodRequestRejected(
+            "unit_unavailable",
+            "A selected unit is no longer available for reservation.",
+            status_code=409,
+        ) from exc
+
+
+def issue_blood_request(*, actor, request_id, idempotency_key, ip_address=None):
+    """Issue all reserved units once, rechecking locked inventory and persisting replay data."""
+    _require_staff(actor)
+    try:
+        with transaction.atomic():
+            blood_request = _lock_request(request_id)
+            previous = IssueIdempotency.objects.filter(
+                blood_request=blood_request,
+                key=idempotency_key,
+            ).first()
+            if previous is not None:
+                return previous.response_body
+            if blood_request.status != BloodRequest.Status.RESERVED:
+                raise BloodRequestRejected(
+                    "invalid_state_transition",
+                    "Only a reserved blood request can be issued.",
+                    status_code=409,
+                )
+
+            allocations = list(
+                BloodAllocation.objects.select_for_update()
+                .filter(
+                    blood_request=blood_request,
+                    status=BloodAllocation.Status.RESERVED,
+                )
+                .order_by("blood_unit_id")
+            )
+            unit_ids = [allocation.blood_unit_id for allocation in allocations]
+            locked_units = {
+                unit.pk: unit
+                for unit in BloodUnit.objects.select_for_update()
+                .filter(pk__in=unit_ids)
+                .order_by("pk")
+            }
+            units = [locked_units[unit_id] for unit_id in unit_ids if unit_id in locked_units]
+            if (
+                len(units) != len(allocations)
+                or sum(unit.quantity_units for unit in units) < blood_request.units_needed
+            ):
+                raise BloodRequestRejected(
+                    "unit_unavailable",
+                    "The reserved units are no longer available for issue.",
+                    status_code=409,
+                )
+
+            today = blood_bank_today()
+            for unit in units:
+                if unit.status != BloodUnit.Status.RESERVED or unit.expiry_date <= today:
+                    raise BloodRequestRejected(
+                        "unit_unavailable",
+                        "A reserved unit is no longer available for issue.",
+                        status_code=409,
+                    )
+                if unit.component != blood_request.component or not is_compatible(
+                    unit.blood_group,
+                    blood_request.patient_blood_group,
+                    blood_request.component,
+                ):
+                    raise BloodRequestRejected(
+                        "incompatible_blood_type",
+                        "A reserved unit is incompatible with this request.",
+                        status_code=422,
+                    )
+
+            for allocation in allocations:
+                unit = locked_units[allocation.blood_unit_id]
+                try:
+                    transition_blood_unit(
+                        actor=actor,
+                        unit_id=unit.pk,
+                        action=InventoryTransaction.Action.ISSUE,
+                        reason=f"Blood request {blood_request.request_id}",
+                        ip_address=ip_address,
+                        as_of_date=today,
+                    )
+                except BloodUnitRejected as exc:
+                    raise _as_request_rejection(exc) from exc
+                unit.status = BloodUnit.Status.ISSUED
+                allocation.status = BloodAllocation.Status.ISSUED
+                allocation.issued_at = timezone.now()
+                allocation.save(update_fields=("status", "issued_at"))
+
+            blood_request.status = BloodRequest.Status.FULFILLED
+            blood_request.save(update_fields=("status",))
+            record_event(
+                action="REQUEST_FULFILLED",
+                actor=actor,
+                entity_type="BLOOD_REQUEST",
+                entity_id=blood_request.pk,
+                ip_address=ip_address,
+            )
+            Notification.objects.create(
+                recipient=blood_request.requester,
+                blood_request=blood_request,
+                type=Notification.Type.REQUEST_FULFILLED,
+            )
+            response_body = {
+                "request_id": blood_request.request_id,
+                "status": BloodRequest.Status.FULFILLED,
+                "issued_units": [_unit_response(unit) for unit in units],
+            }
+            IssueIdempotency.objects.create(
+                blood_request=blood_request,
+                key=idempotency_key,
+                response_body=response_body,
+            )
+            return response_body
+    except IntegrityError as exc:
+        raise BloodRequestRejected(
+            "unit_unavailable",
+            "A reserved unit is no longer available for issue.",
+            status_code=409,
+        ) from exc

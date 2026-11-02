@@ -50,6 +50,7 @@ def test_event_catalogue_contains_every_required_sad_action():
         "UNIT_RETURNED",
         "REQUEST_SUBMITTED",
         "REQUEST_APPROVED",
+        "REQUEST_RESERVED",
         "REQUEST_REJECTED",
         "REQUEST_HELD",
         "REQUEST_FULFILLED",
