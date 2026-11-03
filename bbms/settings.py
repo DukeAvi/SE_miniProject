@@ -28,6 +28,13 @@ def env_positive_int(name: str, default: int) -> int:
     return value
 
 
+def env_percentage(name: str, default: int) -> int:
+    value = int(os.getenv(name, str(default)))
+    if not 1 <= value <= 100:
+        raise ValueError(f"{name} must be between 1 and 100")
+    return value
+
+
 def env_time_zone(name: str, default: str) -> str:
     value = os.getenv(name, default)
     try:
@@ -216,6 +223,12 @@ DEFAULT_STOCK_THRESHOLD = env_positive_int("DEFAULT_STOCK_THRESHOLD", 5)
 BACKUP_RETENTION_DAYS = env_positive_int("BACKUP_RETENTION_DAYS", 7)
 INVENTORY_EXPIRY_BATCH_SIZE = env_positive_int("INVENTORY_EXPIRY_BATCH_SIZE", 100)
 NOTIFICATION_PROVIDER = os.getenv("NOTIFICATION_PROVIDER", "console")
+NOTIFICATION_PENDING_ALERT_THRESHOLD = env_positive_int(
+    "NOTIFICATION_PENDING_ALERT_THRESHOLD", 100
+)
+NOTIFICATION_FAILURE_RATE_ALERT_PERCENT = env_percentage(
+    "NOTIFICATION_FAILURE_RATE_ALERT_PERCENT", 10
+)
 USE_I18N = True
 USE_TZ = True
 
@@ -231,6 +244,10 @@ CELERY_BEAT_SCHEDULE = {
     "expire-blood-units-daily": {
         "task": "apps.inventory.tasks.expire_eligible_blood_units",
         "schedule": crontab(hour=0, minute=5),
+    },
+    "dispatch-pending-notifications": {
+        "task": "apps.notifications.tasks.dispatch_queued_notifications",
+        "schedule": crontab(minute="*/1"),
     },
 }
 

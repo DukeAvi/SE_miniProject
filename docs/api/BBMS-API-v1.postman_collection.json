@@ -936,7 +936,7 @@
         },
         {
           "name": "List current-user notifications",
-          "description": "Allowed roles: DONOR, RECIPIENT, STAFF, ADMIN. Implementation status: planned.",
+          "description": "Allowed roles: DONOR, RECIPIENT, STAFF, ADMIN. Implementation status: implemented. Each user sees only their own notices.",
           "request": {
             "method": "GET",
             "header": [
@@ -953,7 +953,8 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Expected status 200', function () { pm.response.to.have.status(200); });"
+                  "pm.test('Expected status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Response contains my notification list', function () { const body = pm.response.json(); pm.expect(body.results).to.be.an('array'); });"
                 ]
               }
             }
@@ -1187,7 +1188,7 @@
         },
         {
           "name": "List failed notification deliveries",
-          "description": "Allowed roles: ADMIN. Implementation status: planned.",
+          "description": "Allowed roles: ADMIN. Implementation status: implemented. Failure output contains sanitized codes only.",
           "request": {
             "method": "GET",
             "header": [
@@ -1204,7 +1205,8 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Expected status 200', function () { pm.response.to.have.status(200); });"
+                  "pm.test('Expected status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Response contains sanitized failures', function () { const body = pm.response.json(); pm.expect(body.results).to.be.an('array'); body.results.forEach((row) => pm.expect(row).to.have.property('code')); });"
                 ]
               }
             }

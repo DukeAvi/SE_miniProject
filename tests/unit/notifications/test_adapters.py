@@ -41,6 +41,12 @@ def test_factory_selects_console_adapter_by_default(settings):
     assert isinstance(get_notification_adapter(), ConsoleNotificationAdapter)
 
 
+def test_factory_supports_deterministic_mock_adapter(settings):
+    settings.NOTIFICATION_PROVIDER = "mock"
+
+    assert isinstance(get_notification_adapter(), MockNotificationAdapter)
+
+
 @pytest.mark.parametrize("provider", ["email", ""])
 def test_factory_rejects_unconfigured_provider(provider):
     with pytest.raises(ImproperlyConfigured, match="Unsupported notification provider"):

@@ -39,6 +39,11 @@ class Notification(models.Model):
         default=Status.QUEUED,
     )
     created_at = models.DateTimeField(auto_now_add=True)
+    attempt_count = models.PositiveSmallIntegerField(default=0)
+    next_attempt_at = models.DateTimeField(null=True, blank=True)
+    last_attempt_at = models.DateTimeField(null=True, blank=True)
+    sent_at = models.DateTimeField(null=True, blank=True)
+    failure_code = models.CharField(max_length=64, blank=True, default="")
 
     class Meta:
         ordering = ("created_at", "id")
@@ -50,6 +55,10 @@ class Notification(models.Model):
             models.Index(
                 fields=("recipient", "created_at"),
                 name="notice_recipient_time_idx",
+            ),
+            models.Index(
+                fields=("status", "next_attempt_at"),
+                name="notice_due_delivery_idx",
             ),
         ]
         constraints = [
@@ -68,5 +77,34 @@ class Notification(models.Model):
             models.CheckConstraint(
                 condition=models.Q(status__in=("QUEUED", "SENT", "FAILED")),
                 name="notification_status_valid",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(attempt_count__lte=5),
+                name="notification_attempts_max_five",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    models.Q(
+                        status="QUEUED",
+                        sent_at__isnull=True,
+                        failure_code="",
+                    )
+                    | models.Q(
+                        status="SENT",
+                        sent_at__isnull=False,
+                        next_attempt_at__isnull=True,
+                        failure_code="",
+                    )
+                    | models.Q(
+                        status="FAILED",
+                        sent_at__isnull=True,
+                        next_attempt_at__isnull=True,
+                    ) & ~models.Q(failure_code="")
+                ),
+                name="notification_delivery_metadata_matches_status",
+            ),
+            models.UniqueConstraint(
+                fields=("blood_request", "type"),
+                name="notification_request_type_once",
             ),
         ]
