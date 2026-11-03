@@ -5,6 +5,8 @@ from uuid import uuid4
 from django.conf import settings
 from django.db import models
 
+from apps.inventory.models import BloodUnit
+
 
 class BloodRequest(models.Model):
     """A recipient's validated request for blood components."""
@@ -115,5 +117,73 @@ class BloodRequest(models.Model):
                     | ~models.Q(decision_reason="")
                 ),
                 name="request_reject_hold_reason_required",
+            ),
+        ]
+
+
+class BloodAllocation(models.Model):
+    """A request's active reservation or completed issue of one blood unit."""
+
+    class Status(models.TextChoices):
+        RESERVED = "RESERVED", "Reserved"
+        ISSUED = "ISSUED", "Issued"
+        RELEASED = "RELEASED", "Released"
+
+    id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
+    blood_request = models.ForeignKey(
+        BloodRequest,
+        on_delete=models.PROTECT,
+        related_name="allocations",
+    )
+    blood_unit = models.ForeignKey(
+        BloodUnit,
+        on_delete=models.PROTECT,
+        related_name="allocations",
+    )
+    status = models.CharField(max_length=8, choices=Status.choices)
+    allocated_at = models.DateTimeField(auto_now_add=True)
+    issued_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ("allocated_at", "id")
+        constraints = [
+            models.UniqueConstraint(
+                fields=("blood_unit",),
+                condition=models.Q(status__in=("RESERVED", "ISSUED")),
+                name="requests_one_active_allocation_per_unit",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    models.Q(status="RESERVED", issued_at__isnull=True)
+                    | models.Q(status="ISSUED", issued_at__isnull=False)
+                    | models.Q(status="RELEASED")
+                ),
+                name="requests_allocation_issue_timestamp_matches_status",
+            ),
+        ]
+
+
+class IssueIdempotency(models.Model):
+    """Persist successful issue responses so clients can safely retry."""
+
+    id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
+    blood_request = models.ForeignKey(
+        BloodRequest,
+        on_delete=models.PROTECT,
+        related_name="issue_idempotency_records",
+    )
+    key = models.CharField(max_length=128)
+    response_body = models.JSONField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                condition=~models.Q(key=""),
+                name="requests_issue_idempotency_key_nonempty",
+            ),
+            models.UniqueConstraint(
+                fields=("blood_request", "key"),
+                name="requests_issue_idempotency_unique",
             ),
         ]

@@ -36,6 +36,7 @@ class AuditEvent(models.Model):
         UNIT_RETURNED = "UNIT_RETURNED", "Unit returned"
         REQUEST_SUBMITTED = "REQUEST_SUBMITTED", "Request submitted"
         REQUEST_APPROVED = "REQUEST_APPROVED", "Request approved"
+        REQUEST_RESERVED = "REQUEST_RESERVED", "Request reserved"
         REQUEST_REJECTED = "REQUEST_REJECTED", "Request rejected"
         REQUEST_HELD = "REQUEST_HELD", "Request held"
         REQUEST_FULFILLED = "REQUEST_FULFILLED", "Request fulfilled"
@@ -89,7 +90,7 @@ class AuditEvent(models.Model):
                         "UNIT_CREATED", "UNIT_RESERVED", "UNIT_RELEASED",
                         "UNIT_ISSUED", "UNIT_EXPIRED", "UNIT_DISCARDED",
                         "UNIT_RETURNED", "REQUEST_SUBMITTED",
-                        "REQUEST_APPROVED", "REQUEST_REJECTED", "REQUEST_HELD",
+                        "REQUEST_APPROVED", "REQUEST_RESERVED", "REQUEST_REJECTED", "REQUEST_HELD",
                         "REQUEST_FULFILLED", "THRESHOLD_CHANGED", "ACCESS_DENIED",
                     )
                 ),
