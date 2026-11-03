@@ -10,6 +10,7 @@ urlpatterns = [
     path("inventory/", include("apps.inventory.urls")),
     path("", include("apps.requests.root_urls")),
     path("requests/", include("apps.requests.urls")),
+    path("", include("apps.notifications.root_urls")),
     path("notifications/", include("apps.notifications.urls")),
     path("", include("apps.adminops.root_urls")),
     path("administration/", include("apps.adminops.urls")),

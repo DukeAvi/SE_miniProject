@@ -6434,7 +6434,7 @@
       "get": {
         "operationId": "listMyNotifications",
         "summary": "List current-user notifications",
-        "description": "Allowed roles: DONOR, RECIPIENT, STAFF, ADMIN.",
+        "description": "Allowed roles: DONOR, RECIPIENT, STAFF, ADMIN. Each authenticated user sees only their own notifications. Delivery status is visible without recipient or provider details.",
         "tags": [
           "notifications"
         ],
@@ -6444,7 +6444,7 @@
           "STAFF",
           "ADMIN"
         ],
-        "x-implementation-status": "planned",
+        "x-implementation-status": "implemented",
         "responses": {
           "200": {
             "description": "Successful response",
@@ -6460,7 +6460,7 @@
                   "results": [
                     {
                       "notification_id": "notice-demo-001",
-                      "type": "APPOINTMENT_CONFIRMATION",
+                      "type": "REQUEST_APPROVED",
                       "status": "QUEUED",
                       "created_at": "2026-10-29T10:12:00Z"
                     }
@@ -8631,14 +8631,14 @@
       "get": {
         "operationId": "listNotificationFailures",
         "summary": "List failed notification deliveries",
-        "description": "Allowed roles: ADMIN.",
+        "description": "Allowed roles: ADMIN. Lists permanently failed delivery attempts with a sanitized failure code; provider responses and recipient details are omitted.",
         "tags": [
           "admin"
         ],
         "x-allowed-roles": [
           "ADMIN"
         ],
-        "x-implementation-status": "planned",
+        "x-implementation-status": "implemented",
         "responses": {
           "200": {
             "description": "Successful response",
@@ -8654,7 +8654,7 @@
                   "results": [
                     {
                       "notification_id": "notice-demo-001",
-                      "code": "MOCK_DELIVERY_FAILED",
+                      "code": "DELIVERY_FAILED",
                       "created_at": "2026-10-29T10:12:00Z"
                     }
                   ]

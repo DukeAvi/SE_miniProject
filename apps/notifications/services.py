@@ -5,6 +5,11 @@ from typing import Protocol
 
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
+from django.db import transaction
+from django.db.models import Q
+from django.utils import timezone
+
+from .models import Notification
 
 
 logger = logging.getLogger(__name__)
@@ -50,4 +55,40 @@ def get_notification_adapter(provider: str | None = None) -> NotificationAdapter
     )
     if selected_provider == "console":
         return ConsoleNotificationAdapter()
+    if selected_provider == "mock":
+        return MockNotificationAdapter()
     raise ImproperlyConfigured("Unsupported notification provider")
+
+
+MAX_DELIVERY_ATTEMPTS = 5
+RETRY_BACKOFF_SECONDS = (60, 120, 240, 480)
+
+
+def dispatch_notification(notification_id: str) -> None:
+    """Schedule delivery after the outbox transaction commits."""
+    from .tasks import deliver_notification
+
+    transaction.on_commit(
+        lambda: _safe_enqueue(deliver_notification, str(notification_id)),
+        robust=True,
+    )
+
+
+def _safe_enqueue(task, notification_id: str) -> None:
+    try:
+        task.apply_async(args=[notification_id])
+    except Exception:
+        logger.warning(
+            "Notification dispatch could not reach the worker; the outbox sweep will retry"
+        )
+
+
+def due_notification_ids(*, now=None, limit=500):
+    """Return queued notification IDs that are ready for asynchronous delivery."""
+    now = now or timezone.now()
+    return list(
+        Notification.objects.filter(status=Notification.Status.QUEUED)
+        .filter(Q(next_attempt_at__isnull=True) | Q(next_attempt_at__lte=now))
+        .order_by("created_at", "id")
+        .values_list("id", flat=True)[:limit]
+    )
