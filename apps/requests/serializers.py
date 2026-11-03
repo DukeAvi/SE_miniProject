@@ -65,3 +65,30 @@ class BloodRequestSerializer(serializers.ModelSerializer):
             "status",
             "created_at",
         )
+
+
+class BloodRequestStatusHistorySerializer(serializers.Serializer):
+    status = serializers.CharField()
+    occurred_at = serializers.DateTimeField()
+
+
+class BloodRequestDetailSerializer(serializers.ModelSerializer):
+    status_history = serializers.SerializerMethodField()
+
+    class Meta:
+        model = BloodRequest
+        fields = (
+            "request_id",
+            "patient_blood_group",
+            "component",
+            "units_needed",
+            "urgency",
+            "status",
+            "created_at",
+            "reviewed_at",
+            "status_history",
+        )
+
+    def get_status_history(self, instance):
+        history = self.context.get("status_history", {}).get(instance.pk, [])
+        return BloodRequestStatusHistorySerializer(history, many=True).data
