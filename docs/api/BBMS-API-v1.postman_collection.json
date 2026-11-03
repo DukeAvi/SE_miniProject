@@ -873,7 +873,7 @@
         },
         {
           "name": "Reserve compatible available units",
-          "description": "Allowed roles: STAFF. Implementation status: planned.",
+          "description": "Allowed roles: STAFF. Implementation status: implemented. Reserves enough compatible, unexpired units for an approved request. Exact-group preference is followed by FEFO.",
           "request": {
             "method": "POST",
             "header": [
@@ -902,7 +902,7 @@
         },
         {
           "name": "Issue reserved blood units",
-          "description": "Allowed roles: STAFF. Implementation status: planned.",
+          "description": "Allowed roles: STAFF. Implementation status: implemented. Requires Idempotency-Key (1–128 non-whitespace characters); retry with the same key to receive the original result safely.",
           "request": {
             "method": "POST",
             "header": [
@@ -913,6 +913,11 @@
               {
                 "key": "X-CSRFToken",
                 "value": "{{csrfToken}}"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{idempotencyKey}}",
+                "type": "text"
               }
             ],
             "url": "{{baseUrl}}/api/v1/requests/{{id}}/issue"

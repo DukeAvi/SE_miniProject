@@ -5905,14 +5905,14 @@
       "post": {
         "operationId": "reserveBloodUnits",
         "summary": "Reserve compatible available units",
-        "description": "Selection uses approved component compatibility; the fulfillment workflow rechecks inside a locked transaction.",
+        "description": "Staff reserves sufficient compatible AVAILABLE and unexpired units for an approved request. Exact blood-group units are preferred, then FEFO ordering is applied. Request, allocations, inventory transitions, audit, and notification commit atomically.",
         "tags": [
           "requests"
         ],
         "x-allowed-roles": [
           "STAFF"
         ],
-        "x-implementation-status": "planned",
+        "x-implementation-status": "implemented",
         "responses": {
           "200": {
             "description": "Successful response",
@@ -6169,14 +6169,14 @@
       "post": {
         "operationId": "issueBloodUnits",
         "summary": "Issue reserved blood units",
-        "description": "Idempotency-Key is required. Repeating a key returns the original result without changing stock twice.",
+        "description": "Staff issues a reserved request. All reserved unit state, expiry, and compatibility checks are repeated under row locks. Idempotency-Key is required; repeating the same key for this request returns the original successful response without changing stock twice.",
         "tags": [
           "requests"
         ],
         "x-allowed-roles": [
           "STAFF"
         ],
-        "x-implementation-status": "planned",
+        "x-implementation-status": "implemented",
         "responses": {
           "200": {
             "description": "Successful response",
