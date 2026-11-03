@@ -59,6 +59,26 @@ jobs:
       - run: python manage.py makemigrations --check --dry-run
       - run: python manage.py migrate --noinput
       - run: pytest
+      - name: Set up Node.js for the web interface
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install web dependencies
+        working-directory: frontend
+        run: npm ci
+      - name: Lint and typecheck web interface
+        working-directory: frontend
+        run: |
+          npm run lint
+          npm run typecheck
+      - name: Build web interface
+        working-directory: frontend
+        run: npm run build
+      - name: Audit web dependencies
+        working-directory: frontend
+        run: npm audit
       - name: Install and verify Apache JMeter
         if: github.event_name == 'workflow_dispatch'
         run: bash scripts/performance/install_jmeter.sh "$RUNNER_TEMP"
