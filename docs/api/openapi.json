@@ -5089,7 +5089,7 @@
       "get": {
         "operationId": "listBloodRequests",
         "summary": "List requests visible to the current role",
-        "description": "Recipients see their own requests; Staff can see all requests.",
+        "description": "Recipients see only their own requests; Staff can see all operational requests. Results use newest-first ordering and bounded pagination.",
         "tags": [
           "requests"
         ],
@@ -5097,7 +5097,7 @@
           "RECIPIENT",
           "STAFF"
         ],
-        "x-implementation-status": "planned",
+        "x-implementation-status": "implemented",
         "responses": {
           "200": {
             "description": "Successful response",
@@ -5366,7 +5366,7 @@
       "get": {
         "operationId": "getBloodRequest",
         "summary": "Get a request",
-        "description": "Recipients may access only their own request; Staff may access all.",
+        "description": "Recipients may access only their own request; Staff may access all. Status changes are returned chronologically without patient contact or hospital details.",
         "tags": [
           "requests"
         ],
@@ -5374,23 +5374,34 @@
           "RECIPIENT",
           "STAFF"
         ],
-        "x-implementation-status": "planned",
+        "x-implementation-status": "implemented",
         "responses": {
           "200": {
             "description": "Successful response",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/BloodRequest"
+                  "$ref": "#/components/schemas/BloodRequestDetail"
                 },
                 "example": {
-                  "request_id": "req-demo-001",
+                  "request_id": "REQ-2026-0000000000000001",
                   "patient_blood_group": "A-",
                   "component": "RBC",
                   "units_needed": 1,
                   "urgency": "URGENT",
-                  "status": "PENDING",
-                  "created_at": "2026-10-29T10:12:00Z"
+                  "status": "APPROVED",
+                  "created_at": "2026-10-29T10:12:00Z",
+                  "reviewed_at": "2026-10-29T11:00:00Z",
+                  "status_history": [
+                    {
+                      "status": "PENDING",
+                      "occurred_at": "2026-10-29T10:12:00Z"
+                    },
+                    {
+                      "status": "APPROVED",
+                      "occurred_at": "2026-10-29T11:00:00Z"
+                    }
+                  ]
                 }
               }
             }
@@ -10415,6 +10426,89 @@
           "page",
           "page_size",
           "results"
+        ],
+        "additionalProperties": false
+      },
+      "RequestStatusHistory": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "APPROVED",
+              "REJECTED",
+              "ON_HOLD",
+              "RESERVED",
+              "FULFILLED"
+            ]
+          },
+          "occurred_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "status",
+          "occurred_at"
+        ],
+        "additionalProperties": false
+      },
+      "BloodRequestDetail": {
+        "type": "object",
+        "properties": {
+          "request_id": {
+            "type": "string"
+          },
+          "patient_blood_group": {
+            "type": "string"
+          },
+          "component": {
+            "type": "string"
+          },
+          "units_needed": {
+            "type": "integer"
+          },
+          "urgency": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "APPROVED",
+              "REJECTED",
+              "ON_HOLD",
+              "RESERVED",
+              "FULFILLED"
+            ]
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "reviewed_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "status_history": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RequestStatusHistory"
+            }
+          }
+        },
+        "required": [
+          "request_id",
+          "patient_blood_group",
+          "component",
+          "units_needed",
+          "urgency",
+          "status",
+          "created_at",
+          "reviewed_at",
+          "status_history"
         ],
         "additionalProperties": false
       }

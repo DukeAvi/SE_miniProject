@@ -779,7 +779,7 @@
         },
         {
           "name": "List requests visible to the current role",
-          "description": "Allowed roles: RECIPIENT, STAFF. Implementation status: planned.",
+          "description": "Allowed roles: RECIPIENT, STAFF. Implementation status: implemented. Recipients see only owned requests; Staff see all requests.",
           "request": {
             "method": "GET",
             "header": [
@@ -796,7 +796,8 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Expected status 200', function () { pm.response.to.have.status(200); });"
+                  "pm.test('Expected status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Response has pagination fields', function () { const body = pm.response.json(); pm.expect(body).to.have.property('count'); pm.expect(body).to.have.property('results'); });"
                 ]
               }
             }
@@ -804,7 +805,7 @@
         },
         {
           "name": "Get a request",
-          "description": "Allowed roles: RECIPIENT, STAFF. Implementation status: planned.",
+          "description": "Allowed roles: RECIPIENT, STAFF. Implementation status: implemented. Foreign recipient IDs return the same 404 envelope as missing IDs.",
           "request": {
             "method": "GET",
             "header": [
@@ -821,7 +822,8 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Expected status 200', function () { pm.response.to.have.status(200); });"
+                  "pm.test('Expected status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Response includes timestamped status history', function () { const body = pm.response.json(); pm.expect(body).to.have.property('status_history'); pm.expect(body.status_history).to.be.an('array'); });"
                 ]
               }
             }
