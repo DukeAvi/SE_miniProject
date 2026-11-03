@@ -35,6 +35,7 @@ EXPECTED_MATRIX = {
     "blood_request_create": {"RECIPIENT"},
     "own_requests": {"RECIPIENT"},
     "all_requests": {"STAFF"},
+    "request_read": {"RECIPIENT", "STAFF"},
     "request_review": {"STAFF"},
     "unit_fulfillment": {"STAFF"},
     "own_notifications": {"DONOR", "RECIPIENT", "STAFF", "ADMIN"},

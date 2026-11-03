@@ -19,6 +19,7 @@ ROLE_PERMISSION_MATRIX = {
     "blood_request_create": frozenset({"RECIPIENT"}),
     "own_requests": frozenset({"RECIPIENT"}),
     "all_requests": frozenset({"STAFF"}),
+    "request_read": frozenset({"RECIPIENT", "STAFF"}),
     "request_review": frozenset({"STAFF"}),
     "unit_fulfillment": frozenset({"STAFF"}),
     "own_notifications": frozenset({"DONOR", "RECIPIENT", "STAFF", "ADMIN"}),
