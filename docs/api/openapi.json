@@ -6445,7 +6445,7 @@
       "get": {
         "operationId": "listMyNotifications",
         "summary": "List current-user notifications",
-        "description": "Allowed roles: DONOR, RECIPIENT, STAFF, ADMIN. Each authenticated user sees only their own notifications. Delivery status is visible without recipient or provider details.",
+        "description": "Allowed roles: DONOR, RECIPIENT, STAFF, ADMIN. Each authenticated user sees only their own notifications. Delivery status is visible without recipient or provider details. Low-stock alerts include the blood group, component, available quantity, and threshold.",
         "tags": [
           "notifications"
         ],
@@ -6473,7 +6473,8 @@
                       "notification_id": "notice-demo-001",
                       "type": "REQUEST_APPROVED",
                       "status": "QUEUED",
-                      "created_at": "2026-10-29T10:12:00Z"
+                      "created_at": "2026-10-29T10:12:00Z",
+                      "low_stock_alert": null
                     }
                   ]
                 }
@@ -7895,14 +7896,14 @@
       "get": {
         "operationId": "getStockThresholds",
         "summary": "Get low-stock thresholds",
-        "description": "Allowed roles: ADMIN.",
+        "description": "Allowed roles: ADMIN. Returns configured thresholds for each blood group and component; unset values start at DEFAULT_STOCK_THRESHOLD.",
         "tags": [
           "admin"
         ],
         "x-allowed-roles": [
           "ADMIN"
         ],
-        "x-implementation-status": "planned",
+        "x-implementation-status": "implemented",
         "responses": {
           "200": {
             "description": "Successful response",
@@ -8138,15 +8139,15 @@
       },
       "put": {
         "operationId": "setStockThresholds",
-        "summary": "Replace low-stock thresholds",
-        "description": "Allowed roles: ADMIN.",
+        "summary": "Update low-stock thresholds",
+        "description": "Allowed roles: ADMIN. Updates one or more distinct blood-group/component thresholds. Each actual change is audited and immediately reevaluated against available stock.",
         "tags": [
           "admin"
         ],
         "x-allowed-roles": [
           "ADMIN"
         ],
-        "x-implementation-status": "planned",
+        "x-implementation-status": "implemented",
         "responses": {
           "200": {
             "description": "Successful response",
@@ -9984,7 +9985,15 @@
             "type": "string"
           },
           "type": {
-            "type": "string"
+            "type": "string",
+            "enum": [
+              "REQUEST_APPROVED",
+              "REQUEST_REJECTED",
+              "REQUEST_HELD",
+              "REQUEST_RESERVED",
+              "REQUEST_FULFILLED",
+              "LOW_STOCK_ALERT"
+            ]
           },
           "status": {
             "type": "string",
@@ -9997,13 +10006,57 @@
           "created_at": {
             "type": "string",
             "format": "date-time"
+          },
+          "low_stock_alert": {
+            "type": "object",
+            "nullable": true,
+            "properties": {
+              "blood_group": {
+                "type": "string",
+                "enum": [
+                  "O-",
+                  "O+",
+                  "A-",
+                  "A+",
+                  "B-",
+                  "B+",
+                  "AB-",
+                  "AB+"
+                ]
+              },
+              "component": {
+                "type": "string",
+                "enum": [
+                  "WHOLE_BLOOD",
+                  "RBC",
+                  "PLASMA",
+                  "PLATELETS"
+                ]
+              },
+              "available_units": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "threshold_units": {
+                "type": "integer",
+                "minimum": 1
+              }
+            },
+            "required": [
+              "blood_group",
+              "component",
+              "available_units",
+              "threshold_units"
+            ],
+            "additionalProperties": false
           }
         },
         "required": [
           "notification_id",
           "type",
           "status",
-          "created_at"
+          "created_at",
+          "low_stock_alert"
         ],
         "additionalProperties": false
       },
@@ -10142,7 +10195,7 @@
           },
           "threshold_units": {
             "type": "integer",
-            "minimum": 0
+            "minimum": 1
           }
         },
         "required": [

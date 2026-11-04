@@ -9,6 +9,8 @@ from django.db.utils import NotSupportedError
 
 from apps.donors.models import Donation
 
+SUPPORTED_BLOOD_GROUPS = ("O-", "O+", "A-", "A+", "B-", "B+", "AB-", "AB+")
+
 
 class BloodUnit(models.Model):
     """One tracked blood component unit linked to its completed donation."""
@@ -154,3 +156,53 @@ class InventoryJobRun(models.Model):
                 name="inv_job_run_status_valid",
             ),
         ]
+
+
+class StockThreshold(models.Model):
+    """Configured low-stock limit and alert suppression state per stock key."""
+
+    BLOOD_GROUPS = SUPPORTED_BLOOD_GROUPS
+
+    blood_group = models.CharField(max_length=3)
+    component = models.CharField(max_length=16, choices=BloodUnit.Component.choices)
+    threshold_units = models.PositiveIntegerField()
+    alert_active = models.BooleanField(default=False)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ("blood_group", "component")
+        constraints = [
+            models.UniqueConstraint(
+                fields=("blood_group", "component"),
+                name="inv_stock_threshold_key_unique",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(blood_group__in=SUPPORTED_BLOOD_GROUPS),
+                name="inv_stock_threshold_group_valid",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(component__in=tuple(BloodUnit.Component.values)),
+                name="inv_stock_threshold_component_valid",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(threshold_units__gt=0),
+                name="inv_stock_threshold_positive",
+            ),
+        ]
+
+
+class LowStockAlert(models.Model):
+    """Immutable snapshot of a downward crossing for one stock key."""
+
+    threshold = models.ForeignKey(
+        StockThreshold,
+        on_delete=models.PROTECT,
+        related_name="alerts",
+    )
+    available_units = models.PositiveIntegerField()
+    threshold_units = models.PositiveIntegerField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ("-created_at", "-pk")
+        indexes = [models.Index(fields=("created_at", "threshold"), name="inv_low_alert_time_idx")]

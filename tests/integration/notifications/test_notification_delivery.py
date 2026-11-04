@@ -85,7 +85,7 @@ def test_users_list_only_their_own_notifications(role):
     assert response.json()["count"] == 1
     assert response.json()["results"][0]["notification_id"] == str(own.pk)
     assert set(response.json()["results"][0]) == {
-        "notification_id", "type", "status", "created_at"
+        "notification_id", "type", "status", "created_at", "low_stock_alert"
     }
 
 

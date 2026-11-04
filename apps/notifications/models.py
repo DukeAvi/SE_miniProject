@@ -15,6 +15,7 @@ class Notification(models.Model):
         REQUEST_HELD = "REQUEST_HELD", "Request held"
         REQUEST_RESERVED = "REQUEST_RESERVED", "Request reserved"
         REQUEST_FULFILLED = "REQUEST_FULFILLED", "Request fulfilled"
+        LOW_STOCK_ALERT = "LOW_STOCK_ALERT", "Low stock alert"
 
     class Status(models.TextChoices):
         QUEUED = "QUEUED", "Queued"
@@ -31,6 +32,15 @@ class Notification(models.Model):
         "requests.BloodRequest",
         on_delete=models.PROTECT,
         related_name="notification_outbox",
+        null=True,
+        blank=True,
+    )
+    stock_alert = models.ForeignKey(
+        "inventory.LowStockAlert",
+        on_delete=models.PROTECT,
+        related_name="notifications",
+        null=True,
+        blank=True,
     )
     type = models.CharField(max_length=32, choices=Type.choices)
     status = models.CharField(
@@ -70,6 +80,7 @@ class Notification(models.Model):
                         "REQUEST_HELD",
                         "REQUEST_RESERVED",
                         "REQUEST_FULFILLED",
+                        "LOW_STOCK_ALERT",
                     )
                 ),
                 name="notification_type_catalogued",
@@ -105,6 +116,19 @@ class Notification(models.Model):
             ),
             models.UniqueConstraint(
                 fields=("blood_request", "type"),
+                condition=models.Q(blood_request__isnull=False),
                 name="notification_request_type_once",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    models.Q(blood_request__isnull=False, stock_alert__isnull=True)
+                    | models.Q(blood_request__isnull=True, stock_alert__isnull=False)
+                ),
+                name="notification_exactly_one_source",
+            ),
+            models.UniqueConstraint(
+                fields=("stock_alert", "recipient"),
+                condition=models.Q(stock_alert__isnull=False),
+                name="notification_stock_alert_recipient_once",
             ),
         ]

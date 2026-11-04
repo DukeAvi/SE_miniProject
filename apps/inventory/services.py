@@ -13,6 +13,7 @@ from apps.audit.services import record_event
 from apps.donors.models import Donation
 
 from .models import BloodUnit, InventoryJobRun, InventoryTransaction
+from .thresholds import evaluate_stock_threshold
 
 
 logger = logging.getLogger(__name__)
@@ -195,6 +196,16 @@ def transition_blood_unit(*, actor, unit_id, action, reason, ip_address=None, as
             entity_id=unit.pk,
             ip_address=ip_address,
         )
+        evaluate_stock_threshold(
+            blood_group=unit.blood_group,
+            component=unit.component,
+            as_of_date=today,
+            allow_alert=action in (
+                InventoryTransaction.Action.RESERVE,
+                InventoryTransaction.Action.DISCARD,
+                InventoryTransaction.Action.EXPIRE,
+            ),
+        )
         return unit
 
 
@@ -247,5 +258,11 @@ def create_verified_blood_unit(*, actor, donation_id, unit_code, blood_group,
             entity_type="BLOOD_UNIT",
             entity_id=unit.pk,
             ip_address=ip_address,
+        )
+        evaluate_stock_threshold(
+            blood_group=unit.blood_group,
+            component=unit.component,
+            as_of_date=blood_bank_today(),
+            allow_alert=False,
         )
         return unit

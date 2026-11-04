@@ -29,4 +29,4 @@ The Beat sweep safely requeues every due queued notification; no manual replay o
 
 ## Data handling
 
-The outbox stores only a request reference, recipient account reference, notification type, state, attempt timestamps/count, and sanitized failure code. It does not store message bodies, phone numbers, email addresses, provider responses, credentials, or tokens. User notification reads are scoped to the authenticated account.
+The outbox stores only a request or stock-alert reference, recipient account reference, notification type, state, attempt timestamps/count, and sanitized failure code. It does not store message bodies, phone numbers, email addresses, provider responses, credentials, or tokens. User notification reads are scoped to the authenticated account.

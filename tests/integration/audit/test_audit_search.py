@@ -55,6 +55,7 @@ def test_event_catalogue_contains_every_required_sad_action():
         "REQUEST_HELD",
         "REQUEST_FULFILLED",
         "THRESHOLD_CHANGED",
+        "LOW_STOCK_ALERTED",
         "ACCESS_DENIED",
         "USER_ENABLED",
     }
