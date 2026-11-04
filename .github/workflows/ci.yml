@@ -62,9 +62,11 @@ jobs:
           docker compose -f compose.monitoring.yaml config --quiet
       - name: Validate Prometheus and Alertmanager rules
         run: |
-          mkdir -p "$RUNNER_TEMP/bbms-monitoring/targets"
-          BBMS_PROBE_TARGET_FILE="$RUNNER_TEMP/bbms-monitoring/targets/bbms-health.json" python -m scripts.validate_monitoring_config
-          docker run --rm --entrypoint=/bin/promtool -v "$PWD/deployment:/etc/prometheus:ro" -v "$RUNNER_TEMP/bbms-monitoring/targets:/etc/prometheus/targets:ro" prom/prometheus:v3.7.3 check config /etc/prometheus/prometheus.yml
+          monitoring_config="$RUNNER_TEMP/bbms-monitoring/config"
+          mkdir -p "$monitoring_config/targets"
+          cp -R deployment/. "$monitoring_config/"
+          BBMS_PROBE_TARGET_FILE="$monitoring_config/targets/bbms-health.json" python -m scripts.validate_monitoring_config
+          docker run --rm --entrypoint=/bin/promtool -v "$monitoring_config:/etc/prometheus:ro" prom/prometheus:v3.7.3 check config /etc/prometheus/prometheus.yml
           docker run --rm --entrypoint=/bin/promtool -v "$PWD/deployment:/etc/prometheus:ro" prom/prometheus:v3.7.3 check rules /etc/prometheus/alerts.yml
           docker run --rm --workdir=/etc/prometheus --entrypoint=/bin/promtool -v "$PWD/deployment:/etc/prometheus:ro" prom/prometheus:v3.7.3 test rules alerts.test.yml
           docker run --rm --entrypoint=/bin/amtool -v "$PWD/deployment:/etc/alertmanager:ro" prom/alertmanager:v0.29.0 check-config /etc/alertmanager/alertmanager.yml
