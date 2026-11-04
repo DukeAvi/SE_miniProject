@@ -48,12 +48,14 @@ export DJANGO_ALLOWED_HOSTS=localhost
 export DJANGO_DEBUG=false
 
 docker compose -p "$project" -f "$repo_root/compose.yaml" -f "$repo_root/compose.secure.yaml" config --quiet
+echo "Compose TLS deployment configuration validated"
 docker compose -p "$project" -f "$repo_root/compose.yaml" -f "$repo_root/compose.secure.yaml" build edge
 if docker compose -p "$project" -f "$repo_root/compose.yaml" -f "$repo_root/compose.secure.yaml" \
   run --rm --no-deps -e 'BBMS_PUBLIC_HOSTNAME=localhost;id' edge >/dev/null 2>&1; then
   echo "Nginx accepted an invalid public hostname" >&2
   exit 1
 fi
+echo "Nginx hostname validation rejects malformed input"
 docker compose -p "$project" -f "$repo_root/compose.yaml" -f "$repo_root/compose.secure.yaml" up --build -d db redis web edge
 
 for attempt in $(seq 1 60); do
@@ -67,25 +69,29 @@ for attempt in $(seq 1 60); do
   fi
   sleep 2
 done
+echo "TLS edge and application health endpoint are ready"
 
 curl --silent --show-error --fail --resolve localhost:443:127.0.0.1 \
   --cacert "$public_tls_dir/ca.crt" --tlsv1.2 --tls-max 1.2 \
   -D "$temp_root/https.headers" https://localhost/healthz -o "$temp_root/health.json"
-grep -q '"status":"ok"' "$temp_root/health.json"
+grep -Eq '"status"[[:space:]]*:[[:space:]]*"ok"' "$temp_root/health.json"
 grep -qi '^Strict-Transport-Security: max-age=31536000; includeSubDomains' "$temp_root/https.headers"
 grep -qi '^X-Content-Type-Options: nosniff' "$temp_root/https.headers"
 grep -qi '^X-Frame-Options: DENY' "$temp_root/https.headers"
 grep -qi '^Referrer-Policy: strict-origin-when-cross-origin' "$temp_root/https.headers"
 grep -qi '^Content-Security-Policy:' "$temp_root/https.headers"
+echo "TLS 1.2 and application security headers verified"
 
 curl --silent --show-error --fail --resolve localhost:443:127.0.0.1 \
   --cacert "$public_tls_dir/ca.crt" --tlsv1.3 --tls-max 1.3 \
   https://localhost/healthz >/dev/null
+echo "TLS 1.3 verified"
 
 curl --silent --show-error --output /dev/null --dump-header "$temp_root/http.headers" \
   -H 'Host: localhost' http://127.0.0.1/healthz
 grep -qi '^HTTP/1.1 308' "$temp_root/http.headers"
 grep -qi '^Location: https://localhost/healthz' "$temp_root/http.headers"
+echo "HTTP redirects to the configured HTTPS hostname"
 
 if openssl s_client -connect 127.0.0.1:443 -servername localhost -tls1 \
   -cipher 'DEFAULT:@SECLEVEL=0' -brief -verify_return_error \
@@ -93,12 +99,14 @@ if openssl s_client -connect 127.0.0.1:443 -servername localhost -tls1 \
   echo "TLS 1.0 unexpectedly negotiated" >&2
   exit 1
 fi
+echo "TLS 1.0 and TLS 1.1 rejected"
 if openssl s_client -connect 127.0.0.1:443 -servername localhost -tls1_1 \
   -cipher 'DEFAULT:@SECLEVEL=0' -brief -verify_return_error \
   -CAfile "$public_tls_dir/ca.crt" </dev/null >/dev/null 2>&1; then
   echo "TLS 1.1 unexpectedly negotiated" >&2
   exit 1
 fi
+echo "TLS 1.0 and TLS 1.1 rejected"
 
 docker compose -p "$project" -f "$repo_root/compose.yaml" -f "$repo_root/compose.secure.yaml" \
   exec -T web python manage.py shell -c '
@@ -109,6 +117,7 @@ with connection.cursor() as cursor:
 assert encrypted and version in {"TLSv1.2", "TLSv1.3"}, (encrypted, version)
 print(f"PostgreSQL transport verified: {version}, encrypted=True")
 '
+echo "PostgreSQL hostname and CA verification succeeded"
 query='from django.db import connection; connection.ensure_connection()'
 if docker compose -p "$project" -f "$repo_root/compose.yaml" -f "$repo_root/compose.secure.yaml" \
   exec -T -e POSTGRES_HOST=untrusted-database-name web python manage.py shell -c "$query" \
