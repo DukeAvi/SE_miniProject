@@ -74,7 +74,7 @@ def seed(credentials_path: Path) -> None:
         donations = [
             Donation(
                 donor=donors[index % DONOR_COUNT],
-                donation_date=today - timedelta(days=index % 365),
+                donation_date=today - timedelta(days=index % 120),
                 blood_group=BLOOD_GROUPS[index % len(BLOOD_GROUPS)],
                 component=COMPONENTS[index % len(COMPONENTS)],
                 quantity_units=1 + index % 3,
@@ -93,7 +93,7 @@ def seed(credentials_path: Path) -> None:
                     donation_id=donation["id"],
                     unit_code=f"PERF-{index:05d}",
                     blood_group=BLOOD_GROUPS[index % len(BLOOD_GROUPS)],
-                    component=COMPONENTS[index % len(COMPONENTS)],
+                    component=COMPONENTS[(index // len(BLOOD_GROUPS)) % len(COMPONENTS)],
                     collected_at=timezone.make_aware(datetime.combine(donation_date, time(12))),
                     expiry_date=donation_date + timedelta(days=90),
                     quantity_units=1,
@@ -109,6 +109,14 @@ def seed(credentials_path: Path) -> None:
     with connection.cursor() as cursor:
         cursor.execute("ANALYZE donors_donation")
         cursor.execute("ANALYZE inventory_bloodunit")
+    matching_units = BloodUnit.objects.filter(
+        status=BloodUnit.Status.AVAILABLE,
+        blood_group="O+",
+        component=BloodUnit.Component.RBC,
+        expiry_date__gt=today,
+    ).count()
+    if matching_units < 100:
+        raise RuntimeError("The synthetic inventory seed did not produce a full 100-row search page.")
 
     credentials_path.parent.mkdir(parents=True, exist_ok=True)
     credentials_path.write_text(
