@@ -37,11 +37,15 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
       POSTGRES_HOST: db
       POSTGRES_PORT: "5432"
+      POSTGRES_SSLMODE: ${POSTGRES_SSLMODE:-disable}
+      POSTGRES_SSLROOTCERT: ${POSTGRES_SSLROOTCERT:-}
       CELERY_BROKER_URL: redis://redis:6379/0
       SESSION_COOKIE_SECURE: "false"
       CSRF_COOKIE_SECURE: "false"
-    ports:
-      - "8000:8000"
+      SECURE_SSL_REDIRECT: "false"
+      SECURE_HSTS_SECONDS: "0"
+    expose:
+      - "8000"
     depends_on:
       db:
         condition: service_healthy

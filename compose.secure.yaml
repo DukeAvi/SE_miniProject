@@ -1,0 +1,74 @@
+services:
+  db:
+    command:
+      - postgres
+      - -c
+      - ssl=on
+      - -c
+      - ssl_min_protocol_version=TLSv1.2
+      - -c
+      - ssl_cert_file=/run/postgres-tls/server.crt
+      - -c
+      - ssl_key_file=/run/postgres-tls/server.key
+      - -c
+      - ssl_ca_file=/run/postgres-tls/ca.crt
+      - -c
+      - hba_file=/run/postgres-tls/pg_hba.conf
+    volumes:
+      - ${POSTGRES_TLS_DIR:?Set POSTGRES_TLS_DIR to the protected PostgreSQL TLS material directory}/server.crt:/run/postgres-tls/server.crt:ro
+      - ${POSTGRES_TLS_DIR:?Set POSTGRES_TLS_DIR to the protected PostgreSQL TLS material directory}/server.key:/run/postgres-tls/server.key:ro
+      - ${POSTGRES_TLS_DIR:?Set POSTGRES_TLS_DIR to the protected PostgreSQL TLS material directory}/ca.crt:/run/postgres-tls/ca.crt:ro
+      - ./deployment/tls/postgresql-pg_hba.conf:/run/postgres-tls/pg_hba.conf:ro
+
+  web:
+    environment: &secure-db-environment
+      POSTGRES_SSLMODE: verify-full
+      POSTGRES_SSLROOTCERT: /run/postgres-tls/ca.crt
+      DJANGO_DEBUG: "false"
+      DJANGO_ALLOWED_HOSTS: ${BBMS_PUBLIC_HOSTNAME:?Set BBMS_PUBLIC_HOSTNAME}
+      BBMS_PUBLIC_HOSTNAME: ${BBMS_PUBLIC_HOSTNAME:?Set BBMS_PUBLIC_HOSTNAME}
+      SECURE_SSL_REDIRECT: "true"
+      SECURE_HSTS_SECONDS: "31536000"
+      SECURE_HSTS_INCLUDE_SUBDOMAINS: "true"
+      TRUST_PROXY_SSL_HEADER: "true"
+      SESSION_COOKIE_SECURE: "true"
+      CSRF_COOKIE_SECURE: "true"
+      CSRF_TRUSTED_ORIGINS: https://${BBMS_PUBLIC_HOSTNAME:?Set BBMS_PUBLIC_HOSTNAME}
+    volumes:
+      - ${POSTGRES_TLS_DIR:?Set POSTGRES_TLS_DIR}/ca.crt:/run/postgres-tls/ca.crt:ro
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import os, urllib.request; request = urllib.request.Request('http://127.0.0.1:8000/healthz', headers={'Host': os.environ['BBMS_PUBLIC_HOSTNAME'], 'X-Forwarded-Proto': 'https'}); urllib.request.urlopen(request, timeout=3)"
+      interval: 10s
+      timeout: 5s
+      retries: 6
+
+  worker:
+    environment: *secure-db-environment
+    volumes:
+      - ${POSTGRES_TLS_DIR:?Set POSTGRES_TLS_DIR}/ca.crt:/run/postgres-tls/ca.crt:ro
+
+  beat:
+    environment: *secure-db-environment
+    volumes:
+      - ${POSTGRES_TLS_DIR:?Set POSTGRES_TLS_DIR}/ca.crt:/run/postgres-tls/ca.crt:ro
+
+  edge:
+    build:
+      context: .
+      dockerfile: deployment/tls/Dockerfile
+    environment:
+      BBMS_PUBLIC_HOSTNAME: ${BBMS_PUBLIC_HOSTNAME:?Set BBMS_PUBLIC_HOSTNAME}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ${BBMS_TLS_DIR:?Set BBMS_TLS_DIR to the protected public TLS material directory}/fullchain.pem:/run/bbms-tls/fullchain.pem:ro
+      - ${BBMS_TLS_DIR:?Set BBMS_TLS_DIR to the protected public TLS material directory}/privkey.pem:/run/bbms-tls/privkey.pem:ro
+    depends_on:
+      web:
+        condition: service_healthy
+    restart: unless-stopped
