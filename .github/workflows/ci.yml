@@ -38,6 +38,7 @@ jobs:
       POSTGRES_PASSWORD: ci-only-password
       POSTGRES_HOST: localhost
       POSTGRES_PORT: "5432"
+      POSTGRES_SSLMODE: disable
       BBMS_PUBLIC_HEALTH_URL: https://bbms.example.test/healthz
       BBMS_ALERT_WEBHOOK_URL: https://alerts.example.test/webhook
       BBMS_ALERT_WEBHOOK_BEARER_TOKEN: ""
@@ -60,6 +61,8 @@ jobs:
         run: |
           docker compose -f compose.yaml config --quiet
           docker compose -f compose.monitoring.yaml config --quiet
+      - name: Verify TLS edge and PostgreSQL TLS deployment
+        run: bash scripts/test_tls_deployment.sh
       - name: Validate Prometheus and Alertmanager rules
         run: |
           monitoring_config="$RUNNER_TEMP/bbms-monitoring/config"

@@ -1,0 +1,45 @@
+events {}
+
+http {
+    server_tokens off;
+
+    server {
+        listen 80 default_server;
+        server_name __BBMS_PUBLIC_HOSTNAME__;
+        return 308 https://__BBMS_PUBLIC_HOSTNAME__$request_uri;
+    }
+
+    server {
+        listen 443 ssl default_server;
+        server_name __BBMS_PUBLIC_HOSTNAME__;
+
+        ssl_certificate /run/bbms-tls/fullchain.pem;
+        ssl_certificate_key /run/bbms-tls/privkey.pem;
+        ssl_protocols TLSv1.2 TLSv1.3;
+        ssl_ciphers ECDHE+AESGCM:ECDHE+CHACHA20:!aNULL:!MD5:!DSS:!3DES;
+        ssl_prefer_server_ciphers off;
+        ssl_session_cache shared:BBMS_TLS:10m;
+        ssl_session_timeout 10m;
+        ssl_session_tickets off;
+
+        add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header X-Frame-Options "DENY" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+        add_header Permissions-Policy "camera=(), microphone=(), geolocation=()" always;
+
+        location / {
+            proxy_pass http://web:8000;
+            proxy_http_version 1.1;
+            proxy_hide_header Strict-Transport-Security;
+            proxy_hide_header X-Content-Type-Options;
+            proxy_hide_header X-Frame-Options;
+            proxy_hide_header Referrer-Policy;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto https;
+            proxy_set_header X-Forwarded-Host $host;
+        }
+    }
+}
