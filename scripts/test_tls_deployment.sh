@@ -130,15 +130,19 @@ for service in web worker beat; do
   done
   test "$(docker inspect --format '{{.State.Health.Status}}' "$container_id")" = healthy
   previous_restarts="$(docker inspect --format '{{.RestartCount}}' "$container_id")"
-  docker kill --signal KILL "$container_id" >/dev/null
+  # Signal the process inside the container. Docker's kill API marks it manually
+  # stopped and suppresses the restart policy we are trying to verify.
+  docker exec "$container_id" python -c 'import os, signal; os.kill(1, signal.SIGTERM)'
   for attempt in $(seq 1 60); do
     restarts="$(docker inspect --format '{{.RestartCount}}' "$container_id")"
     health="$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{end}}' "$container_id")"
     if [ "$restarts" -gt "$previous_restarts" ] && [ "$health" = healthy ]; then break; fi
     sleep 2
   done
-  test "$restarts" -gt "$previous_restarts"
-  test "$health" = healthy
+  if [ "$restarts" -le "$previous_restarts" ] || [ "$health" != healthy ]; then
+    echo "TC-Reli-01: $service recovery failed (restarts=$restarts, health=$health)" >&2
+    exit 1
+  fi
   echo "TC-Reli-01: $service restarted automatically and recovered healthy"
 done
 
