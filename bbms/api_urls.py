@@ -6,6 +6,7 @@ app_name = "api-v1"
 urlpatterns = [
     path("", include("apps.accounts.urls")),
     path("", include("apps.donors.donation_urls")),
+    path("", include("apps.adminops.report_urls")),
     path("donors/", include("apps.donors.urls")),
     path("inventory/", include("apps.inventory.urls")),
     path("", include("apps.requests.root_urls")),
