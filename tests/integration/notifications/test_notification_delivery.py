@@ -93,10 +93,13 @@ def test_notification_list_validates_pagination_and_rejects_unknown_filters():
     user = make_user("RECIPIENT")
 
     invalid_page = client_as(user).get("/api/v1/notifications?page=0")
+    oversized_page = client_as(user).get("/api/v1/notifications?page_size=101")
     unknown_filter = client_as(user).get("/api/v1/notifications?recipient=other")
 
     assert invalid_page.status_code == 400
     assert invalid_page.json()["error"]["code"] == "invalid_query"
+    assert oversized_page.status_code == 400
+    assert oversized_page.json()["error"]["code"] == "invalid_query"
     assert unknown_filter.status_code == 400
 
 

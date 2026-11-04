@@ -18,7 +18,7 @@ jobs:
   validate:
     name: Lint, checks and tests
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 25
     services:
       postgres:
         image: postgres:16
@@ -41,6 +41,8 @@ jobs:
       BBMS_PUBLIC_HEALTH_URL: https://bbms.example.test/healthz
       BBMS_ALERT_WEBHOOK_URL: https://alerts.example.test/webhook
       BBMS_ALERT_WEBHOOK_BEARER_TOKEN: ""
+      BBMS_APP_METRICS_URL: https://metrics.internal.example.test/metrics
+      BBMS_APP_METRICS_BEARER_TOKEN: ci-only-metrics-token-never-use-in-production-0123456789
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
@@ -56,6 +58,25 @@ jobs:
       - run: python manage.py makemigrations --check --dry-run
       - run: python manage.py migrate --noinput
       - run: pytest
+      - name: Install and verify Apache JMeter
+        run: bash scripts/performance/install_jmeter.sh "$RUNNER_TEMP"
+      - name: Run PostgreSQL normal-load profile (TC-Perf-01)
+        env:
+          PERF_BENCHMARK_CONFIRM: "yes"
+          PERF_CREDENTIALS_FILE: ${{ runner.temp }}/bbms-perf-credentials.json
+          PERF_RESULTS_DIR: ${{ runner.temp }}/performance-results
+          JMETER_BIN: ${{ runner.temp }}/apache-jmeter-5.6.3/bin/jmeter
+        run: |
+          python scripts/performance/seed_dataset.py --credentials-file "$PERF_CREDENTIALS_FILE"
+          python scripts/performance/run_benchmark.py
+      - name: Upload performance results and query plans
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: tc-perf-01-${{ github.run_id }}
+          path: ${{ runner.temp }}/performance-results/
+          if-no-files-found: warn
+          retention-days: 14
       - name: Validate deployment Compose files
         run: |
           docker compose -f compose.yaml config --quiet
@@ -65,7 +86,7 @@ jobs:
           monitoring_config="$RUNNER_TEMP/bbms-monitoring/config"
           mkdir -p "$monitoring_config/targets"
           cp -R deployment/. "$monitoring_config/"
-          BBMS_PROBE_TARGET_FILE="$monitoring_config/targets/bbms-health.json" python -m scripts.validate_monitoring_config
+          BBMS_PROBE_TARGET_FILE="$monitoring_config/targets/bbms-health.json" BBMS_METRICS_TARGET_FILE="$monitoring_config/targets/bbms-app-metrics.json" python -m scripts.validate_monitoring_config
           docker run --rm prom/prometheus:v3.7.3 --storage.tsdb.retention.time=400d --version
           docker run --rm --entrypoint=/bin/promtool -v "$monitoring_config:/etc/prometheus:ro" prom/prometheus:v3.7.3 check config /etc/prometheus/prometheus.yml
           docker run --rm --entrypoint=/bin/promtool -v "$PWD/deployment:/etc/prometheus:ro" prom/prometheus:v3.7.3 check rules /etc/prometheus/alerts.yml

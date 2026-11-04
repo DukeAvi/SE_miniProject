@@ -59,6 +59,21 @@ def test_donor_lists_local_date_slots_with_live_capacity():
     assert listed["available_capacity"] == 3
 
 
+def test_donor_list_endpoints_never_return_more_than_100_rows_per_page():
+    donor = make_donor("page-limit")
+    slot = make_slot()
+    client = client_for(donor.user)
+    date_value = slot.starts_at.astimezone(ZoneInfo("Asia/Kolkata")).date().isoformat()
+
+    slot_page = client.get(SLOTS_URL, {"date": date_value, "page_size": 101})
+    appointment_page = client.get(APPOINTMENTS_URL, {"page_size": 101})
+
+    assert slot_page.status_code == 200
+    assert slot_page.json()["page_size"] == 100
+    assert appointment_page.status_code == 200
+    assert appointment_page.json()["page_size"] == 100
+
+
 def test_staff_can_list_slots_but_cannot_book_for_a_donor():
     slot = make_slot()
     staff = make_user("STAFF", 2)

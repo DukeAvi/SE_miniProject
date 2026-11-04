@@ -186,6 +186,18 @@ def test_admin_list_is_paginated_and_excludes_public_accounts():
     assert returned_ids <= {admin.pk, staff.pk}
 
 
+def test_admin_user_list_caps_page_size_at_100():
+    admin = make_user("ADMIN", 501)
+    client = APIClient()
+    client.force_authenticate(admin)
+
+    response = client.get(f"{USERS_URL}?page=1&page_size=101")
+
+    assert response.status_code == 200
+    assert response.json()["page_size"] == 100
+    assert len(response.json()["results"]) <= 100
+
+
 def test_disabling_account_revokes_every_active_session_and_is_audited():
     admin = make_user("ADMIN")
     staff = make_user("STAFF", 2)

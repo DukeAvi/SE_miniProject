@@ -14,3 +14,10 @@ groups:
           severity: critical
         annotations:
           summary: BBMS five-minute 5xx probe rate exceeded one percent
+      - alert: BbmsSearchDashboardP95LatencyAboveThreeSeconds
+        expr: histogram_quantile(0.95, sum by (le, route) (rate(bbms_http_request_duration_seconds_bucket{job="bbms-app", route=~"api/v1/inventory/units|api/v1/reports/<str:resource>"}[5m]))) > 3
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: BBMS search or dashboard API p95 latency exceeded three seconds for five minutes

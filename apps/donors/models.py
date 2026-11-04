@@ -56,6 +56,9 @@ class Donation(models.Model):
 
     class Meta:
         ordering = ("-donation_date", "-created_at")
+        indexes = [
+            models.Index(fields=("donation_date", "id"), name="donation_date_pk_idx"),
+        ]
         constraints = [
             models.CheckConstraint(condition=models.Q(quantity_units__gte=1), name="donors_donation_units_positive"),
             models.CheckConstraint(condition=models.Q(screening_weight_kg__gte=0), name="donors_donation_weight_nonnegative"),
