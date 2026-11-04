@@ -1,0 +1,36 @@
+rule_files:
+  - alerts.yml
+
+evaluation_interval: 1m
+
+tests:
+  - interval: 1m
+    input_series:
+      - series: 'probe_success{job="bbms-health", instance="https://bbms.example.test/healthz"}'
+        values: '1 0 0 0 1 1'
+      - series: 'probe_http_status_code{job="bbms-health", instance="https://bbms.example.test/healthz"}'
+        values: '200 500 500 500 200 200'
+    alert_rule_test:
+      - eval_time: 2m
+        alertname: BbmsThreeConsecutiveProbeFailures
+        exp_alerts: []
+      - eval_time: 3m
+        alertname: BbmsThreeConsecutiveProbeFailures
+        exp_alerts:
+          - exp_labels:
+              alertname: BbmsThreeConsecutiveProbeFailures
+              instance: https://bbms.example.test/healthz
+              job: bbms-health
+              severity: critical
+            exp_annotations:
+              summary: BBMS readiness probe failed three consecutive times
+      - eval_time: 4m
+        alertname: BbmsFiveMinute5xxRateAboveOnePercent
+        exp_alerts:
+          - exp_labels:
+              alertname: BbmsFiveMinute5xxRateAboveOnePercent
+              instance: https://bbms.example.test/healthz
+              job: bbms-health
+              severity: critical
+            exp_annotations:
+              summary: BBMS five-minute 5xx probe rate exceeded one percent

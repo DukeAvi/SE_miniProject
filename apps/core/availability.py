@@ -14,7 +14,8 @@ def calculate_availability(samples, maintenance_windows, *, target_percent=99.5)
             included.append(float(value))
     up = sum(1 for value in included if value >= 1.0)
     total = len(included)
-    percent = round((up / total * 100.0) if total else 100.0, 4)
+    raw_percent = up / total * 100.0 if total else None
+    percent = round(raw_percent, 4) if raw_percent is not None else None
     return {
         "probe_samples": len(samples),
         "planned_maintenance_samples": excluded,
@@ -23,7 +24,8 @@ def calculate_availability(samples, maintenance_windows, *, target_percent=99.5)
         "failed_samples": total - up,
         "availability_percent": percent,
         "target_percent": float(target_percent),
-        "target_met": percent >= target_percent,
+        "target_met": raw_percent is not None and raw_percent >= target_percent,
+        "data_available": total > 0,
     }
 
 
