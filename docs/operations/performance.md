@@ -31,4 +31,13 @@ The run creates `tc-perf-01.jtl`, `summary.json`, `query-plans.json`, `jmeter.lo
 
 ## Results
 
-The first committed run is pending. Update this section from the actual GitHub Actions artifact after the reproducible benchmark completes; do not substitute a local SQLite test or a synthetic result. Retain a fresh result with each performance-affecting change.
+GitHub Actions run [41807600683](https://github.com/DukeAvi/SE_miniProject/actions/runs/41807600683) completed TC-Perf-01 against PostgreSQL 16 on 2026-11-04. Its uploaded artifact, `tc-perf-01-41807600683`, contains the raw JMeter JTL, summary, sanitized query plans, and service logs. The profile passed:
+
+| Flow | Samples | p95 | Limit | Failed | Non-200 | Result |
+| --- | ---: | ---: | ---: | ---: | ---: | --- |
+| Inventory search | 11,392 | 18 ms | 3,000 ms | 0 | 0 | Pass |
+| Dashboard donation report | 11,390 | 16 ms | 3,000 ms | 0 | 0 | Pass |
+
+PostgreSQL `EXPLAIN ANALYZE` on the seeded test data showed the inventory search using `inv_search_filter_order_idx` with 100 returned rows and 0.230 ms execution time. The dashboard donation date-range query used `donation_date_pk_idx`, returned 100 rows, and took 0.177 ms. These are warm CI-run measurements on synthetic data, not production capacity claims. The run's full validation job failed afterward in `promtool test rules`: the new p95 alert test incorrectly expected a `job` label even though the rule's `sum by (le, route)` expression deliberately aggregates that label away. The test expectation now matches the actual alert labels; the next CI run must confirm the corrected rule test.
+
+The 20-user normal-load profile remains a proposal because issue #73 requires an agreed normal load but does not specify its concurrency. Product-owner confirmation of that profile is still needed before treating this benchmark as final acceptance evidence. Retain a fresh artifact with each performance-affecting change.

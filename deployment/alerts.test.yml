@@ -48,7 +48,6 @@ tests:
         exp_alerts:
           - exp_labels:
               alertname: BbmsSearchDashboardP95LatencyAboveThreeSeconds
-              job: bbms-app
               route: api/v1/inventory/units
               severity: warning
             exp_annotations:
