@@ -6,6 +6,10 @@ evaluation_interval: 1m
 tests:
   - interval: 1m
     input_series:
+      - series: 'bbms_http_request_duration_seconds_count{job="bbms-app",status_code="200"}'
+        values: '0+98x15'
+      - series: 'bbms_http_request_duration_seconds_count{job="bbms-app",status_code="500"}'
+        values: '0+2x15'
       - series: 'probe_success{job="bbms-health", instance="https://bbms.example.test/healthz"}'
         values: '1 0 0 0 1 1'
       - series: 'probe_http_status_code{job="bbms-health", instance="https://bbms.example.test/healthz"}'
@@ -35,11 +39,9 @@ tests:
         exp_alerts:
           - exp_labels:
               alertname: BbmsFiveMinute5xxRateAboveOnePercent
-              instance: https://bbms.example.test/healthz
-              job: bbms-health
               severity: critical
             exp_annotations:
-              summary: BBMS five-minute 5xx probe rate exceeded one percent
+              summary: BBMS five-minute request 5xx rate exceeded one percent
       - eval_time: 5m
         alertname: BbmsSearchDashboardP95LatencyAboveThreeSeconds
         exp_alerts: []

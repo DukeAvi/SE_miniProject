@@ -69,8 +69,8 @@ def test_alert_rules_use_required_probe_and_server_error_thresholds():
     assert probe_failure["expr"] == 'probe_success{job="bbms-health"} == 0'
     assert probe_failure["for"] == "2m"
     server_error = by_name["BbmsFiveMinute5xxRateAboveOnePercent"]
-    assert "probe_http_status_code" in server_error["expr"]
-    assert "[5m:1m]" in server_error["expr"]
+    assert "bbms_http_request_duration_seconds_count" in server_error["expr"]
+    assert "[5m]" in server_error["expr"]
     assert "> 0.01" in server_error["expr"]
     latency = by_name["BbmsSearchDashboardP95LatencyAboveThreeSeconds"]
     assert "histogram_quantile(0.95" in latency["expr"]

@@ -9,11 +9,11 @@ groups:
         annotations:
           summary: BBMS readiness probe failed three consecutive times
       - alert: BbmsFiveMinute5xxRateAboveOnePercent
-        expr: avg_over_time((probe_http_status_code{job="bbms-health"} >= bool 500)[5m:1m]) > 0.01
+        expr: sum(rate(bbms_http_request_duration_seconds_count{job="bbms-app",status_code=~"5.."}[5m])) / sum(rate(bbms_http_request_duration_seconds_count{job="bbms-app"}[5m])) > 0.01
         labels:
           severity: critical
         annotations:
-          summary: BBMS five-minute 5xx probe rate exceeded one percent
+          summary: BBMS five-minute request 5xx rate exceeded one percent
       - alert: BbmsSearchDashboardP95LatencyAboveThreeSeconds
         expr: histogram_quantile(0.95, sum by (le, route) (rate(bbms_http_request_duration_seconds_bucket{job="bbms-app", route=~"api/v1/inventory/units|api/v1/reports/<str:resource>"}[5m]))) > 3
         for: 5m
