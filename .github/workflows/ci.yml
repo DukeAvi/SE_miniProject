@@ -85,6 +85,8 @@ jobs:
           test "$(docker inspect --format '{{.State.Running}}' "$container")" = true
           test "$(docker inspect --format '{{.RestartCount}}' "$container")" -ge 1
           docker rm -f "$container"
+      - name: Run encrypted PostgreSQL backup and restore drill
+        run: bash scripts/backup_restore_drill.sh
       - name: Verify low-stock crossing locks on PostgreSQL
         run: pytest -q tests/integration/inventory/test_low_stock_alerts.py::test_concurrent_stock_reductions_create_one_crossing_alert
         env:
