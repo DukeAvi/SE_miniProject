@@ -1,0 +1,67 @@
+services:
+  blackbox:
+    image: prom/blackbox-exporter:v0.27.0
+    volumes:
+      - ./deployment/blackbox.yml:/etc/blackbox_exporter/config.yml:ro
+    restart: unless-stopped
+
+  monitoring-config-check:
+    build: .
+    command: ["python", "-m", "scripts.validate_monitoring_config"]
+    environment:
+      BBMS_PUBLIC_HEALTH_URL: ${BBMS_PUBLIC_HEALTH_URL:?Set BBMS_PUBLIC_HEALTH_URL to the public HTTPS health URL}
+      BBMS_ALERT_WEBHOOK_URL: ${BBMS_ALERT_WEBHOOK_URL:?Set BBMS_ALERT_WEBHOOK_URL to an HTTPS notification endpoint}
+      BBMS_PROBE_TARGET_FILE: /app/var/probe-targets/bbms-health.json
+    volumes:
+      - probe-targets:/app/var/probe-targets
+
+  prometheus:
+    image: prom/prometheus:v3.7.3
+    command: ["--config.file=/etc/prometheus/prometheus.yml", "--storage.tsdb.retention.time=400d"]
+    volumes:
+      - ./deployment/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./deployment/alerts.yml:/etc/prometheus/alerts.yml:ro
+      - probe-targets:/etc/prometheus/targets:ro
+      - prometheus-data:/prometheus
+    ports:
+      - "127.0.0.1:9090:9090"
+    depends_on:
+      blackbox:
+        condition: service_started
+      alertmanager:
+        condition: service_started
+      monitoring-config-check:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  alertmanager:
+    image: prom/alertmanager:v0.29.0
+    command: ["--config.file=/etc/alertmanager/alertmanager.yml"]
+    volumes:
+      - ./deployment/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+    ports:
+      - "127.0.0.1:9093:9093"
+    restart: unless-stopped
+
+  alert-receiver:
+    build: .
+    command: ["python", "scripts/alert_receiver.py"]
+    environment:
+      BBMS_ALERT_WEBHOOK_URL: ${BBMS_ALERT_WEBHOOK_URL:?Set BBMS_ALERT_WEBHOOK_URL to an HTTPS notification endpoint}
+      BBMS_ALERT_WEBHOOK_BEARER_TOKEN: ${BBMS_ALERT_WEBHOOK_BEARER_TOKEN:-}
+    depends_on:
+      monitoring-config-check:
+        condition: service_completed_successfully
+    volumes:
+      - alert-evidence:/app/var/alerts
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:9095/healthz', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  prometheus-data:
+  alert-evidence:
+  probe-targets:

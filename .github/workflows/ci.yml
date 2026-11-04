@@ -38,6 +38,9 @@ jobs:
       POSTGRES_PASSWORD: ci-only-password
       POSTGRES_HOST: localhost
       POSTGRES_PORT: "5432"
+      BBMS_PUBLIC_HEALTH_URL: https://bbms.example.test/healthz
+      BBMS_ALERT_WEBHOOK_URL: https://alerts.example.test/webhook
+      BBMS_ALERT_WEBHOOK_BEARER_TOKEN: ""
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
@@ -53,6 +56,35 @@ jobs:
       - run: python manage.py makemigrations --check --dry-run
       - run: python manage.py migrate --noinput
       - run: pytest
+      - name: Validate deployment Compose files
+        run: |
+          docker compose -f compose.yaml config --quiet
+          docker compose -f compose.monitoring.yaml config --quiet
+      - name: Validate Prometheus and Alertmanager rules
+        run: |
+          monitoring_config="$RUNNER_TEMP/bbms-monitoring/config"
+          mkdir -p "$monitoring_config/targets"
+          cp -R deployment/. "$monitoring_config/"
+          BBMS_PROBE_TARGET_FILE="$monitoring_config/targets/bbms-health.json" python -m scripts.validate_monitoring_config
+          docker run --rm prom/prometheus:v3.7.3 --storage.tsdb.retention.time=400d --version
+          docker run --rm --entrypoint=/bin/promtool -v "$monitoring_config:/etc/prometheus:ro" prom/prometheus:v3.7.3 check config /etc/prometheus/prometheus.yml
+          docker run --rm --entrypoint=/bin/promtool -v "$PWD/deployment:/etc/prometheus:ro" prom/prometheus:v3.7.3 check rules /etc/prometheus/alerts.yml
+          docker run --rm --workdir=/etc/prometheus --entrypoint=/bin/promtool -v "$PWD/deployment:/etc/prometheus:ro" prom/prometheus:v3.7.3 test rules alerts.test.yml
+          docker run --rm --entrypoint=/bin/amtool -v "$PWD/deployment:/etc/alertmanager:ro" prom/alertmanager:v0.29.0 check-config /etc/alertmanager/alertmanager.yml
+      - name: Verify Docker restart policy after process exit
+        run: |
+          container=bbms-restart-policy-check
+          docker rm -f "$container" >/dev/null 2>&1 || true
+          docker run -d --name "$container" --restart unless-stopped alpine:3.21 sh -c 'if [ ! -f /tmp/first-run ]; then touch /tmp/first-run; exit 1; fi; sleep 30'
+          for attempt in $(seq 1 15); do
+            running=$(docker inspect --format '{{.State.Running}}' "$container")
+            restarts=$(docker inspect --format '{{.RestartCount}}' "$container")
+            if [ "$running" = true ] && [ "$restarts" -ge 1 ]; then break; fi
+            sleep 1
+          done
+          test "$(docker inspect --format '{{.State.Running}}' "$container")" = true
+          test "$(docker inspect --format '{{.RestartCount}}' "$container")" -ge 1
+          docker rm -f "$container"
       - name: Verify low-stock crossing locks on PostgreSQL
         run: pytest -q tests/integration/inventory/test_low_stock_alerts.py::test_concurrent_stock_reductions_create_one_crossing_alert
         env:

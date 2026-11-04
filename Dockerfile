@@ -9,7 +9,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
-RUN useradd --create-home --uid 10001 bbms && chown -R bbms:bbms /app
+RUN useradd --create-home --uid 10001 bbms && mkdir -p /app/var/alerts /app/var/probe-targets && chown -R bbms:bbms /app
 USER bbms
 
 CMD ["gunicorn", "bbms.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "2"]

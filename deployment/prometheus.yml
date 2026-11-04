@@ -15,8 +15,9 @@ scrape_configs:
     metrics_path: /probe
     params:
       module: [http_2xx]
-    static_configs:
-      - targets: ["http://web:8000/healthz"]
+    file_sd_configs:
+      - files: ["/etc/prometheus/targets/bbms-health.json"]
+        refresh_interval: 1m
     relabel_configs:
       - source_labels: [__address__]
         target_label: __param_target

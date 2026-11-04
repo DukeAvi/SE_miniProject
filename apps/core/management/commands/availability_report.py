@@ -20,7 +20,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         try:
             start = datetime.strptime(options["month"], "%Y-%m").replace(tzinfo=UTC)
-            end = (start.replace(day=28) + timedelta(days=4)).replace(day=1)
+            end = (start.replace(day=28) + timedelta(days=4)).replace(day=1) - timedelta(minutes=1)
             maintenance = json.loads(Path(options["maintenance_file"]).read_text())
             windows = [
                 (datetime.fromisoformat(item["start"].replace("Z", "+00:00")),
@@ -36,9 +36,14 @@ class Command(BaseCommand):
             with urlopen(f"{options['prometheus_url'].rstrip('/')}/api/v1/query_range?{query}", timeout=10) as response:
                 payload = json.load(response)
             results = payload["data"]["result"]
-            if not results:
+            samples = [
+                sample
+                for result in results
+                for sample in result.get("values", [])
+            ]
+            if not samples:
                 raise CommandError("No health-probe samples exist for the requested month.")
-            report = calculate_availability(parse_prometheus_samples(results[0]["values"]), windows)
+            report = calculate_availability(parse_prometheus_samples(samples), windows)
         except (OSError, ValueError, KeyError, json.JSONDecodeError) as exc:
             raise CommandError("Availability data could not be read.") from exc
         report["month"] = options["month"]
