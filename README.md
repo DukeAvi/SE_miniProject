@@ -51,6 +51,8 @@ celery -A bbms beat --loglevel=INFO
 
 Beat schedules expiry at 00:05 in `BLOOD_BANK_TIME_ZONE`. See the [expiry operations guide](docs/operations/inventory-expiry.md) for monitoring, retries, and the test-only manual trigger. The demo notification provider writes sanitized console events; it does not send email or SMS.
 
+For an internet-facing deployment, use the [secure transport guide](docs/operations/secure-transport.md) and run Compose with `compose.secure.yaml`. The base Compose stack is private/local development configuration and must not be exposed directly.
+
 ## Checks
 
 The test suite uses its own SQLite settings. Run these checks from the repository root:
