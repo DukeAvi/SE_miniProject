@@ -1,0 +1,16 @@
+groups:
+  - name: bbms-availability
+    rules:
+      - alert: BbmsThreeConsecutiveProbeFailures
+        expr: probe_success{job="bbms-health"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: BBMS readiness probe failed three consecutive times
+      - alert: BbmsFiveMinute5xxRateAboveOnePercent
+        expr: avg_over_time((probe_http_status_code{job="bbms-health"} >= bool 500)[5m:1m]) > 0.01
+        labels:
+          severity: critical
+        annotations:
+          summary: BBMS five-minute 5xx probe rate exceeded one percent

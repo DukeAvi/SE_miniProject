@@ -4,14 +4,16 @@
 
 `GET /healthz` executes a minimal `SELECT 1` against the configured primary database. It returns `200 {"status":"ok"}` when that dependency responds, or `503 {"status":"unavailable"}` when it does not. The response omits connection details and exception text. The endpoint is a database readiness check; it does not report Celery worker or broker readiness.
 
-## Deployment work still required for BBMS-NF-002 (#74)
+## Local supervised stack and monitoring
 
-The repository does not define a deployment target, packaged web/worker process units, external probe provider, public health URL, alert destination, or durable uptime/maintenance data source. As a result, this code change does not claim to configure process restart, a one-minute external probe, the three-failure/five-minute 5xx alerts, or the monthly 99.5% availability report.
+`compose.yaml` runs PostgreSQL, Redis, Django, Celery worker and Beat, Blackbox Exporter, Prometheus, Alertmanager, and a small webhook receiver. Services use restart policies and health checks. Set `DJANGO_SECRET_KEY` and `POSTGRES_PASSWORD` before starting the stack; configure the receiver's external webhook destination in the deployment environment when needed.
 
-Before those operational criteria can be implemented and verified, the repository owner must identify:
+Prometheus probes `/healthz` once per minute. Alerts fire after three consecutive failed probes or when the five-minute server-error rate exceeds one percent. Alert payloads are reduced to alert name, status, and timestamps before they are stored. Prometheus retains probe data for 400 days.
 
-- The deployment target and how web, Celery worker, and Beat processes are supervised.
-- The externally reachable probe URL and monitoring/alert destination.
-- Where planned maintenance windows and probe results are recorded for monthly availability calculations.
+Record planned UTC maintenance windows in `deployment/maintenance.json`. Generate a monthly report with:
 
-The remaining operational work must include evidence of automatic restart, alert threshold behavior, maintenance exclusion, and the monthly availability calculation. Keep issue #74 open until that evidence exists.
+```bash
+python manage.py availability_report --month YYYY-MM
+```
+
+The report excludes samples inside those maintenance windows and reports whether availability met the 99.5% target. For deployment evidence, retain the report and the Prometheus/Alertmanager firing history alongside the release record.

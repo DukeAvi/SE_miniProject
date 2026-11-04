@@ -1,0 +1,11 @@
+route:
+  receiver: bbms-alert-evidence
+  group_wait: 0s
+  group_interval: 1m
+  repeat_interval: 4h
+
+receivers:
+  - name: bbms-alert-evidence
+    webhook_configs:
+      - url: http://alert-receiver:9095/alerts
+        send_resolved: true
