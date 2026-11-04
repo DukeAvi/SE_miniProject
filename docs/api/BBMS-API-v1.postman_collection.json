@@ -962,7 +962,7 @@
         },
         {
           "name": "Get an operational report",
-          "description": "Allowed roles: STAFF, ADMIN. Implementation status: planned.",
+          "description": "Allowed roles: STAFF, ADMIN. Implementation status: implemented. Use a Staff or Admin session; filters are resource-specific and CSV contains the complete filtered export.",
           "request": {
             "method": "GET",
             "header": [
