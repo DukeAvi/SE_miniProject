@@ -1,6 +1,6 @@
 # TC-Audit-02: one-year audit retention evidence
 
-**Revision:** record the final PR head SHA here after the issue commit.
+**Tested code revision:** `98fb14177b6acb94abd0ea70553f0d8893e9113f`.
 **Execution date:** 2026-11-04 Asia/Kolkata (automated checks below).
 **Environment:** Python 3.14.6, Django 5.2.18, pytest 9.1.1, SQLite in-memory test database.
 **Data:** generated synthetic audit rows only; no donor, recipient, clinical, or production data.
@@ -32,7 +32,7 @@ cutoff.
 
 ```text
 DJANGO_SETTINGS_MODULE=bbms.settings_test /tmp/bbms-sprint2-venv/bin/pytest tests/integration/audit -q
-67 passed in 9.26s
+67 passed in 9.09s
 
 DJANGO_SETTINGS_MODULE=bbms.settings_test /tmp/bbms-sprint2-venv/bin/python manage.py check
 System check identified no issues (0 silenced).
@@ -47,7 +47,7 @@ All migrations applied successfully, including audit.0006.
 All checks passed!
 
 DJANGO_SETTINGS_MODULE=bbms.settings_test /tmp/bbms-sprint2-venv/bin/pytest -q
-650 passed, 5 skipped in 146.35s
+650 passed, 5 skipped in 141.68s
 
 git diff --check
 Passed (no whitespace errors).
