@@ -76,7 +76,7 @@ services:
 
   beat:
     build: .
-    command: ["celery", "-A", "bbms", "beat", "--loglevel=INFO", "--pidfile=/tmp/celerybeat.pid"]
+    command: ["sh", "-c", "rm -f /tmp/celerybeat.pid && exec celery -A bbms beat --loglevel=INFO --pidfile=/tmp/celerybeat.pid"]
     environment: *app-environment
     depends_on:
       db:

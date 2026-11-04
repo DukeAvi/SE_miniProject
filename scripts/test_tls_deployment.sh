@@ -117,6 +117,41 @@ assert encrypted and version in {"TLSv1.2", "TLSv1.3"}, (encrypted, version)
 print(f"PostgreSQL transport verified: {version}, encrypted=True")
 '
 echo "PostgreSQL hostname and CA verification succeeded"
+
+# Exercise the real application processes, rather than a stand-in container.
+docker compose -p "$project" -f "$repo_root/compose.yaml" -f "$repo_root/compose.secure.yaml" up --build -d worker beat
+for service in web worker beat; do
+  container_id="$(docker compose -p "$project" -f "$repo_root/compose.yaml" -f "$repo_root/compose.secure.yaml" ps -q "$service")"
+  test -n "$container_id"
+  for attempt in $(seq 1 60); do
+    if [ "$(docker inspect --format '{{.State.Health.Status}}' "$container_id")" = healthy ]; then break; fi
+    sleep 2
+  done
+  test "$(docker inspect --format '{{.State.Health.Status}}' "$container_id")" = healthy
+  previous_restarts="$(docker inspect --format '{{.RestartCount}}' "$container_id")"
+  docker kill --signal KILL "$container_id" >/dev/null
+  for attempt in $(seq 1 60); do
+    restarts="$(docker inspect --format '{{.RestartCount}}' "$container_id")"
+    health="$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{end}}' "$container_id")"
+    if [ "$restarts" -gt "$previous_restarts" ] && [ "$health" = healthy ]; then break; fi
+    sleep 2
+  done
+  test "$restarts" -gt "$previous_restarts"
+  test "$health" = healthy
+  echo "TC-Reli-01: $service restarted automatically and recovered healthy"
+done
+
+docker compose -p "$project" -f "$repo_root/compose.yaml" -f "$repo_root/compose.secure.yaml" stop db
+status="$(curl --silent --show-error --resolve localhost:443:127.0.0.1 --cacert "$public_tls_dir/ca.crt" --output "$temp_root/unavailable.json" --write-out '%{http_code}' https://localhost/healthz)"
+test "$status" = 503
+grep -Eq '"status"[[:space:]]*:[[:space:]]*"unavailable"' "$temp_root/unavailable.json"
+docker compose -p "$project" -f "$repo_root/compose.yaml" -f "$repo_root/compose.secure.yaml" up -d db
+for attempt in $(seq 1 60); do
+  if curl --silent --fail --cacert "$public_tls_dir/ca.crt" https://localhost/healthz >/dev/null; then break; fi
+  sleep 2
+done
+curl --silent --fail --cacert "$public_tls_dir/ca.crt" https://localhost/healthz >/dev/null
+echo "TC-Reli-01: database failure returned sanitized 503 and readiness recovered"
 query='from django.db import connection; connection.ensure_connection()'
 if docker compose -p "$project" -f "$repo_root/compose.yaml" -f "$repo_root/compose.secure.yaml" \
   exec -T -e POSTGRES_HOST=untrusted-database-name web python manage.py shell -c "$query" \
