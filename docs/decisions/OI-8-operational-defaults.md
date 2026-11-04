@@ -23,8 +23,8 @@ Use the defaults below for the version 1.0 demonstration. An invalid value stops
 
 ## Consequences
 
-- Seed data (QA-001, issue #95) and the operational runbook must use these values. No runbook exists in the repository yet.
-- The backup job (NF-006) is not implemented yet; this record fixes its default. BBMS-F-041 uses these approved defaults for configurable low-stock alerts.
+- Seed data (QA-001, issue #95) and the backup operational runbook use these values.
+- The backup job (NF-006, issue #78) uses this approved retention default; its implementation and restore runbook are in `docs/operations/database-backups.md`. BBMS-F-041 uses the approved low-stock default for configurable alerts.
 - Issue #54 owns appointment capacity, #69 owns low-stock alert thresholds, #78 owns backup retention, and #95 owns synthetic seed data.
 - A deployment that needs different values changes the environment variables; no code change is needed.
 
