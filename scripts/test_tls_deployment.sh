@@ -34,7 +34,8 @@ cp "$temp_root/server.key" "$postgres_tls_dir/server.key"
 chmod 600 "$postgres_tls_dir/server.key"
 postgres_uid="$(docker run --rm postgres:16-alpine id -u postgres)"
 postgres_gid="$(docker run --rm postgres:16-alpine id -g postgres)"
-sudo chown "$postgres_uid:$postgres_gid" "$postgres_tls_dir/server.key"
+docker run --rm --user 0 -v "$postgres_tls_dir:/tls" postgres:16-alpine \
+  chown "$postgres_uid:$postgres_gid" /tls/server.key
 cp "$temp_root/ca.crt" "$public_tls_dir/ca.crt"
 cp "$temp_root/server.crt" "$public_tls_dir/fullchain.pem"
 cp "$temp_root/server.key" "$public_tls_dir/privkey.pem"
