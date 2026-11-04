@@ -902,7 +902,7 @@
         },
         {
           "name": "Issue reserved blood units",
-          "description": "Allowed roles: STAFF. Implementation status: implemented. Requires Idempotency-Key (1–128 non-whitespace characters); retry with the same key to receive the original result safely.",
+          "description": "Allowed roles: STAFF. Implementation status: implemented. Requires Idempotency-Key (1\u2013128 non-whitespace characters); retry with the same key to receive the original result safely.",
           "request": {
             "method": "POST",
             "header": [
@@ -954,7 +954,8 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('Expected status 200', function () { pm.response.to.have.status(200); });",
-                  "pm.test('Response contains my notification list', function () { const body = pm.response.json(); pm.expect(body.results).to.be.an('array'); });"
+                  "pm.test('Response contains my notification list', function () { const body = pm.response.json(); pm.expect(body.results).to.be.an('array'); });",
+                  "pm.test('Notification includes low-stock details when applicable', function () { const rows = pm.response.json().results; rows.forEach((row) => { if (row.type === 'LOW_STOCK_ALERT') { pm.expect(row.low_stock_alert).to.have.property('blood_group'); pm.expect(row.low_stock_alert).to.have.property('available_units'); } }); });"
                 ]
               }
             }
@@ -1096,7 +1097,7 @@
         },
         {
           "name": "Get low-stock thresholds",
-          "description": "Allowed roles: ADMIN. Implementation status: planned.",
+          "description": "Allowed roles: ADMIN. Implementation status: implemented. Returns all configured blood-group/component thresholds.",
           "request": {
             "method": "GET",
             "header": [
@@ -1113,15 +1114,16 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Expected status 200', function () { pm.response.to.have.status(200); });"
+                  "pm.test('Expected status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Response contains threshold list', function () { pm.expect(pm.response.json().thresholds).to.be.an('array'); });"
                 ]
               }
             }
           ]
         },
         {
-          "name": "Replace low-stock thresholds",
-          "description": "Allowed roles: ADMIN. Implementation status: planned.",
+          "name": "Update low-stock thresholds",
+          "description": "Allowed roles: ADMIN. Implementation status: implemented. Updates the pairs included in the request and leaves other thresholds unchanged.",
           "request": {
             "method": "PUT",
             "header": [

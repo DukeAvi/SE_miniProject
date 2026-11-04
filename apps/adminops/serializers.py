@@ -62,6 +62,24 @@ class ManagedUserPatchSerializer(StrictInputSerializer):
         return attrs
 
 
+class StockThresholdEntrySerializer(StrictInputSerializer):
+    blood_group = serializers.ChoiceField(choices=("O-", "O+", "A-", "A+", "B-", "B+", "AB-", "AB+"))
+    component = serializers.ChoiceField(choices=("WHOLE_BLOOD", "RBC", "PLASMA", "PLATELETS"))
+    threshold_units = serializers.IntegerField(min_value=1)
+
+
+class StockThresholdsSerializer(StrictInputSerializer):
+    thresholds = StockThresholdEntrySerializer(many=True, min_length=1)
+
+    def validate_thresholds(self, values):
+        keys = [(item["blood_group"], item["component"]) for item in values]
+        if len(keys) != len(set(keys)):
+            raise serializers.ValidationError(
+                "Each blood group and component pair may appear only once."
+            )
+        return values
+
+
 class ManagedUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User

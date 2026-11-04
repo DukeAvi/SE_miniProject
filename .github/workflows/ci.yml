@@ -53,3 +53,7 @@ jobs:
       - run: python manage.py makemigrations --check --dry-run
       - run: python manage.py migrate --noinput
       - run: pytest
+      - name: Verify low-stock crossing locks on PostgreSQL
+        run: pytest -q tests/integration/inventory/test_low_stock_alerts.py::test_concurrent_stock_reductions_create_one_crossing_alert
+        env:
+          DJANGO_SETTINGS_MODULE: bbms.settings

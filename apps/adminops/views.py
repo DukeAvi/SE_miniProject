@@ -14,11 +14,18 @@ from rest_framework.views import APIView
 
 from apps.accounts.models import AccountRole
 from apps.core.permissions import RolePermission
+from apps.inventory.services import blood_bank_today
+from apps.inventory.thresholds import (
+    StockThresholdRejected,
+    get_stock_thresholds,
+    update_stock_thresholds,
+)
 
 from .serializers import (
     ManagedUserCreateSerializer,
     ManagedUserPatchSerializer,
     ManagedUserSerializer,
+    StockThresholdsSerializer,
 )
 from .services import ManagedUserRejected, create_managed_user, update_managed_user
 
@@ -124,3 +131,47 @@ class ManagedUserDetailView(APIView):
         except ManagedUserRejected as exc:
             return _error(exc.code, exc.message, exc.details, exc.status_code)
         return Response(ManagedUserSerializer(user).data)
+
+
+@method_decorator(csrf_protect, name="dispatch")
+class StockThresholdCollectionView(APIView):
+    permission_classes = (IsAuthenticated, RolePermission)
+    permission_code = "stock_thresholds"
+
+    def get_authenticate_header(self, request):
+        return "Session"
+
+    def get(self, request):
+        if request.query_params:
+            return _error("invalid_query", "Unexpected query parameters.")
+        return Response({"thresholds": [
+            {
+                "blood_group": threshold.blood_group,
+                "component": threshold.component,
+                "threshold_units": threshold.threshold_units,
+            }
+            for threshold in get_stock_thresholds()
+        ]})
+
+    def put(self, request):
+        if request.query_params:
+            return _error("invalid_query", "Unexpected query parameters.")
+        serializer = StockThresholdsSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        try:
+            thresholds = update_stock_thresholds(
+                actor=request.user,
+                thresholds=serializer.validated_data["thresholds"],
+                ip_address=request.META.get("REMOTE_ADDR"),
+                as_of_date=blood_bank_today(),
+            )
+        except StockThresholdRejected as exc:
+            return _error(exc.code, exc.message, exc.details, exc.status_code)
+        return Response({"thresholds": [
+            {
+                "blood_group": threshold.blood_group,
+                "component": threshold.component,
+                "threshold_units": threshold.threshold_units,
+            }
+            for threshold in thresholds
+        ]})

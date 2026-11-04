@@ -77,9 +77,9 @@ class NotificationCollectionView(APIView):
         if error:
             return error
         page, page_size = pagination
-        notifications = Notification.objects.filter(recipient=request.user).order_by(
-            "-created_at", "-id"
-        )
+        notifications = Notification.objects.filter(recipient=request.user).select_related(
+            "stock_alert__threshold"
+        ).order_by("-created_at", "-id")
         return _page_response(notifications, page, page_size, NotificationSerializer)
 
 

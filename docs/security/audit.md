@@ -23,7 +23,7 @@ BBMS-SR-004 / DS-SR-004 uses the same protected append path for all approved sec
 - donor operations: `DONOR_UPDATED`, `APPOINTMENT_BOOKED`, `APPOINTMENT_CANCELLED`, and `DONATION_RECORDED`;
 - inventory operations: `UNIT_CREATED`, `UNIT_RESERVED`, `UNIT_RELEASED`, `UNIT_ISSUED`, `UNIT_EXPIRED`, `UNIT_DISCARDED`, and `UNIT_RETURNED`;
 - request operations: `REQUEST_SUBMITTED`, `REQUEST_APPROVED`, `REQUEST_REJECTED`, `REQUEST_HELD`, and `REQUEST_FULFILLED`; and
-- administration and authorization: `THRESHOLD_CHANGED` and `ACCESS_DENIED`.
+- administration and authorization: `THRESHOLD_CHANGED`, `LOW_STOCK_ALERTED`, and `ACCESS_DENIED`.
 
 Failed authentication, expired sessions, and denied access use the `FAILURE` outcome. Known actors retain their role snapshot; unknown-login and expired-cookie events intentionally have no actor. Event rows contain no payload/details field, credentials, token or session value, notification content, or clinical/contact data. Entity references accept only sanitized opaque identifiers.
 
