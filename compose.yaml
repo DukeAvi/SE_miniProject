@@ -44,7 +44,7 @@ services:
 
   web:
     build: .
-    command: ["sh", "-c", "mkdir -p \"$$PROMETHEUS_MULTIPROC_DIR\" && rm -f \"$$PROMETHEUS_MULTIPROC_DIR\"/* && python manage.py migrate --noinput && gunicorn --config gunicorn.conf.py bbms.wsgi:application --bind 0.0.0.0:8000 --workers 2"]
+    command: ["sh", "-c", "mkdir -p \"$$PROMETHEUS_MULTIPROC_DIR\" && rm -f \"$$PROMETHEUS_MULTIPROC_DIR\"/* && python manage.py migrate --noinput && exec gunicorn --config gunicorn.conf.py bbms.wsgi:application --bind 0.0.0.0:8000 --workers 2"]
     environment:
       <<: *app-environment
       PROMETHEUS_METRICS_BEARER_TOKEN: ${BBMS_APP_METRICS_BEARER_TOKEN:?Set BBMS_APP_METRICS_BEARER_TOKEN}
@@ -83,7 +83,7 @@ services:
 
   beat:
     build: .
-    command: ["celery", "-A", "bbms", "beat", "--loglevel=INFO", "--pidfile=/tmp/celerybeat.pid"]
+    command: ["sh", "-c", "rm -f /tmp/celerybeat.pid && exec celery -A bbms beat --loglevel=INFO --pidfile=/tmp/celerybeat.pid"]
     environment: *app-environment
     depends_on:
       db:

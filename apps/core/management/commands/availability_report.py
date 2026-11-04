@@ -27,6 +27,8 @@ class Command(BaseCommand):
                  datetime.fromisoformat(item["end"].replace("Z", "+00:00")))
                 for item in maintenance.get("windows", [])
             ]
+            if any(a.tzinfo is None or b.tzinfo is None or a >= b for a, b in windows):
+                raise ValueError("Maintenance windows require ordered timezone-aware timestamps.")
             query = urlencode({
                 "query": 'probe_success{job="bbms-health"}',
                 "start": start.isoformat(),
@@ -35,6 +37,8 @@ class Command(BaseCommand):
             })
             with urlopen(f"{options['prometheus_url'].rstrip('/')}/api/v1/query_range?{query}", timeout=10) as response:
                 payload = json.load(response)
+            if payload.get("status") != "success":
+                raise ValueError("Prometheus query failed.")
             results = payload["data"]["result"]
             samples = [
                 sample
@@ -44,6 +48,17 @@ class Command(BaseCommand):
             if not samples:
                 raise CommandError("No health-probe samples exist for the requested month.")
             report = calculate_availability(parse_prometheus_samples(samples), windows)
+            expected = set()
+            minute = start
+            while minute <= end:
+                if not any(a <= minute < b for a, b in windows):
+                    expected.add(minute)
+                minute += timedelta(minutes=1)
+            observed = {timestamp for timestamp, _ in parse_prometheus_samples(samples)}
+            report["expected_samples"] = len(expected)
+            report["missing_samples"] = len(expected - observed)
+            report["coverage_complete"] = bool(expected) and not report["missing_samples"]
+            report["target_met"] = report["target_met"] and report["coverage_complete"]
         except (OSError, ValueError, KeyError, json.JSONDecodeError) as exc:
             raise CommandError("Availability data could not be read.") from exc
         report["month"] = options["month"]

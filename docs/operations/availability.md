@@ -1,5 +1,7 @@
 # Health and availability operations
 
+Monthly reports include expected and missing one-minute observations. An incomplete observation window cannot establish that the monthly target was met, even when every recorded probe succeeded. Maintenance windows must include timezones and end after they start.
+
 Traceability: `BBMS-NF-002` / `DS-NF-002` / `TC-Reli-01` (GitHub issue #74).
 
 ## Readiness endpoint
