@@ -18,6 +18,8 @@ The sprint review adopts this 20-user synthetic profile for the classroom projec
 
 ## Run locally
 
+Routine push and PR CI runs lint, application tests and deployment checks. Run the CI workflow manually from GitHub Actions to execute the longer JMeter benchmark and upload its results. Repeat that benchmark after changes affecting performance; the recorded passing benchmark remains the baseline for this sprint.
+
 Use a clean, isolated PostgreSQL database. Do not run the seed against a production or shared database.
 
 ```bash

@@ -7,7 +7,7 @@ archive="apache-jmeter-${version}.tgz"
 mkdir -p "$destination"
 downloaded=false
 for base in https://dlcdn.apache.org/jmeter/binaries https://archive.apache.org/dist/jmeter/binaries; do
-  if curl --fail --location --silent --show-error --connect-timeout 15 --max-time 180 "$base/$archive" -o "$destination/$archive" &&
+  if curl --fail --location --silent --show-error --connect-timeout 15 --max-time 600 "$base/$archive" -o "$destination/$archive" &&
      curl --fail --location --silent --show-error --connect-timeout 15 --max-time 30 "$base/$archive.sha512" -o "$destination/$archive.sha512"; then
     downloaded=true
     break
