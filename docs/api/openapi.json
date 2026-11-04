@@ -6722,7 +6722,7 @@
       "get": {
         "operationId": "getReport",
         "summary": "Get an operational report",
-        "description": "Allowed roles: STAFF, ADMIN.",
+        "description": "Allowed roles: STAFF, ADMIN. Date filters use the configured blood-bank timezone for timestamps. Resource filters are blood_group/component/status for donations, blood_group/component/action for inventory, blood_group/component/status/urgency for requests, and blood_group/component for issued-units. JSON is paginated (page_size capped at 100); CSV exports the complete filtered result. Admin receives grouped summaries; Staff receives operational rows without direct personal/contact fields.",
         "tags": [
           "reports"
         ],
@@ -6730,7 +6730,7 @@
           "STAFF",
           "ADMIN"
         ],
-        "x-implementation-status": "planned",
+        "x-implementation-status": "implemented",
         "responses": {
           "200": {
             "description": "Successful response",
@@ -6742,7 +6742,20 @@
                 "example": {
                   "from": "2026-10-01",
                   "to": "2026-10-29",
+                  "count": 0,
+                  "page": 1,
+                  "page_size": 20,
+                  "totals": {
+                    "records": 0,
+                    "quantity_units": 0
+                  },
                   "results": []
+                }
+              },
+              "text/csv": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
                 }
               }
             }
@@ -6986,6 +6999,84 @@
               "type": "string",
               "format": "date"
             }
+          },
+          {
+            "name": "blood_group",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["O-", "O+", "A-", "A+", "B-", "B+", "AB-", "AB+"]
+            },
+            "description": "Optional resource-specific blood-group filter."
+          },
+          {
+            "name": "component",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["WHOLE_BLOOD", "RBC", "PLASMA", "PLATELETS"]
+            },
+            "description": "Optional resource-specific component filter."
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Optional status filter for donations or requests."
+          },
+          {
+            "name": "action",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["RESERVE", "RELEASE", "ISSUE", "EXPIRE", "DISCARD", "RETURN"]
+            },
+            "description": "Optional inventory transaction action filter."
+          },
+          {
+            "name": "urgency",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["ROUTINE", "URGENT", "EMERGENCY"]
+            },
+            "description": "Optional request urgency filter."
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          {
+            "name": "export",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["json", "csv"]
+            },
+            "description": "Select json (default) or csv. CSV exports all filtered records and does not apply page parameters."
           }
         ],
         "security": [
@@ -9980,6 +10071,30 @@
             "type": "string",
             "format": "date"
           },
+          "count": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Number of rows after filtering; Admin rows are grouped summaries."
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "page_size": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "totals": {
+            "type": "object",
+            "description": "Totals over the matching source records before pagination or Admin grouping.",
+            "properties": {
+              "records": {"type": "integer", "minimum": 0},
+              "quantity_units": {"type": "integer", "minimum": 0}
+            },
+            "required": ["records", "quantity_units"],
+            "additionalProperties": false
+          },
           "results": {
             "type": "array",
             "items": {
@@ -9991,6 +10106,10 @@
         "required": [
           "from",
           "to",
+          "count",
+          "page",
+          "page_size",
+          "totals",
           "results"
         ],
         "additionalProperties": false
