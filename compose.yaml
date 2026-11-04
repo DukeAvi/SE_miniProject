@@ -1,3 +1,19 @@
+x-app-environment: &app-environment
+  DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:?Set DJANGO_SECRET_KEY}
+  DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1,web}
+  POSTGRES_DB: bbms
+  POSTGRES_USER: bbms
+  POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+  POSTGRES_HOST: db
+  POSTGRES_PORT: "5432"
+  POSTGRES_SSLMODE: ${POSTGRES_SSLMODE:-disable}
+  POSTGRES_SSLROOTCERT: ${POSTGRES_SSLROOTCERT:-}
+  CELERY_BROKER_URL: redis://redis:6379/0
+  SESSION_COOKIE_SECURE: "false"
+  CSRF_COOKIE_SECURE: "false"
+  SECURE_SSL_REDIRECT: "false"
+  SECURE_HSTS_SECONDS: "0"
+
 services:
   db:
     image: postgres:16-alpine
@@ -28,22 +44,13 @@ services:
 
   web:
     build: .
-    command: ["sh", "-c", "python manage.py migrate --noinput && exec gunicorn bbms.wsgi:application --bind 0.0.0.0:8000 --workers 2"]
-    environment: &app-environment
-      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:?Set DJANGO_SECRET_KEY}
-      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1,web}
-      POSTGRES_DB: bbms
-      POSTGRES_USER: bbms
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
-      POSTGRES_HOST: db
-      POSTGRES_PORT: "5432"
-      POSTGRES_SSLMODE: ${POSTGRES_SSLMODE:-disable}
-      POSTGRES_SSLROOTCERT: ${POSTGRES_SSLROOTCERT:-}
-      CELERY_BROKER_URL: redis://redis:6379/0
-      SESSION_COOKIE_SECURE: "false"
-      CSRF_COOKIE_SECURE: "false"
-      SECURE_SSL_REDIRECT: "false"
-      SECURE_HSTS_SECONDS: "0"
+    command: ["sh", "-c", "mkdir -p \"$$PROMETHEUS_MULTIPROC_DIR\" && rm -f \"$$PROMETHEUS_MULTIPROC_DIR\"/* && python manage.py migrate --noinput && exec gunicorn --config gunicorn.conf.py bbms.wsgi:application --bind 0.0.0.0:8000 --workers 2"]
+    environment:
+      <<: *app-environment
+      PROMETHEUS_METRICS_BEARER_TOKEN: ${BBMS_APP_METRICS_BEARER_TOKEN:?Set BBMS_APP_METRICS_BEARER_TOKEN}
+      PROMETHEUS_MULTIPROC_DIR: /tmp/prometheus-multiproc
+    tmpfs:
+      - /tmp/prometheus-multiproc
     expose:
       - "8000"
     depends_on:
@@ -148,7 +155,10 @@ services:
     environment:
       BBMS_PUBLIC_HEALTH_URL: ${BBMS_PUBLIC_HEALTH_URL:-}
       BBMS_ALERT_WEBHOOK_URL: ${BBMS_ALERT_WEBHOOK_URL:-}
+      BBMS_APP_METRICS_URL: ${BBMS_APP_METRICS_URL:?Set BBMS_APP_METRICS_URL to the private HTTPS /metrics endpoint}
+      BBMS_APP_METRICS_BEARER_TOKEN: ${BBMS_APP_METRICS_BEARER_TOKEN:?Set BBMS_APP_METRICS_BEARER_TOKEN}
       BBMS_PROBE_TARGET_FILE: /app/var/probe-targets/bbms-health.json
+      BBMS_METRICS_TARGET_FILE: /app/var/probe-targets/bbms-app-metrics.json
     volumes:
       - probe-targets:/app/var/probe-targets
 

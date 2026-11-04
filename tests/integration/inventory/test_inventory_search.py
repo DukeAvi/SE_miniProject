@@ -110,6 +110,13 @@ def test_unit_search_paginates_with_page_metadata():
     assert response.json()["results"][0]["id"] in {str(unit.pk) for unit in units}
 
 
+def test_unit_search_caps_page_size_at_100():
+    response = get_client("STAFF").get(UNITS_URL, {"page": 1, "page_size": 101})
+
+    assert response.status_code == 200
+    assert response.json()["page_size"] == 100
+
+
 @pytest.mark.parametrize(
     ("params", "field"),
     [

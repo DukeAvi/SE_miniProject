@@ -11,7 +11,10 @@ services:
     environment:
       BBMS_PUBLIC_HEALTH_URL: ${BBMS_PUBLIC_HEALTH_URL:?Set BBMS_PUBLIC_HEALTH_URL to the public HTTPS health URL}
       BBMS_ALERT_WEBHOOK_URL: ${BBMS_ALERT_WEBHOOK_URL:?Set BBMS_ALERT_WEBHOOK_URL to an HTTPS notification endpoint}
+      BBMS_APP_METRICS_URL: ${BBMS_APP_METRICS_URL:?Set BBMS_APP_METRICS_URL to the private HTTPS /metrics endpoint}
+      BBMS_APP_METRICS_BEARER_TOKEN: ${BBMS_APP_METRICS_BEARER_TOKEN:?Set BBMS_APP_METRICS_BEARER_TOKEN}
       BBMS_PROBE_TARGET_FILE: /app/var/probe-targets/bbms-health.json
+      BBMS_METRICS_TARGET_FILE: /app/var/probe-targets/bbms-app-metrics.json
     volumes:
       - probe-targets:/app/var/probe-targets
 

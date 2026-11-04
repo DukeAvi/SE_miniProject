@@ -6,10 +6,20 @@ evaluation_interval: 1m
 tests:
   - interval: 1m
     input_series:
+      - series: 'bbms_http_request_duration_seconds_count{job="bbms-app",status_code="200"}'
+        values: '0+98x15'
+      - series: 'bbms_http_request_duration_seconds_count{job="bbms-app",status_code="500"}'
+        values: '0+2x15'
       - series: 'probe_success{job="bbms-health", instance="https://bbms.example.test/healthz"}'
         values: '1 0 0 0 1 1'
       - series: 'probe_http_status_code{job="bbms-health", instance="https://bbms.example.test/healthz"}'
         values: '200 500 500 500 200 200'
+      - series: 'bbms_http_request_duration_seconds_bucket{job="bbms-app", route="api/v1/inventory/units", le="+Inf"}'
+        values: '10 20 30 40 50 60 70 80 90 100 110 120 130 140 150 160'
+      - series: 'bbms_http_request_duration_seconds_bucket{job="bbms-app", route="api/v1/inventory/units", le="3.0"}'
+        values: '5 10 15 20 25 30 35 40 45 50 55 60 65 70 75 80'
+      - series: 'bbms_http_request_duration_seconds_bucket{job="bbms-app", route="api/v1/inventory/units", le="5.0"}'
+        values: '9 18 27 36 45 54 63 72 81 90 99 108 117 126 135 144'
     alert_rule_test:
       - eval_time: 2m
         alertname: BbmsThreeConsecutiveProbeFailures
@@ -29,8 +39,18 @@ tests:
         exp_alerts:
           - exp_labels:
               alertname: BbmsFiveMinute5xxRateAboveOnePercent
-              instance: https://bbms.example.test/healthz
-              job: bbms-health
               severity: critical
             exp_annotations:
-              summary: BBMS five-minute 5xx probe rate exceeded one percent
+              summary: BBMS five-minute request 5xx rate exceeded one percent
+      - eval_time: 5m
+        alertname: BbmsSearchDashboardP95LatencyAboveThreeSeconds
+        exp_alerts: []
+      - eval_time: 6m
+        alertname: BbmsSearchDashboardP95LatencyAboveThreeSeconds
+        exp_alerts:
+          - exp_labels:
+              alertname: BbmsSearchDashboardP95LatencyAboveThreeSeconds
+              route: api/v1/inventory/units
+              severity: warning
+            exp_annotations:
+              summary: BBMS search or dashboard API p95 latency exceeded three seconds for five minutes

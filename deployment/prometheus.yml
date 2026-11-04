@@ -11,6 +11,14 @@ alerting:
         - targets: ["alertmanager:9093"]
 
 scrape_configs:
+  - job_name: bbms-app
+    scrape_interval: 15s
+    authorization:
+      type: Bearer
+      credentials_file: /etc/prometheus/targets/bbms-app-metrics-token
+    file_sd_configs:
+      - files: ["/etc/prometheus/targets/bbms-app-metrics.json"]
+        refresh_interval: 1m
   - job_name: bbms-health
     metrics_path: /probe
     params:

@@ -42,6 +42,16 @@ class BloodUnit(models.Model):
 
     class Meta:
         ordering = ("-created_at", "id")
+        indexes = [
+            models.Index(
+                fields=("status", "expiry_date", "created_at", "id"),
+                name="inv_status_expiry_order_idx",
+            ),
+            models.Index(
+                fields=("status", "blood_group", "component", "expiry_date", "created_at", "id"),
+                name="inv_search_filter_order_idx",
+            ),
+        ]
         constraints = [
             models.CheckConstraint(
                 condition=models.Q(blood_group__in=("O-", "O+", "A-", "A+", "B-", "B+", "AB-", "AB+")),

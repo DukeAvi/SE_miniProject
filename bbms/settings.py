@@ -80,7 +80,9 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    "apps.core.metrics.RequestLatencyMiddleware",
     "django.middleware.security.SecurityMiddleware",
+    "django.middleware.gzip.GZipMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -169,6 +171,7 @@ SECURE_PROXY_SSL_HEADER = (
 )
 CSRF_TRUSTED_ORIGINS = env_list("CSRF_TRUSTED_ORIGINS")
 DATA_UPLOAD_MAX_MEMORY_SIZE = env_positive_int("DATA_UPLOAD_MAX_MEMORY_SIZE", 1_048_576)
+PROMETHEUS_METRICS_BEARER_TOKEN = os.getenv("PROMETHEUS_METRICS_BEARER_TOKEN", "")
 
 SESSION_ENGINE = "django.contrib.sessions.backends.db"
 SESSION_IDLE_TIMEOUT_SECONDS = env_positive_int(
