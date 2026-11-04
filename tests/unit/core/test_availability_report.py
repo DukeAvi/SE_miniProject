@@ -60,6 +60,9 @@ def test_monthly_report_combines_probe_series_and_calculates_target(tmp_path, mo
     assert report["failed_samples"] == 1
     assert report["availability_percent"] == pytest.approx(66.6667)
     assert report["target_met"] is False
+    assert report["expected_samples"] == 43200
+    assert report["missing_samples"] == 43197
+    assert report["coverage_complete"] is False
     query = parse_qs(urlparse(requested["url"]).query)
     assert query["start"] == ["2026-11-01T00:00:00+00:00"]
     assert query["end"] == ["2026-11-30T23:59:00+00:00"]
@@ -78,6 +81,15 @@ def test_monthly_report_rejects_an_empty_prometheus_range(tmp_path, monkeypatch)
             "--prometheus-url=https://prometheus.example.test",
             f"--maintenance-file={maintenance}",
         )
+
+
+def test_monthly_report_rejects_maintenance_without_timezone(tmp_path):
+    maintenance = tmp_path / "maintenance.json"
+    maintenance.write_text(json.dumps({"windows": [{
+        "start": "2026-11-01T00:00:00", "end": "2026-11-01T01:00:00",
+    }]}), encoding="utf-8")
+    with pytest.raises(CommandError, match="could not be read"):
+        call_command("availability_report", "--month=2026-11", f"--maintenance-file={maintenance}")
 
 
 def test_monthly_report_does_not_call_maintenance_only_month_100_percent(tmp_path, monkeypatch):

@@ -34,7 +34,8 @@ cp "$temp_root/server.key" "$postgres_tls_dir/server.key"
 chmod 600 "$postgres_tls_dir/server.key"
 postgres_uid="$(docker run --rm postgres:16-alpine id -u postgres)"
 postgres_gid="$(docker run --rm postgres:16-alpine id -g postgres)"
-sudo chown "$postgres_uid:$postgres_gid" "$postgres_tls_dir/server.key"
+docker run --rm --user 0 -v "$postgres_tls_dir:/tls" postgres:16-alpine \
+  chown "$postgres_uid:$postgres_gid" /tls/server.key
 cp "$temp_root/ca.crt" "$public_tls_dir/ca.crt"
 cp "$temp_root/server.crt" "$public_tls_dir/fullchain.pem"
 cp "$temp_root/server.key" "$public_tls_dir/privkey.pem"
@@ -117,6 +118,45 @@ assert encrypted and version in {"TLSv1.2", "TLSv1.3"}, (encrypted, version)
 print(f"PostgreSQL transport verified: {version}, encrypted=True")
 '
 echo "PostgreSQL hostname and CA verification succeeded"
+
+# Exercise the real application processes, rather than a stand-in container.
+docker compose -p "$project" -f "$repo_root/compose.yaml" -f "$repo_root/compose.secure.yaml" up --build -d worker beat
+for service in web worker beat; do
+  container_id="$(docker compose -p "$project" -f "$repo_root/compose.yaml" -f "$repo_root/compose.secure.yaml" ps -q "$service")"
+  test -n "$container_id"
+  for attempt in $(seq 1 60); do
+    if [ "$(docker inspect --format '{{.State.Health.Status}}' "$container_id")" = healthy ]; then break; fi
+    sleep 2
+  done
+  test "$(docker inspect --format '{{.State.Health.Status}}' "$container_id")" = healthy
+  previous_restarts="$(docker inspect --format '{{.RestartCount}}' "$container_id")"
+  # Signal the process inside the container. Docker's kill API marks it manually
+  # stopped and suppresses the restart policy we are trying to verify.
+  docker exec "$container_id" python -c 'import os, signal; os.kill(1, signal.SIGTERM)'
+  for attempt in $(seq 1 60); do
+    restarts="$(docker inspect --format '{{.RestartCount}}' "$container_id")"
+    health="$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{end}}' "$container_id")"
+    if [ "$restarts" -gt "$previous_restarts" ] && [ "$health" = healthy ]; then break; fi
+    sleep 2
+  done
+  if [ "$restarts" -le "$previous_restarts" ] || [ "$health" != healthy ]; then
+    echo "TC-Reli-01: $service recovery failed (restarts=$restarts, health=$health)" >&2
+    exit 1
+  fi
+  echo "TC-Reli-01: $service restarted automatically and recovered healthy"
+done
+
+docker compose -p "$project" -f "$repo_root/compose.yaml" -f "$repo_root/compose.secure.yaml" stop db
+status="$(curl --silent --show-error --resolve localhost:443:127.0.0.1 --cacert "$public_tls_dir/ca.crt" --output "$temp_root/unavailable.json" --write-out '%{http_code}' https://localhost/healthz)"
+test "$status" = 503
+grep -Eq '"status"[[:space:]]*:[[:space:]]*"unavailable"' "$temp_root/unavailable.json"
+docker compose -p "$project" -f "$repo_root/compose.yaml" -f "$repo_root/compose.secure.yaml" up -d db
+for attempt in $(seq 1 60); do
+  if curl --silent --fail --cacert "$public_tls_dir/ca.crt" https://localhost/healthz >/dev/null; then break; fi
+  sleep 2
+done
+curl --silent --fail --cacert "$public_tls_dir/ca.crt" https://localhost/healthz >/dev/null
+echo "TC-Reli-01: database failure returned sanitized 503 and readiness recovered"
 query='from django.db import connection; connection.ensure_connection()'
 if docker compose -p "$project" -f "$repo_root/compose.yaml" -f "$repo_root/compose.secure.yaml" \
   exec -T -e POSTGRES_HOST=untrusted-database-name web python manage.py shell -c "$query" \
