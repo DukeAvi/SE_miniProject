@@ -99,7 +99,6 @@ if openssl s_client -connect 127.0.0.1:443 -servername localhost -tls1 \
   echo "TLS 1.0 unexpectedly negotiated" >&2
   exit 1
 fi
-echo "TLS 1.0 and TLS 1.1 rejected"
 if openssl s_client -connect 127.0.0.1:443 -servername localhost -tls1_1 \
   -cipher 'DEFAULT:@SECLEVEL=0' -brief -verify_return_error \
   -CAfile "$public_tls_dir/ca.crt" </dev/null >/dev/null 2>&1; then
