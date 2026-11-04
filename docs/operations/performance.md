@@ -10,11 +10,11 @@ The Django middleware records `bbms_http_request_duration_seconds` as a Promethe
 
 For Gunicorn multi-worker deployments, `PROMETHEUS_MULTIPROC_DIR` points to a per-container tmpfs directory. The startup command clears that ephemeral directory before workers start; the Gunicorn `child_exit` hook retires dead-worker gauge files. Prometheus scrapes this endpoint every 15 seconds. `BbmsSearchDashboardP95LatencyAboveThreeSeconds` fires when the rolling five-minute p95 for inventory search or dashboard donation reports exceeds three seconds continuously for five minutes. `promtool test rules` covers the alert's pending and firing states.
 
-## Reproducible normal-load profile (proposed for owner confirmation)
+## Reproducible normal-load profile
 
 TC-Perf-01 uses an isolated PostgreSQL 16 database, Python 3.12, Django's production settings, and the same two-worker Gunicorn process count as the Compose web service. CI disables only HTTPS redirection and secure-cookie flags for its loopback HTTP test transport. It seeds 10,000 synthetic completed donations and 10,000 synthetic inventory units across 100 synthetic donor profiles. All accounts use `example.test`; no real or clinical data is used. Apache JMeter 5.6.3 starts 20 authenticated virtual users over a 30-second ramp, runs for 330 seconds, and uses a 250 ms think time between search and report requests. The first 30 seconds are excluded as warm-up; the remaining five minutes form the measurement window. Each iteration requests a 100-row inventory search and a 30-day donation dashboard report. The acceptance threshold is p95 <= 3,000 ms for each flow, with zero failed or non-200 samples.
 
-The issue does not define a numeric normal-load profile. The 20-user profile is a repeatable project proposal, not a recorded Product Owner approval. Confirm that profile before treating its performance result as final acceptance evidence.
+The sprint review adopts this 20-user synthetic profile for the classroom project under the repository owner's delegated instruction to resolve the remaining review decisions. It measures project acceptance on the documented CI environment; production capacity requires separate measurement.
 
 ## Run locally
 
@@ -40,4 +40,4 @@ GitHub Actions run [41807600683](https://github.com/DukeAvi/SE_miniProject/actio
 
 PostgreSQL `EXPLAIN ANALYZE` on the seeded test data showed the inventory search using `inv_search_filter_order_idx` with 100 returned rows and 0.230 ms execution time. The dashboard donation date-range query used `donation_date_pk_idx`, returned 100 rows, and took 0.177 ms. These are warm CI-run measurements on synthetic data, not production capacity claims. The run's full validation job failed afterward in `promtool test rules`: the new p95 alert test incorrectly expected a `job` label even though the rule's `sum by (le, route)` expression deliberately aggregates that label away. The test expectation now matches the actual alert labels; the next CI run must confirm the corrected rule test.
 
-The 20-user normal-load profile remains a proposal because issue #73 requires an agreed normal load but does not specify its concurrency. Product-owner confirmation of that profile is still needed before treating this benchmark as final acceptance evidence. Retain a fresh artifact with each performance-affecting change.
+Retain a fresh artifact with each performance-affecting change. The latest PR revision must pass the complete CI job before merging; the earlier failed run above is retained as defect and rerun history.
