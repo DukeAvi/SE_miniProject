@@ -22,7 +22,7 @@ trap cleanup EXIT
 docker network create "$network" >/dev/null
 docker run -d --name "$source" --network "$network" -e POSTGRES_DB=bbms -e POSTGRES_USER=bbms -e POSTGRES_PASSWORD="$password" postgres:16-alpine >/dev/null
 docker run -d --name "$spare" --network "$network" -e POSTGRES_DB=bbms -e POSTGRES_USER=bbms -e POSTGRES_PASSWORD="$password" postgres:16-alpine >/dev/null
-docker run -d --name "$minio" --network "$network" -e MINIO_ROOT_USER="$access_key" -e MINIO_ROOT_PASSWORD="$secret_key" minio/minio:RELEASE.2025-02-07T23-21-09Z server /data >/dev/null
+docker run -d --name "$minio" --network "$network" -e MINIO_ROOT_USER="$access_key" -e MINIO_ROOT_PASSWORD="$secret_key" quay.io/minio/minio:RELEASE.2025-02-07T23-21-09Z server /data >/dev/null
 docker build -f deployment/backup/Dockerfile -t "$image" . >/dev/null
 
 ready=false
