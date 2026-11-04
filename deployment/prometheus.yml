@@ -2,11 +2,6 @@ global:
   scrape_interval: 60s
   evaluation_interval: 60s
 
-storage:
-  tsdb:
-    retention:
-      time: 400d
-
 rule_files:
   - /etc/prometheus/alerts.yml
 

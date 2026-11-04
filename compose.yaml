@@ -104,7 +104,7 @@ services:
 
   prometheus:
     image: prom/prometheus:v3.7.3
-    command: ["--config.file=/etc/prometheus/prometheus.yml"]
+    command: ["--config.file=/etc/prometheus/prometheus.yml", "--storage.tsdb.retention.time=400d"]
     volumes:
       - ./deployment/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - ./deployment/alerts.yml:/etc/prometheus/alerts.yml:ro

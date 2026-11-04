@@ -66,6 +66,7 @@ jobs:
           mkdir -p "$monitoring_config/targets"
           cp -R deployment/. "$monitoring_config/"
           BBMS_PROBE_TARGET_FILE="$monitoring_config/targets/bbms-health.json" python -m scripts.validate_monitoring_config
+          docker run --rm prom/prometheus:v3.7.3 --storage.tsdb.retention.time=400d --version
           docker run --rm --entrypoint=/bin/promtool -v "$monitoring_config:/etc/prometheus:ro" prom/prometheus:v3.7.3 check config /etc/prometheus/prometheus.yml
           docker run --rm --entrypoint=/bin/promtool -v "$PWD/deployment:/etc/prometheus:ro" prom/prometheus:v3.7.3 check rules /etc/prometheus/alerts.yml
           docker run --rm --workdir=/etc/prometheus --entrypoint=/bin/promtool -v "$PWD/deployment:/etc/prometheus:ro" prom/prometheus:v3.7.3 test rules alerts.test.yml

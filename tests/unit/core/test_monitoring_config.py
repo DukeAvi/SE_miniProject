@@ -44,7 +44,7 @@ def test_prometheus_probes_public_https_target_every_minute_and_retains_history(
 
     assert file_discovery["files"] == ["/etc/prometheus/targets/bbms-health.json"]
     assert file_discovery["refresh_interval"] == "1m"
-    assert config["storage"]["tsdb"]["retention"]["time"] == "400d"
+    assert compose["services"]["prometheus"]["command"][-1] == "--storage.tsdb.retention.time=400d"
     assert "prometheus-data" in compose["services"]["prometheus"]["volumes"][-1]
     assert "prometheus-data" in compose["volumes"]
 
