@@ -35,6 +35,19 @@ def env_percentage(name: str, default: int) -> int:
     return value
 
 
+def postgres_ssl_options(mode: str, root_certificate: str = "") -> dict[str, str]:
+    """Return libpq TLS options and reject unsupported or incomplete settings."""
+    supported_modes = {"disable", "verify-ca", "verify-full"}
+    if mode not in supported_modes:
+        raise ValueError("POSTGRES_SSLMODE must be a supported libpq SSL mode")
+    if mode in {"verify-ca", "verify-full"} and not root_certificate:
+        raise ValueError("POSTGRES_SSLROOTCERT is required for certificate verification")
+    options = {"sslmode": mode}
+    if root_certificate:
+        options["sslrootcert"] = root_certificate
+    return options
+
+
 def env_time_zone(name: str, default: str) -> str:
     value = os.getenv(name, default)
     try:
@@ -110,6 +123,10 @@ DATABASES = {
         "HOST": os.getenv("POSTGRES_HOST", "localhost"),
         "PORT": os.getenv("POSTGRES_PORT", "5432"),
         "CONN_MAX_AGE": 60,
+        "OPTIONS": postgres_ssl_options(
+            os.getenv("POSTGRES_SSLMODE", "verify-full" if not DEBUG else "disable"),
+            os.getenv("POSTGRES_SSLROOTCERT", ""),
+        ),
     }
 }
 
@@ -139,6 +156,20 @@ REST_FRAMEWORK = {
     ],
 }
 SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_SSL_REDIRECT = env_bool("SECURE_SSL_REDIRECT", default=not DEBUG)
+SECURE_HSTS_SECONDS = int(os.getenv("SECURE_HSTS_SECONDS", "31536000" if not DEBUG else "0"))
+if SECURE_HSTS_SECONDS < 0:
+    raise ValueError("SECURE_HSTS_SECONDS cannot be negative")
+SECURE_HSTS_INCLUDE_SUBDOMAINS = env_bool("SECURE_HSTS_INCLUDE_SUBDOMAINS", default=not DEBUG)
+SECURE_HSTS_PRELOAD = env_bool("SECURE_HSTS_PRELOAD", default=False)
+SECURE_REFERRER_POLICY = os.getenv("SECURE_REFERRER_POLICY", "strict-origin-when-cross-origin")
+X_FRAME_OPTIONS = "DENY"
+SECURE_PROXY_SSL_HEADER = (
+    ("HTTP_X_FORWARDED_PROTO", "https")
+    if env_bool("TRUST_PROXY_SSL_HEADER", default=False)
+    else None
+)
+CSRF_TRUSTED_ORIGINS = env_list("CSRF_TRUSTED_ORIGINS")
 DATA_UPLOAD_MAX_MEMORY_SIZE = env_positive_int("DATA_UPLOAD_MAX_MEMORY_SIZE", 1_048_576)
 PROMETHEUS_METRICS_BEARER_TOKEN = os.getenv("PROMETHEUS_METRICS_BEARER_TOKEN", "")
 
