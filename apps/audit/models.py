@@ -43,6 +43,8 @@ class AuditEvent(models.Model):
         THRESHOLD_CHANGED = "THRESHOLD_CHANGED", "Threshold changed"
         LOW_STOCK_ALERTED = "LOW_STOCK_ALERTED", "Low stock alert created"
         ACCESS_DENIED = "ACCESS_DENIED", "Access denied"
+        AUDIT_RETENTION_DRY_RUN = "AUDIT_RETENTION_DRY_RUN", "Audit retention dry run"
+        AUDIT_RETENTION_RUN = "AUDIT_RETENTION_RUN", "Audit retention run"
 
     class Outcome(models.TextChoices):
         SUCCESS = "SUCCESS", "Success"
@@ -93,6 +95,8 @@ class AuditEvent(models.Model):
                         "UNIT_RETURNED", "REQUEST_SUBMITTED",
                         "REQUEST_APPROVED", "REQUEST_RESERVED", "REQUEST_REJECTED", "REQUEST_HELD",
                         "REQUEST_FULFILLED", "THRESHOLD_CHANGED", "LOW_STOCK_ALERTED", "ACCESS_DENIED",
+                        "AUDIT_RETENTION_RUN",
+                        "AUDIT_RETENTION_DRY_RUN",
                     )
                 ),
                 name="audit_action_catalogued",
