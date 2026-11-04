@@ -50,7 +50,7 @@ services:
       PROMETHEUS_METRICS_BEARER_TOKEN: ${BBMS_APP_METRICS_BEARER_TOKEN:?Set BBMS_APP_METRICS_BEARER_TOKEN}
       PROMETHEUS_MULTIPROC_DIR: /tmp/prometheus-multiproc
     tmpfs:
-      - /tmp/prometheus-multiproc
+      - /tmp/prometheus-multiproc:uid=10001,gid=10001,mode=0700
     expose:
       - "8000"
     depends_on:
