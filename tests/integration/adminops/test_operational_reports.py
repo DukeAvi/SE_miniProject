@@ -321,13 +321,17 @@ def test_reports_require_authentication_and_an_allowed_role():
 def test_admin_gets_grouped_summaries_without_staff_level_record_access():
     donation = make_donation(131, quantity_units=3)
     unit = make_unit(donation, 131, quantity_units=3)
-    InventoryTransaction.objects.create(
-        blood_unit=unit,
-        action=InventoryTransaction.Action.ISSUE,
-        from_status=BloodUnit.Status.RESERVED,
-        to_status=BloodUnit.Status.ISSUED,
-        reason="Report test fixture",
-    )
+    with patch(
+        "django.utils.timezone.now",
+        return_value=datetime(2026, 11, 4, 12, 0, tzinfo=LOCAL_ZONE),
+    ):
+        InventoryTransaction.objects.create(
+            blood_unit=unit,
+            action=InventoryTransaction.Action.ISSUE,
+            from_status=BloodUnit.Status.RESERVED,
+            to_status=BloodUnit.Status.ISSUED,
+            reason="Report test fixture",
+        )
     request = make_request(132)
     BloodAllocation.objects.create(
         blood_request=request,
