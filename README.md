@@ -1,6 +1,6 @@
 # Blood Bank Management System
 
-The project is an API-only Django application using Python 3.12+, Django 5.2, Django REST Framework, PostgreSQL, and Celery for scheduled inventory expiry. There is no frontend build step. Use the local SQLite demo for a quick start, or PostgreSQL and Redis for the full runtime.
+The project uses a Django REST Framework API (Python 3.12+, Django 5.2, PostgreSQL, Celery for scheduled inventory expiry) and a Next.js browser interface in `frontend/`. Django remains authoritative for authentication, role permissions, validation, workflows and persistence. Use the local SQLite demo for a quick start, or PostgreSQL and Redis for the full runtime.
 
 ## Install dependencies
 
@@ -31,6 +31,8 @@ DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,testserver python manage.py demo_sprint
 ```
 
 The seed command is safe to repeat with the same date. Its record counts and in-memory request/notification mocks are documented in the [seed-data guide](docs/qa/seed-test-data.md). The demo database does not require PostgreSQL or Redis.
+
+For the browser demo, start Django with the local frontend origins included in `CSRF_TRUSTED_ORIGINS`, then follow the [frontend setup guide](frontend/README.md). Register synthetic Donor or Recipient accounts in the browser. Staff and Admin accounts must be created by an Admin using the protected management API. Seeded donor records include their donor profile; public registration does not collect the additional eligibility profile fields. The frontend uses the same-origin Next.js API proxy and Django's session/CSRF cookies.
 
 ## PostgreSQL runtime
 
@@ -94,7 +96,7 @@ The v1.0 one-role-per-account behavior is approved under OI-5 (#88): a person ac
 
 The API uses Django database-backed sessions. Fetch `GET /api/v1/auth/csrf` before a state-changing request and send the returned `csrfToken` in the `X-CSRFToken` header. Login is `POST /api/v1/auth/login` with `email` and `password`; successful responses include a role dashboard path. Logout is `POST /api/v1/auth/logout` and invalidates the current session. Unknown emails, incorrect passwords, disabled accounts, and accounts with no recognized role receive the same generic credential error.
 
-Login failures are throttled by account and client IP. The defaults are five failures per 900-second window and are configurable with `LOGIN_THROTTLE_ATTEMPTS` and `LOGIN_THROTTLE_WINDOW_SECONDS`. Independently, more than 20 failures from one client address in 60 seconds emit one sanitized `apps.security.alerts` warning per window; configure this with `FAILED_LOGIN_ALERT_THRESHOLD` and `FAILED_LOGIN_ALERT_WINDOW_SECONDS`, and route that logger to the deployment alert handler. Only a keyed address hash is retained in the alert counter. The session cookie is HttpOnly and SameSite=Lax, and defaults to Secure when DEBUG is false. The CSRF cookie is SameSite=Lax, defaults to Secure when DEBUG is false, and is readable by the browser so clients can send its token in the header. Sessions renew their idle expiry on activity after 1200 seconds by default (`SESSION_IDLE_TIMEOUT_SECONDS`) and have an independent 28800-second absolute lifetime (`SESSION_ABSOLUTE_TIMEOUT_SECONDS`). The older `SESSION_COOKIE_AGE` variable remains a fallback for the idle timeout. Expired API sessions return `401 session_expired`; a browser UI is not present in this repository yet to implement its redirect behavior. Server-side session authentication is approved under OI-6 (#89), following SAD ADR-004.
+Login failures are throttled by account and client IP. The defaults are five failures per 900-second window and are configurable with `LOGIN_THROTTLE_ATTEMPTS` and `LOGIN_THROTTLE_WINDOW_SECONDS`. Independently, more than 20 failures from one client address in 60 seconds emit one sanitized `apps.security.alerts` warning per window; configure this with `FAILED_LOGIN_ALERT_THRESHOLD` and `FAILED_LOGIN_ALERT_WINDOW_SECONDS`, and route that logger to the deployment alert handler. Only a keyed address hash is retained in the alert counter. The session cookie is HttpOnly and SameSite=Lax, and defaults to Secure when DEBUG is false. The CSRF cookie is SameSite=Lax, defaults to Secure when DEBUG is false, and is readable by the browser so clients can send its token in the header. Sessions renew their idle expiry on activity after 1200 seconds by default (`SESSION_IDLE_TIMEOUT_SECONDS`) and have an independent 28800-second absolute lifetime (`SESSION_ABSOLUTE_TIMEOUT_SECONDS`). The older `SESSION_COOKIE_AGE` variable remains a fallback for the idle timeout. Expired API sessions return `401 session_expired`; the browser interface displays a readable sign-in-again message. Server-side session authentication is approved under OI-6 (#89), following SAD ADR-004.
 
 ## Credential and log protection
 
