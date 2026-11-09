@@ -1,5 +1,13 @@
 # System Validation Report — Sprint 2 QA
 
+## Current rerun — 2026-11-09
+
+Backend baseline `fd0e96f`: 650 passed, zero failed, five PostgreSQL-only skips (`.venv/bin/pytest -q`, 99.86 seconds). The fixture defect #174 is resolved by merged PR #178. Audit retention is integrated through #176. The current browser review in [TC-UX-01](../TC-UX-01.md) covers four real API-backed role dashboards, axe checks, mobile keyboard navigation, exported desktop/mobile images, and failed-request input preservation.
+
+The workflow includes PostgreSQL low-stock concurrency, TLS deployment, and encrypted backup/restore checks. The original statement below that CI provides no PostgreSQL coverage is superseded. Complete representative-user UAT, actual screen-reader checks, the remaining PostgreSQL concurrency cases, monthly uptime evidence, and owner release sign-off remain unverified. Those are tracked by #96/#77; this report does not invent their outcomes.
+
+## Original execution
+
 **Execution date:** 2026-11-05 (Asia/Kolkata)
 **Backend baseline:** `main` `f693371ba0fce6d5d7d57e03ff2aa6dfff47d8f2`
 **Dashboard candidate:** PR #177, tree `07039fcf69578034e7bfb966de3e29a9a8ef7375` (same tree as tested dashboard commit `8366159b92f89609fc2845f7864a67e02a639d53`).

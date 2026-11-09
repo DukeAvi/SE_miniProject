@@ -1,5 +1,9 @@
 # Requirements Traceability — Sprint 2 QA
 
+## Rerun disposition — 2026-11-09
+
+At backend baseline `fd0e96f`, `.venv/bin/pytest -q` produced 650 passed, zero failed, and five PostgreSQL-only skips. BBMS-F-042 / TC-Report-01 is now **P** after #178 resolved #174. BBMS-NF-004 / TC-Audit-02 automated retention checks are **P** after merging #176. Other automated pass rows below remain passing in the full rerun. Browser accessibility and screenshot evidence is updated in [TC-UX-01](../TC-UX-01.md); actual screen-reader verification and UAT remain pending. The table below is the preserved original execution, not the final rerun disposition.
+
 **Tested baseline:** `main` `f693371ba0fce6d5d7d57e03ff2aa6dfff47d8f2` (2026-11-05, Asia/Kolkata).
 **Source:** Team 9 BBMS SRS v1.0, §8 RTM; Software Test Plan §5 and §13.
 **Status key:** **P** = automated evidence passed on the stated baseline; **F** = failed test requiring triage; **Partial** = some evidence exists but acceptance is not fully verified; **NR** = not run or no sufficient evidence. These are execution dispositions, not edits to the original SRS.

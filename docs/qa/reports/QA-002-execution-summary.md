@@ -1,5 +1,17 @@
 # QA-002 — Sprint 2 test execution summary
 
+## Current rerun — 2026-11-09
+
+Backend baseline: `fd0e96f` (merged audit-retention PR #176 and deterministic report-fixture PR #178). Run from the repository root with `.venv/bin/pytest -q`: **650 passed, 0 failed, 5 skipped in 99.86 seconds**. Executed-test pass rate is 100%; 650/655 collected cases passed (99.24%). The five skips require PostgreSQL and are not counted as passes. The original failure evidence below is preserved; #174 is resolved by #178.
+
+The 84-cell role policy matrix and full component compatibility matrix pass in this rerun. Audit retention is now integrated and its 67-test audit suite passed during PR review. The current dashboard checks and exported screenshots are recorded in [TC-UX-01](../TC-UX-01.md).
+
+CI now includes a PostgreSQL low-stock concurrency check, a TLS deployment check, and an encrypted backup/restore drill. Their workflow results provide reproducible deployment evidence; the historical statements below about missing CI coverage describe the old execution only. Remaining PostgreSQL concurrency cases, representative-user UAT, actual screen-reader verification, measured monthly availability, and release-owner sign-off are still outstanding. Issue #96 stays open for those exit criteria. This evidence PR can be merged without declaring the release frozen.
+
+Historical coverage percentages below apply only to the original baseline and have not been relabeled as measurements of this revision.
+
+## Original execution
+
 **Execution date:** 2026-11-05 (Asia/Kolkata)
 **Tested baseline:** `main` at `f693371ba0fce6d5d7d57e03ff2aa6dfff47d8f2`
 **Environment:** Linux, Python 3.14.6, Django 5.2.18, pytest 9.1.1, SQLite in-memory test database (`bbms.settings_test`).
