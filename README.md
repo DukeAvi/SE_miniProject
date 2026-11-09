@@ -19,6 +19,7 @@ For runtime-only dependencies, install `requirements.txt` instead. The commands 
 The `bbms.settings_seed` settings use a disposable, Git-ignored SQLite database with DEBUG enabled. Migrate it, create synthetic Sprint 1 records, and start the API:
 
 ```bash
+test -f .env || cp .env.example .env
 python manage.py migrate --noinput --settings=bbms.settings_seed
 python manage.py seed_test_data --settings=bbms.settings_seed --as-of-date 2026-10-30
 python manage.py runserver --settings=bbms.settings_seed
@@ -31,6 +32,8 @@ DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,testserver python manage.py demo_sprint
 ```
 
 The seed command is safe to repeat with the same date. Its record counts and in-memory request/notification mocks are documented in the [seed-data guide](docs/qa/seed-test-data.md). The demo database does not require PostgreSQL or Redis.
+
+The [Sprint 2 handoff](docs/demos/sprint-2-summary.md) summarizes the integrated role dashboards. The [release record](docs/qa/release-readiness.md) documents verified behavior and accepted classroom-demo limitations.
 
 For the browser demo, start Django with the local frontend origins included in `CSRF_TRUSTED_ORIGINS`, then follow the [frontend setup guide](frontend/README.md). Register synthetic Donor or Recipient accounts in the browser. Staff and Admin accounts must be created by an Admin using the protected management API. Seeded donor records include their donor profile; public registration does not collect the additional eligibility profile fields. The frontend uses the same-origin Next.js API proxy and Django's session/CSRF cookies.
 
