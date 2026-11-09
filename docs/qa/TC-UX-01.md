@@ -4,7 +4,7 @@
 
 - Project: BBMS, `BBMS-NF-005` / `DS-NF-005`
 - Executed: 2026-11-05 (Asia/Kolkata)
-- Environment: local Django `bbms.settings_seed` + SQLite synthetic seed; Next.js 16.4.5, React 19.3.0, Node 22.23.2, Codex in-app Chromium browser
+- Environment: local Django `bbms.settings_seed` + SQLite synthetic seed; Next.js 16.4.5, React 19.3.0, Node 22.23.2, Chromium browser
 - Tested revision: `8366159b92f89609fc2845f7864a67e02a639d53` on `feature/77-role-dashboards` (UI checks used the corresponding local source state before its commit; final lint/typecheck/build/audit ran against this commit).
 - Data: only synthetic `.example.test` accounts and the documented `seed_test_data` fixtures. No real donor, recipient, patient, or clinical data was used.
 
@@ -40,3 +40,19 @@ The app was started with the local synthetic SQLite settings; migrations and `se
 - Donor self-registration and donor-profile provisioning are separate in the current API. New public registrations cannot use donor appointment/history endpoints until an approved workflow creates a profile.
 - `donor_detail` is present in the backend role policy matrix, but no staff donor lookup endpoint is currently registered. Staff donation entry consequently accepts a numeric donor account ID and lets Django validate eligibility; a discoverable donor roster/verification workflow is not implemented in the current API contract.
 - Screenshot files and a full keyboard/screen-reader pass remain required before marking the accessibility verification complete.
+
+## Review rerun — 2026-11-09
+
+The original execution record above is retained as historical evidence. The current candidate includes the merged report-fixture correction (#178) and audit retention (#176).
+
+- `npm ci`: successful, zero reported vulnerabilities.
+- `npm run lint`, `npm run typecheck`, `npm run build`: passed.
+- Chromium against the real local Django API: all four synthetic roles signed in and loaded their own dashboards without application alerts.
+- axe WCAG 2 A/AA and 2.1 AA scans: no violations on all four overview and work/administration screens.
+- A rejected recipient request preserves the entered patient name and exposes its validation error through `role="alert"`.
+- At 390×844, all four roles expose keyboard-operated mobile navigation and profile controls. Page width stays within the viewport; tables scroll within their regions.
+- Fixed form handlers now await the server result before clearing successful submissions. Validation failures retain input. Registration failures use an alert announcement; success remains a status announcement.
+- Threshold and account controls have a minimum height of 44px. The single-column work stack constrains its grid track so the Admin tables cannot widen the page.
+- Desktop (1440×1000) and mobile (390×844) captures are committed under [screenshots](screenshots/): `donor-desktop.png`, `donor-mobile.png`, `recipient-desktop.png`, `recipient-mobile.png`, `staff-desktop.png`, `staff-mobile.png`, `admin-desktop.png`, `admin-mobile.png`.
+
+The browser tools were installed temporarily outside the repository. No browser dependency or CI job was added. These checks validate DOM announcements and keyboard interactions; an actual NVDA/VoiceOver session and representative-user acceptance still require human execution. Issue #77 remains open for that verification rather than recording an unperformed check as passed.

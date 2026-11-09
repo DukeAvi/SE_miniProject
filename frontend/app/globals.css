@@ -26,6 +26,7 @@ body {
   line-height: 1.5;
 }
 button, input, select, textarea { font: inherit; }
+input, select, textarea { min-height: 44px; }
 button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
 button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
   outline: 3px solid #946300;
@@ -87,7 +88,7 @@ a { color: inherit; }
 .quick-action { min-height: 54px; display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: #fff; color: var(--ink); text-align: left; cursor: pointer; }
 .quick-action svg { width: 19px; height: 19px; color: #7d5900; }
 .quick-action:hover { background: #fbf8ef; border-color: #d9c78f; }
-.stack { display: grid; gap: 16px; }
+.stack { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
 .field-grid, .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 0 16px; }
 .form-actions { display: flex; align-items: end; padding-bottom: 15px; }
 .inline-form { display: flex; align-items: end; flex-wrap: wrap; gap: 10px; }
@@ -95,7 +96,7 @@ a { color: inherit; }
 .slot-list { display: grid; gap: 8px; margin-top: 12px; }
 .slot-row, .action-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding: 12px; border: 1px solid var(--line); border-radius: 11px; }
 .record-count { color: var(--muted); font-size: 12px; }
-.table-wrap { max-width: 100%; overflow: auto; border: 1px solid var(--line); border-radius: 12px; }
+.table-wrap { position: relative; max-width: 100%; overflow: auto; border: 1px solid var(--line); border-radius: 12px; }
 table { width: 100%; border-collapse: collapse; text-align: left; }
 th, td { padding: 12px 14px; border-bottom: 1px solid var(--line); white-space: nowrap; }
 th { background: #f8f6f0; color: #64645c; font-size: 11px; letter-spacing: .05em; text-transform: uppercase; }
@@ -190,7 +191,7 @@ tbody tr:last-child td { border-bottom: 0; }
   .story-copy h1 { font-size: 48px; }
   .auth-panel { padding: 18px; }
   .auth-card { padding: 25px; }
-  .app-shell { display: block; }
+  .app-shell { display: block; overflow-x: clip; }
   .sidebar { position: fixed; z-index: 20; inset: 0 auto 0 0; width: min(300px, 84vw); height: 100dvh; transform: translateX(-105%); transition: transform .2s ease; box-shadow: var(--shadow); }
   .sidebar[data-open="true"] { transform: translateX(0); }
   .mobile-menu { display: inline-flex; }

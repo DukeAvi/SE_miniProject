@@ -57,7 +57,7 @@ export default function RegisterPage() {
             <div className="field"><label htmlFor="phone">Phone number</label><input id="phone" name="phone" type="tel" autoComplete="tel" required maxLength={32} aria-describedby="phone-help" value={form.phone} onChange={(event) => update("phone", event.target.value)} /><small id="phone-help">Include country code, for example +12025550123.</small></div>
             <div className="field"><label htmlFor="role">Account type</label><select id="role" name="role" value={form.role} onChange={(event) => update("role", event.target.value)}><option value="DONOR">Donor</option><option value="RECIPIENT">Recipient</option></select></div>
             <div className="field"><label htmlFor="password">Password</label><input id="password" name="password" type="password" autoComplete="new-password" required maxLength={128} value={form.password} onChange={(event) => update("password", event.target.value)} /><small>Use a unique password for the demo account.</small></div>
-            {error && <div className={error.startsWith("Account created") ? "success-box" : "error-box"} role="status">{error}</div>}
+            {error && <div className={error.startsWith("Account created") ? "success-box" : "error-box"} role={error.startsWith("Account created") ? "status" : "alert"}>{error}</div>}
             <button className="button button-primary full-width" disabled={busy} type="submit">{busy ? "Creating account…" : "Create account"}<ArrowRight size={17} aria-hidden="true" /></button>
           </form>
           <div className="auth-foot"><Link className="inline-link" href="/"><ArrowLeft size={14} aria-hidden="true" /> Back to sign in</Link></div>
