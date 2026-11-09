@@ -14,6 +14,43 @@ Only Admin can read audit records. `GET /api/v1/admin/audit-logs` supports these
 
 Results are ordered newest first and expose only protected audit metadata. TC-Audit-01 coverage is in `tests/integration/audit/test_audit_search.py`.
 
+## One-year retention (BBMS-NF-004 / DS-NF-004)
+
+Audit events use UTC timestamps and indexed search dimensions: occurrence time,
+actor plus time, action plus time, and affected record plus time. Retention uses
+the UTC calendar anniversary one year before the run time. An event exactly at
+the cutoff is retained; only events strictly older than the cutoff are eligible.
+For a leap-day run, the anniversary is February 28 of the preceding year.
+
+Run a safe count-only pass first:
+
+```sh
+python manage.py purge_audit_events
+```
+
+The command records each run as an `AUDIT_RETENTION_RUN` event. The dry-run is
+the default and never deletes records. Review its cutoff and eligible count,
+then run the controlled purge explicitly:
+
+```sh
+python manage.py purge_audit_events --execute
+```
+
+The delete and successful run event are committed in one transaction. A failed
+purge rolls back its deletions and records a failure outcome. The command prints
+the run identifier, UTC cutoff, eligible count, and deleted count. Schedule it
+from the restricted operations environment at least monthly; do not expose a
+retention endpoint to application users. The ordinary model and queryset delete
+methods remain blocked. `TC-Audit-02` coverage is in
+`tests/integration/audit/test_audit_retention.py`.
+
+Search indexes are retained alongside the UTC timestamp. The current ORM model
+keeps its single-column generated event identifier because existing audit
+lookups and SQLite-based verification rely on it. A PostgreSQL monthly
+range-partition conversion would require a coordinated primary-key and schema
+migration; it is not part of this issue's explicit verification checklist and
+must be reviewed as a separate database-design change before deployment.
+
 ## Security-event coverage
 
 BBMS-SR-004 / DS-SR-004 uses the same protected append path for all approved security and critical-change events:
