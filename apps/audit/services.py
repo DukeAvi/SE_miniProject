@@ -2,9 +2,11 @@
 
 import re
 from datetime import UTC, datetime, time, timedelta
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from django.core.exceptions import ValidationError
+from django.db import transaction
+from django.utils import timezone
 
 from .models import AuditEvent
 
@@ -64,3 +66,65 @@ def search_events(*, actor_id=None, action=None, from_date=None, to_date=None,
     if entity_type is not None:
         events = events.filter(entity_type=entity_type, entity_id=entity_id)
     return events.order_by("-occurred_at", "-id")
+
+
+def _one_year_before(value: datetime) -> datetime:
+    """Return the UTC calendar anniversary, clamping leap day to Feb 28."""
+    try:
+        return value.replace(year=value.year - 1)
+    except ValueError:
+        return value.replace(year=value.year - 1, day=28)
+
+
+def run_retention(*, now=None, dry_run=True) -> dict[str, object]:
+    """Inspect or purge audit events older than the one-year UTC retention window.
+
+    Deletion is intentionally available only through this service/management
+    command path. The public model and queryset deletion APIs remain blocked.
+    """
+    now = now or timezone.now()
+    if timezone.is_naive(now):
+        raise ValidationError("Retention time must be timezone-aware.")
+    now = now.astimezone(UTC)
+    cutoff = _one_year_before(now)
+    eligible = AuditEvent.objects.filter(occurred_at__lt=cutoff)
+    eligible_count = eligible.count()
+    run_id = uuid4()
+    audit_fields = {
+        "entity_type": "AUDIT_RETENTION_RUN",
+        "entity_id": str(run_id),
+        "correlation_id": run_id,
+    }
+
+    if dry_run:
+        record_event(action=AuditEvent.Action.AUDIT_RETENTION_DRY_RUN, **audit_fields)
+        return {
+            "run_id": run_id,
+            "cutoff": cutoff,
+            "eligible_count": eligible_count,
+            "deleted_count": 0,
+            "dry_run": True,
+        }
+
+    try:
+        with transaction.atomic():
+            # _raw_delete bypasses Django's ordinary cascading delete collector;
+            # the filter is restricted to the audited, one-year cutoff above.
+            deleted_count = eligible._raw_delete(using=eligible.db)
+            record_event(action=AuditEvent.Action.AUDIT_RETENTION_RUN, **audit_fields)
+    except Exception:
+        # The purge transaction rolled back. Preserve a failure trace separately.
+        record_event(
+            action=AuditEvent.Action.AUDIT_RETENTION_RUN,
+            **audit_fields,
+            outcome=AuditEvent.Outcome.FAILURE,
+        )
+        raise
+
+    return {
+        "run_id": run_id,
+        "cutoff": cutoff,
+        "eligible_count": eligible_count,
+        "deleted_count": deleted_count,
+        "dry_run": False,
+    }
