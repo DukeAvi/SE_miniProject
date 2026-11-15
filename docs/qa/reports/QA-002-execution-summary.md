@@ -18,7 +18,7 @@
 | Full backend suite | `python -m pytest -q` | 649 passed, 1 failed, 5 skipped; 54.15s; exit 1 |
 | Full suite with coverage | `python -m coverage run --data-file=$cov --branch --source=apps -m pytest -q` | 649 passed, 1 failed, 5 skipped; 62.05s; exit 1 |
 | Focused PostgreSQL concurrency set | `python -m pytest --ds=bbms.settings -q` plus the five node IDs listed in [unit-test-report.md](unit-test-report.md) | 2 passed, 3 failed; 11.38s; exit 1 |
-| GitHub Actions on report PR #185 | CI workflow, `Run pytest` step | Failed: 649 passed, 1 failed, 5 skipped in 75.91s; same low-stock `alert_active` assertion. [Run 43736538474](https://github.com/DukeAvi/SE_miniProject/actions/runs/43736538474). Lint, Django checks, migration checks and migration application passed. |
+| GitHub Actions on report PR #185 | CI workflow, `Run pytest` step | Two runs failed with the same low-stock `alert_active` assertion: [43736538474](https://github.com/DukeAvi/SE_miniProject/actions/runs/43736538474) at 5fbf613 (649 passed, 1 failed, 5 skipped; 75.91s) and [43736855078](https://github.com/DukeAvi/SE_miniProject/actions/runs/43736855078) at 41c9b62 (649 passed, 1 failed, 5 skipped; 58.83s). Lint, Django checks, migration checks and migration application passed in both. |
 | Lint | `python -m ruff check .` | Passed: all checks passed |
 | Django checks | `python manage.py check --settings=bbms.settings_test` | Passed: 0 issues |
 | Migration consistency | `python manage.py makemigrations --check --dry-run --settings=bbms.settings_test` | Passed: no changes detected |
