@@ -4,7 +4,7 @@
 
 ## Revision and methodology
 
-- Tested code revision: `12b8e60` (test fixtures/assertions only); application source baseline: `f913fa70a5c6e3b50e07c7f00fc579928508c0ba`
+- Tested code revision: `12b8e60ab99308fcbd3c92ce1898d952bc440408` (test fixtures/assertions only); application source baseline: `f913fa70a5c6e3b50e07c7f00fc579928508c0ba`
 - Execution date: 2026-11-15 (Asia/Calcutta)
 - Tool: Coverage.py 7.17.0, `--branch`, Python 3.12.7
 - Scope: Python source under `apps/`; frontend code is not included. There are no configured coverage exclusions.

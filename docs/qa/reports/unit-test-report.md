@@ -5,7 +5,7 @@
 ## Revision and environment
 
 - Repository: `DukeAvi/SE_miniProject`
-- Tested code revision: `12b8e60` (`test/183-final-qa-reports`); application source remains at synchronized `origin/main` revision `f913fa70a5c6e3b50e07c7f00fc579928508c0ba`. The difference is limited to the two QA test-fixture/assertion corrections described below.
+- Tested code revision: `12b8e60ab99308fcbd3c92ce1898d952bc440408` (`test/183-final-qa-reports`); application source remains at synchronized `origin/main` revision `f913fa70a5c6e3b50e07c7f00fc579928508c0ba`. The difference is limited to the two QA test-fixture/assertion corrections described below.
 - Execution date: 2026-11-15 (Asia/Calcutta)
 - Local environment: Windows x64, Python 3.12.7, Django 5.2.18, pytest 9.1.1, psycopg 3.3.6, SQLite in-memory for the default suite
 - PostgreSQL sandbox: PostgreSQL 16.16, loopback-only disposable cluster, port 55432, trust authentication, database `postgres`; pytest created its disposable test database. No shared or production database was used.
@@ -18,7 +18,7 @@ Result: **650 passed, 0 failed, 5 skipped** in 54.36 seconds. Exit code 0. The e
 
 Historical CI failures on report-only commits `5fbf613`, `41c9b62`, and `6e3c1bb` all failed on `test_raising_threshold_can_trigger_alert_and_lowering_it_can_clear_active_state`. The test froze `apps.inventory.services.blood_bank_today`, but the admin endpoint calls the separately imported alias in `apps.adminops.views`; that alias used the actual date (2026-11-15), so test units expiring 2026-11-10 were considered expired and the alert correctly stayed active. The test fixture now freezes the view alias too. This corrected test determinism; application behavior was not changed.
 
-All three cited CI runs (`43736538474`, `43736855078`, `43737103165`) reproduced the same stale-date test-fixture failure on report-only commits; the pytest suite had 649 passed, 1 failed, and 5 skipped each time. The report-only diffs did not change executable code. After correction in `12b8e60`, CI run [43739824521](https://github.com/DukeAvi/SE_miniProject/actions/runs/43739824521) on report head `3cc0343a752cb20f67113d540845bb3de175d11b` passed: 650 passed, 5 SQLite skips in 58.67 seconds. CI's dedicated PostgreSQL low-stock test also passed (1 test, 6.88 seconds, teardown warning). The main CI suite uses SQLite, so its five PostgreSQL-only cases are skipped; the five independent PostgreSQL results above are separate.
+All three cited CI runs (`43736538474`, `43736855078`, `43737103165`) reproduced the same stale-date test-fixture failure on report-only commits; the pytest suite had 649 passed, 1 failed, and 5 skipped each time. The report-only diffs did not change executable code. After correction in `12b8e60ab99308fcbd3c92ce1898d952bc440408`, CI run [43739824521](https://github.com/DukeAvi/SE_miniProject/actions/runs/43739824521) on report head `3cc0343a752cb20f67113d540845bb3de175d11b` passed: 650 passed, 5 SQLite skips in 58.67 seconds. CI's dedicated PostgreSQL low-stock test also passed (1 test, 6.88 seconds, teardown warning). The main CI suite uses SQLite, so its five PostgreSQL-only cases are skipped; the five independent PostgreSQL results above are separate.
 
 The five skips explicitly require PostgreSQL row-lock/concurrency semantics and are not counted as passing tests. Their PostgreSQL results are recorded below and in the [execution summary](QA-002-execution-summary.md).
 
@@ -55,4 +55,4 @@ The fifth case also passed in PostgreSQL CI on application baseline `f913fa70a5c
 
 ## Historical results
 
-Earlier reports for `f693371` and `fd0e96f` remain historical and are not evidence for this revision. The known report fixture defect #174 was corrected by merged PR #178. The three CI failures described above are test-fixture issues corrected in `12b8e60`; no application defect was demonstrated by them.
+Earlier reports for `f693371` and `fd0e96f` remain historical and are not evidence for this revision. The known report fixture defect #174 was corrected by merged PR #178. The three CI failures described above are test-fixture issues corrected in `12b8e60ab99308fcbd3c92ce1898d952bc440408`; no application defect was demonstrated by them.

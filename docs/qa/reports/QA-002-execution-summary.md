@@ -5,7 +5,7 @@
 ## Revision, date and environment
 
 - Repository: `DukeAvi/SE_miniProject`
-- Tested code revision: `12b8e60` (`test/183-final-qa-reports`); the two changes since application baseline are test-only fixture/assertion corrections.
+- Tested code revision: `12b8e60ab99308fcbd3c92ce1898d952bc440408` (`test/183-final-qa-reports`); the two changes since application baseline are test-only fixture/assertion corrections.
 - Application source baseline: `f913fa70a5c6e3b50e07c7f00fc579928508c0ba` (`main` / `origin/main` on 2026-11-15)
 - Execution date: 2026-11-15 (Asia/Calcutta)
 - Local environment: Windows x64, Python 3.12.7, Django 5.2.18, pytest 9.1.1, Coverage.py 7.17.0, Ruff
@@ -33,7 +33,7 @@ Two test-only corrections were made, without changing application behavior:
 
 CI runs for commits `5fbf613`, `41c9b62`, and `6e3c1bb`—[43736538474](https://github.com/DukeAvi/SE_miniProject/actions/runs/43736538474), [43736855078](https://github.com/DukeAvi/SE_miniProject/actions/runs/43736855078), and [43737103165](https://github.com/DukeAvi/SE_miniProject/actions/runs/43737103165)—all failed at the same low-stock test assertion: `alert_active` remained true. Each run had 649 passed, 1 failed, and 5 skipped. The three diffs contained only QA reports; no application regression was introduced by those commits. Actual root cause was the stale date fixture described above.
 
-After the fixture corrections, [CI run 43739824521](https://github.com/DukeAvi/SE_miniProject/actions/runs/43739824521) passed on report head `3cc0343a752cb20f67113d540845bb3de175d11b`: backend suite 650 passed / 5 skipped (58.67s), PostgreSQL low-stock case 1 passed (6.88s, teardown warning), Ruff, Django/migration checks, frontend lint/typecheck/build/audit, Compose validation, TLS, monitoring, restart and encrypted backup/restore checks passed. JMeter install/profile/artifact steps were skipped by workflow conditions. This CI head contains the corrected tests and the same application source as `f913fa70`; the subsequent report-only documentation commit does not change executable code.
+After the fixture corrections, [CI run 43739824521](https://github.com/DukeAvi/SE_miniProject/actions/runs/43739824521) passed on report head `3cc0343a752cb20f67113d540845bb3de175d11b`: backend suite 650 passed / 5 skipped (58.67s), PostgreSQL low-stock case 1 passed (6.88s, teardown warning), Ruff, Django/migration checks, frontend lint/typecheck/build/audit, Compose validation, TLS, monitoring, restart and encrypted backup/restore checks passed. JMeter install/profile/artifact steps were skipped by workflow conditions. This CI head contains the corrected tests and the same application source as `f913fa70a5c6e3b50e07c7f00fc579928508c0ba`; the subsequent report-only documentation commit does not change executable code.
 
 ## Coverage
 
@@ -54,7 +54,7 @@ Package breakdowns and exact reproduction commands are in [coverage-report.md](c
 - Performance/JMeter procedure: [performance.md](../../operations/performance.md). No fresh JMeter run; CI steps were skipped.
 - TLS procedure: [secure-transport.md](../../operations/secure-transport.md). CI TLS edge and PostgreSQL TLS checks passed; no public production-host scan is claimed.
 - Backup/restore procedure: [database-backups.md](../../operations/database-backups.md). CI encrypted synthetic restore/integrity drill passed; no production restore or measured production RPO/RTO is claimed.
-- Baseline main CI [42607673691](https://github.com/DukeAvi/SE_miniProject/actions/runs/42607673691) is historical on `f913fa70`. It passed configured TLS, backup and PostgreSQL low-stock steps; its JMeter steps were skipped.
+- Baseline main CI [42607673691](https://github.com/DukeAvi/SE_miniProject/actions/runs/42607673691) is historical on `f913fa70a5c6e3b50e07c7f00fc579928508c0ba`. It passed configured TLS, backup and PostgreSQL low-stock steps; its JMeter steps were skipped.
 - Existing browser evidence [TC-UX-01](../TC-UX-01.md) predates #182 and is not evidence for its donor onboarding/Staff selection changes. Refresh after #182 merges. Manual UAT and screen-reader execution were not performed here.
 - No complete observed month was provided; no 99.5% availability claim is made.
 - Historical `fd0e96f` (2026-11-09: 650 passed, 0 failed, 5 skipped in 99.86s) and `f693371` (2026-11-05: 639 passed, 1 failed, 5 skipped; date-dependent #174 fixture) are retained as historical only. #174 was corrected by merged PR #178.

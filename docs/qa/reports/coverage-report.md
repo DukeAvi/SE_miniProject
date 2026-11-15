@@ -4,7 +4,7 @@
 
 ## Revision and environment
 
-- Tested code revision: `12b8e60` (test fixtures/assertions only); application source baseline: `f913fa70a5c6e3b50e07c7f00fc579928508c0ba`
+- Tested code revision: `12b8e60ab99308fcbd3c92ce1898d952bc440408` (test fixtures/assertions only); application source baseline: `f913fa70a5c6e3b50e07c7f00fc579928508c0ba`
 - Execution date: 2026-11-15 (Asia/Calcutta)
 - Environment: Windows x64, Python 3.12.7, Django 5.2.18, pytest 9.1.1, Coverage.py 7.17.0
 - Test database: SQLite in-memory (`bbms.settings_test`)
@@ -12,7 +12,7 @@
 
 ## Measured results
 
-Coverage was collected from a fresh complete backend test invocation on `12b8e60`. Result: 650 passed, zero failed, five PostgreSQL-only skips in 65.83 seconds. The five concurrency cases were run separately on PostgreSQL and all passed; they are documented in the [unit report](unit-test-report.md). Coverage is a measurement, not an implied threshold.
+Coverage was collected from a fresh complete backend test invocation on `12b8e60ab99308fcbd3c92ce1898d952bc440408`. Result: 650 passed, zero failed, five PostgreSQL-only skips in 65.83 seconds. The five concurrency cases were run separately on PostgreSQL and all passed; they are documented in the [unit report](unit-test-report.md). Coverage is a measurement, not an implied threshold.
 
 | Metric | Covered | Total | Percentage |
 |---|---:|---:|---:|
