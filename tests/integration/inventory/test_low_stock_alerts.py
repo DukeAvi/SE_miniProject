@@ -80,6 +80,8 @@ def client_as(user):
 @pytest.fixture(autouse=True)
 def freeze_blood_bank_date(monkeypatch):
     monkeypatch.setattr("apps.inventory.services.blood_bank_today", lambda: TODAY)
+    # The API view imports this function directly, so patch its alias as well.
+    monkeypatch.setattr("apps.adminops.views.blood_bank_today", lambda: TODAY)
 
 
 def test_migration_seeds_default_threshold_for_every_supported_pair():
