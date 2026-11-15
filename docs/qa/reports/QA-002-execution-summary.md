@@ -18,10 +18,11 @@
 | Full backend suite | `python -m pytest -q` | 649 passed, 1 failed, 5 skipped; 54.15s; exit 1 |
 | Full suite with coverage | `python -m coverage run --data-file=$cov --branch --source=apps -m pytest -q` | 649 passed, 1 failed, 5 skipped; 62.05s; exit 1 |
 | Focused PostgreSQL concurrency set | `python -m pytest --ds=bbms.settings -q` plus the five node IDs listed in [unit-test-report.md](unit-test-report.md) | 2 passed, 3 failed; 11.38s; exit 1 |
+| GitHub Actions on report PR #185 | CI workflow, `Run pytest` step | Failed: 649 passed, 1 failed, 5 skipped in 75.91s; same low-stock `alert_active` assertion. [Run 43736538474](https://github.com/DukeAvi/SE_miniProject/actions/runs/43736538474). Lint, Django checks, migration checks and migration application passed. |
 | Lint | `python -m ruff check .` | Passed: all checks passed |
 | Django checks | `python manage.py check --settings=bbms.settings_test` | Passed: 0 issues |
 | Migration consistency | `python manage.py makemigrations --check --dry-run --settings=bbms.settings_test` | Passed: no changes detected |
-| Whitespace check | `git diff --check` | Run during report validation before handoff |
+| Whitespace check | `git diff --check` | Passed |
 
 The five SQLite skips are explicitly PostgreSQL-only row-lock/concurrency checks and are not passes. On PostgreSQL, duplicate appointment and booking capacity passed; same-unit inventory transition failed because both workers returned conflict instead of one success; request reservation errored because the required stock-threshold row was absent; and low-stock crossing failed because its threshold fixture was absent. A separate CI execution of the fifth test passed on the same baseline in [run 42607673691](https://github.com/DukeAvi/SE_miniProject/actions/runs/42607673691). The full suite's one failure is `test_raising_threshold_can_trigger_alert_and_lowering_it_can_clear_active_state`, which observed `alert_active=True` after lowering the threshold. These failures were not altered or suppressed.
 

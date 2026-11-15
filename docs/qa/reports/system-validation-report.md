@@ -17,6 +17,7 @@
 | Migration consistency | Pass | `python manage.py makemigrations --check --dry-run --settings=bbms.settings_test`; no changes detected. |
 | Ruff | Pass | `python -m ruff check .`; all checks passed. |
 | Backend regression suite | Fail | 649 passed, 1 failed, 5 PostgreSQL-only skips on SQLite; see [unit report](unit-test-report.md). |
+| GitHub Actions on this report PR | Fail at pytest | [Run 43736538474](https://github.com/DukeAvi/SE_miniProject/actions/runs/43736538474) reproduced the same low-stock `alert_active` assertion (649 passed, 1 failed, 5 skipped); lint, checks and migrations passed. CI ran the SQLite suite, not the PostgreSQL matrix. |
 | PostgreSQL concurrency | Partial / failed | All five targeted cases executed on PostgreSQL 16.16: two passed, three failed. The fifth case passed in the baseline GitHub Actions PostgreSQL job; see [run](https://github.com/DukeAvi/SE_miniProject/actions/runs/42607673691). |
 | Role permission matrix | Pass (automated baseline) | Existing automated test covers 21 protected operations × four roles (84 cells); included in the full suite. |
 | Blood compatibility matrix | Pass (automated baseline) | Existing tests cover 64 ABO/Rh pairings across four components (256 combinations); included in the full suite. |

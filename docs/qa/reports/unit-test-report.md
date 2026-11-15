@@ -18,6 +18,8 @@ Result: **649 passed, 1 failed, 5 skipped** in 54.15 seconds. Exit code 1. The e
 
 The failure is `tests/integration/inventory/test_low_stock_alerts.py::test_raising_threshold_can_trigger_alert_and_lowering_it_can_clear_active_state`: after lowering the threshold from 5 to 4 with four available units, `alert_active` remains true. The failure is a real failing assertion on this baseline, not an environment skip. No application or test code was changed as part of this report task.
 
+GitHub Actions independently reproduced this same failure for report PR #185 at report commit `5fbf6136df5ce87a12bb010507b271729972508a`: workflow run [43736538474](https://github.com/DukeAvi/SE_miniProject/actions/runs/43736538474), step “Run pytest”, 649 passed, 1 failed, 5 skipped in 75.91 seconds. Ruff, Django system checks, migration consistency, and migration application steps passed. CI used its SQLite test settings, so its PostgreSQL-only tests were skipped; it is not the PostgreSQL concurrency result.
+
 The five skips explicitly require PostgreSQL row-lock/concurrency semantics and are not counted as passing tests. Their PostgreSQL results are recorded below and in the [execution summary](QA-002-execution-summary.md).
 
 ## PostgreSQL concurrency cases
