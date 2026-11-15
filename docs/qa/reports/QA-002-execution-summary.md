@@ -1,66 +1,62 @@
-# QA-002 — Final test execution summary (preliminary baseline)
+# QA-002 — Final test execution summary (fresh baseline)
 
-**Status:** Fresh baseline results are recorded; evaluation-final results remain pending. Issue #182 requires the final suite, coverage and refreshed browser evidence to use its merged application revision; #182 remains open and assigned to ANDYGAMER4321.
+**Status:** Fresh baseline evidence is complete for the currently merged application source. Evaluation-final results still depend on #182, which remains open and assigned to ANDYGAMER4321. Do not interpret this report as release acceptance.
 
 ## Revision, date and environment
 
 - Repository: `DukeAvi/SE_miniProject`
-- Tested code revision: `12b8e60` (`test/183-final-qa-reports`; two test-only corrections); application source baseline: `f913fa70a5c6e3b50e07c7f00fc579928508c0ba` (`main` / `origin/main`)
+- Tested code revision: `12b8e60` (`test/183-final-qa-reports`); the two changes since application baseline are test-only fixture/assertion corrections.
+- Application source baseline: `f913fa70a5c6e3b50e07c7f00fc579928508c0ba` (`main` / `origin/main` on 2026-11-15)
 - Execution date: 2026-11-15 (Asia/Calcutta)
-- Local environment: Windows x64; Python 3.12.7; Django 5.2.18; pytest 9.1.1; Coverage.py 7.17.0; Ruff installed
-- Default backend tests: SQLite in-memory, `bbms.settings_test`
-- PostgreSQL concurrency tests: disposable PostgreSQL 16.16 instance, loopback 127.0.0.1:55432, local trust authentication, pytest-created isolated test database; no shared or production database
+- Local environment: Windows x64, Python 3.12.7, Django 5.2.18, pytest 9.1.1, Coverage.py 7.17.0, Ruff
+- Default suite: SQLite in-memory (`bbms.settings_test`)
+- PostgreSQL: disposable PostgreSQL 16.16 cluster, loopback `127.0.0.1:55432`, local trust auth; each case used a separate pytest-created test database. No shared or production database was used.
 
-## Backend test results
+## Backend results
 
-| Run | Command | Outcome |
-|---|---|---|
-| Full backend suite | `python -m pytest -q` | 650 passed, 0 failed, 5 skipped; 54.36s; exit 0 |
-| Full suite with coverage | `python -m coverage run --data-file=$cov --branch --source=apps -m pytest -q` | 650 passed, 0 failed, 5 skipped; 65.83s; exit 0 |
-| PostgreSQL concurrency | Five separate `python -m pytest --ds=bbms.settings -q <node-id>` runs; exact node commands in [unit-test-report.md](unit-test-report.md) | 5 passed, 0 failed; each actually executed against PostgreSQL 16.16; teardown warnings documented |
-| GitHub Actions on report PR #185 | `CI — Lint, checks and tests`, `Run pytest` step | Runs [43736538474](https://github.com/DukeAvi/SE_miniProject/actions/runs/43736538474), [43736855078](https://github.com/DukeAvi/SE_miniProject/actions/runs/43736855078), and [43737103165](https://github.com/DukeAvi/SE_miniProject/actions/runs/43737103165) failed on the same test-fixture date mismatch (649 passed, 1 failed, 5 skipped each). The fixture-only correction is in `12b8e60`; CI for that pushed head is pending. |
-| Lint | `python -m ruff check .` | Passed: all checks passed |
-| Django checks | `python manage.py check --settings=bbms.settings_test` | Passed: 0 issues |
-| Migration consistency | `python manage.py makemigrations --check --dry-run --settings=bbms.settings_test` | Passed: no changes detected |
-| Whitespace check | `git diff --check` | Passed |
+| Run | Result |
+|---|---|
+| `python -m pytest -q` | 650 passed, 0 failed, 5 skipped in 54.36s; exit 0. Executed-test pass rate 100%; 650/655 collected cases passed (99.24%). |
+| `python -m coverage run --data-file=$cov --branch --source=apps -m pytest -q` | 650 passed, 0 failed, 5 skipped in 65.83s; exit 0. |
+| Five independent PostgreSQL case runs (`python -m pytest --ds=bbms.settings -q <node-id>`) | 5 passed, 0 failed. Each case truly ran against PostgreSQL; exact node IDs and expected/actual results are in [unit-test-report.md](unit-test-report.md). Each run emitted a test-database teardown warning for two worker sessions; the disposable DB was dropped between cases. |
+| Ruff, Django check, migrations, API contracts | All passed: Ruff clean; Django found 0 issues; no migration changes; 34 OpenAPI operations and 35 Postman requests validated, 33 implemented Django operations resolved. |
+| `git diff --check` and report links | Passed; no whitespace errors or broken local report links. |
 
-The five SQLite skips require PostgreSQL locking and are not counted as passes. All five passed in individual fresh-database PostgreSQL runs. A diagnostic combined invocation produced false missing-threshold errors because transaction-test teardown flushed migration-seeded rows between cases; the independent invocations avoid that interference. The third case required a frozen as-of date and a scoped audit-event assertion because the expected low-stock audit event is also emitted. The full-suite CI failure was a stale-date fixture: the API view's imported date alias was not frozen. Both corrections are test-only and are included in `12b8e60`; application behavior was not changed.
+Five concurrency tests are skipped only on the SQLite full-suite backend and are not counted as passes there. The five separate PostgreSQL runs each passed. Running all five in one pytest invocation was attempted as a diagnostic but was not used as the final result: transactional test teardown flushes migration-seeded threshold rows between cases. Separate fresh databases avoid that contamination.
+
+Two test-only corrections were made, without changing application behavior:
+
+- The low-stock threshold test now freezes the date alias imported by the admin API view. Previously only the service module's function was frozen, so the view used 2026-11-15 while fixtures expired 2026-11-10.
+- The concurrent inventory test now supplies its frozen business date and scopes its audit assertion to `UNIT_RESERVED`, excluding the expected low-stock audit event.
+
+## CI failure investigation and latest CI
+
+CI runs for commits `5fbf613`, `41c9b62`, and `6e3c1bb`—[43736538474](https://github.com/DukeAvi/SE_miniProject/actions/runs/43736538474), [43736855078](https://github.com/DukeAvi/SE_miniProject/actions/runs/43736855078), and [43737103165](https://github.com/DukeAvi/SE_miniProject/actions/runs/43737103165)—all failed at the same low-stock test assertion: `alert_active` remained true. Each run had 649 passed, 1 failed, and 5 skipped. The three diffs contained only QA reports; no application regression was introduced by those commits. Actual root cause was the stale date fixture described above.
+
+After the fixture corrections, [CI run 43739824521](https://github.com/DukeAvi/SE_miniProject/actions/runs/43739824521) passed on report head `3cc0343a752cb20f67113d540845bb3de175d11b`: backend suite 650 passed / 5 skipped (58.67s), PostgreSQL low-stock case 1 passed (6.88s, teardown warning), Ruff, Django/migration checks, frontend lint/typecheck/build/audit, Compose validation, TLS, monitoring, restart and encrypted backup/restore checks passed. JMeter install/profile/artifact steps were skipped by workflow conditions. This CI head contains the corrected tests and the same application source as `f913fa70`; the subsequent report-only documentation commit does not change executable code.
 
 ## Coverage
 
-Fresh Coverage.py 7.17.0 branch measurement on tested code revision `12b8e60`:
+Fresh Coverage.py 7.17.0 run, `--branch --source=apps`:
 
-- Statements/executable lines: 2,913 / 3,170 = **91.89%**.
-- Branch outcomes: 517 / 624 = **82.85%**; 107 branch outcomes unexecuted.
-- Exclusions: 0 configured statements/branches.
-- Scope: Python under `apps/` only; no frontend coverage is implied.
-- Combined Coverage.py `Cover` metric: 90.41%, distinct from line and branch percentages.
+- Statements / executable lines: **2,913 / 3,170 = 91.89%**.
+- Branch outcomes: **517 / 624 = 82.85%**; 107 branch outcomes not covered.
+- Exclusions: 0 configured.
+- Scope: Python files under `apps/`; frontend code is excluded, not measured.
+- Coverage.py combined `Cover` figure: 90.41%; distinct from statement and branch percentages.
 
-Detailed methods and commands are in [coverage-report.md](coverage-report.md) and [branch-coverage-report.md](branch-coverage-report.md).
+Package breakdowns and exact reproduction commands are in [coverage-report.md](coverage-report.md) and [branch-coverage-report.md](branch-coverage-report.md).
 
-## Existing evidence and test matrices
+## Other evidence and acceptance disposition
 
-- Role policy: 21 protected operations × four roles (84 cells); included in the full suite.
-- Blood compatibility: 64 ABO/Rh pairings × four components (256 combinations); included in the full suite.
-- Baseline main CI: [run 42607673691](https://github.com/DukeAvi/SE_miniProject/actions/runs/42607673691) succeeded on `f913fa70a5c6e3b50e07c7f00fc579928508c0ba`. Its PostgreSQL low-stock, TLS edge/PostgreSQL TLS and encrypted backup/restore jobs succeeded. Its JMeter install, normal-load profile and result artifact steps were skipped by workflow conditions; this run does not provide fresh JMeter results.
-- Report PR CI failures: each of runs 43736538474, 43736855078 and 43737103165 failed at the same assertion in `test_raising_threshold_can_trigger_alert_and_lowering_it_can_clear_active_state`. The three commits changed report files only. The issue was the test's date patch not reaching the admin view's imported date alias, not a report-code regression. The correction is test-only in `12b8e60`; latest CI on that commit remains to be verified after push.
-- Existing browser evidence: [TC-UX-01](../TC-UX-01.md) is historical relative to #182 and must be refreshed after its merge.
-- Procedures: [performance/JMeter](../../operations/performance.md), [secure transport](../../operations/secure-transport.md), and [database backup/restore](../../operations/database-backups.md). CI checks are not evidence of an external production TLS scan, production restore with measured RPO/RTO, or a production monthly availability measurement.
-- Historical report evidence: prior `f693371` and `fd0e96f` results remain historical and are not relabeled as current. The old report-fixture issue #174 was corrected by merged PR #178; the current low-stock failure is separate.
+- Role policy matrix: 21 operations × four roles (84 cells), included in passing suite.
+- Compatibility matrix: 64 ABO/Rh pairs × four components (256 combinations), included in passing suite.
+- Performance/JMeter procedure: [performance.md](../../operations/performance.md). No fresh JMeter run; CI steps were skipped.
+- TLS procedure: [secure-transport.md](../../operations/secure-transport.md). CI TLS edge and PostgreSQL TLS checks passed; no public production-host scan is claimed.
+- Backup/restore procedure: [database-backups.md](../../operations/database-backups.md). CI encrypted synthetic restore/integrity drill passed; no production restore or measured production RPO/RTO is claimed.
+- Baseline main CI [42607673691](https://github.com/DukeAvi/SE_miniProject/actions/runs/42607673691) is historical on `f913fa70`. It passed configured TLS, backup and PostgreSQL low-stock steps; its JMeter steps were skipped.
+- Existing browser evidence [TC-UX-01](../TC-UX-01.md) predates #182 and is not evidence for its donor onboarding/Staff selection changes. Refresh after #182 merges. Manual UAT and screen-reader execution were not performed here.
+- No complete observed month was provided; no 99.5% availability claim is made.
+- Historical `fd0e96f` (2026-11-09: 650 passed, 0 failed, 5 skipped in 99.86s) and `f693371` (2026-11-05: 639 passed, 1 failed, 5 skipped; date-dependent #174 fixture) are retained as historical only. #174 was corrected by merged PR #178.
 
-### Earlier report results (historical)
-
-| Revision / date | Earlier result | Disposition |
-|---|---|---|
-| `fd0e96f`, 2026-11-09 | 650 passed, 0 failed, 5 SQLite-only skips in 99.86s (historically reported). | Superseded by this fresh 2026-11-15 run; its counts are not attributed to `12b8e60`. |
-| `f693371`, 2026-11-05 | 639 passed, 1 failed, 5 skipped; the failure was the date-sensitive operational-report fixture tracked as #174. | #174 was corrected by merged PR #178. This is not the current failure. |
-
-## Requirement coverage and disposition
-
-Automated role and compatibility matrices are represented in the passing full suite. The full backend suite passes with five PostgreSQL-only SQLite skips; all five corresponding PostgreSQL cases pass independently. The test-fixture corrections were not application behavior changes. Evaluation-final measurements still require merged #182 and refreshed donor onboarding/Staff-selection browser flows. Manual UAT and screen-reader execution remain unperformed here. JMeter was not run in the latest baseline CI; no production TLS scan, production restore drill/RPO/RTO, or observed monthly 99.5% availability period is claimed.
-
-No application code was changed. Two test-only corrections fixed nondeterministic/stale test assumptions; the original failures and their CI reruns are documented above. Defect age/severity and release sign-off are not asserted without owner triage and approval. QA-002 evaluation-final acceptance is **not complete** until #182 is merged and the suite, coverage and browser/system checks are rerun on that merged revision. Issue #181 / RTM files were not modified.
-
-## Reproduction
-
-See the exact full-suite, per-case PostgreSQL, Ruff, Django, migration and coverage commands in [unit-test-report.md](unit-test-report.md), [coverage-report.md](coverage-report.md), and [system-validation-report.md](system-validation-report.md). Application source is baseline `f913fa70a5c6e3b50e07c7f00fc579928508c0ba`; tested tree including test-only corrections is `12b8e60`.
+System checks and baseline test/coverage evidence are consistent across the four reports. Issue #183 is not evaluation-final until #182 merges and the suite, coverage, and relevant browser/system checks are rerun on that merged application revision. No changes were made to #181's Test Plan, RTM or index files; no product defect was silently changed. Release sign-off, defect aging/severity, production TLS/recovery results, and human UAT remain unasserted.
