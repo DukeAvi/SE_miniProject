@@ -41,6 +41,28 @@ The app was started with the local synthetic SQLite settings; migrations and `se
 - `donor_detail` is present in the backend role policy matrix, but no staff donor lookup endpoint is currently registered. Staff donation entry consequently accepts a numeric donor account ID and lets Django validate eligibility; a discoverable donor roster/verification workflow is not implemented in the current API contract.
 - Screenshot files and a full keyboard/screen-reader pass remain required before marking the accessibility verification complete.
 
+## Donor onboarding and Staff selection checklist for #182
+
+This checklist describes manual checks to perform on the merged #182 revision. It is a procedure, not an execution record; leave results unmarked until a person runs it against the named revision.
+
+### Functional UAT
+
+1. Register a new synthetic Donor account through the public registration screen and sign in.
+2. Open the Donor work area. Confirm the page explains that Staff verification is needed, while the rest of the dashboard remains usable.
+3. Sign in as Staff. Search the donor by a partial name and then by email. Confirm the result is the intended active Donor and does not expose birth date, weight, or other unnecessary fields.
+4. Select the donor and complete the profile using authorized synthetic values. Confirm the profile is created once and the success message is announced.
+5. Search for the same donor again and confirm the UI marks the profile verified. Use the documented API/Postman request once more; confirm the duplicate is rejected and existing details are not changed.
+6. Sign in again as the Donor and refresh. Confirm appointments and donation history load, and use an available synthetic slot if the local demo has one.
+7. As Staff, select a profiled donor and record a valid synthetic donation. Confirm invalid dates, mismatched blood group, and ineligible weight are rejected without creating a donation.
+8. Try the lookup and profile-creation requests as Donor, Recipient, and Admin accounts. Confirm the server denies each operation.
+
+### Keyboard and screen-reader pass
+
+1. Complete the lookup and profile forms using only Tab, Shift+Tab, Enter, and Space; confirm visible focus and that result selection is keyboard-operable.
+2. With NVDA, VoiceOver, or another named screen reader, inspect labels for search and profile fields, selected donor state, no-match feedback, validation errors, and profile-created status.
+3. At a 390×844 viewport, confirm results and forms remain in the viewport or scroll in their intended region without horizontal page overflow.
+4. Record the tester, tool/browser, date, tested commit, and observed outcome. If not run, keep the result as not executed.
+
 ## Review rerun — 2026-11-09
 
 The original execution record above is retained as historical evidence. The current candidate includes the merged report-fixture correction (#178) and audit retention (#176).
