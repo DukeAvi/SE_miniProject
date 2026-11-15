@@ -261,6 +261,7 @@ def test_concurrent_reservation_cannot_change_the_same_unit_twice():
                 unit_id=unit.pk,
                 action=InventoryTransaction.Action.RESERVE,
                 reason="Concurrent reservation test",
+                as_of_date=TODAY,
             )
             result = "ok"
         except BloodUnitRejected:
@@ -273,4 +274,4 @@ def test_concurrent_reservation_cannot_change_the_same_unit_twice():
 
     assert sorted(results) == ["conflict", "ok"]
     assert InventoryTransaction.objects.filter(blood_unit=unit).count() == 1
-    assert AuditEvent.objects.count() == 1
+    assert AuditEvent.objects.filter(action="UNIT_RESERVED").count() == 1
