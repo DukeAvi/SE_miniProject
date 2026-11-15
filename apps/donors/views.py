@@ -9,7 +9,6 @@ from django.db.models import Count, Q
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_protect
 from rest_framework import status
-from rest_framework.exceptions import NotFound
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -88,8 +87,12 @@ class MyDonationHistoryView(APIView):
             return _error("invalid_query", "Unexpected query parameters.")
         try:
             profile = DonorProfile.objects.get(user=request.user)
-        except DonorProfile.DoesNotExist as exc:
-            raise NotFound("Donor profile was not found.") from exc
+        except DonorProfile.DoesNotExist:
+            return _error(
+                "donor_profile_not_found",
+                "Your donor profile needs Staff verification before history is available.",
+                status_code=404,
+            )
         records = Donation.objects.filter(donor=profile).select_related("donor")
         paginator = DonationHistoryPagination()
         page = paginator.paginate_queryset(records, request, view=self)
