@@ -4,7 +4,7 @@ This guide describes the Sprint 2 browser demonstration. Use synthetic informati
 
 ## Start the demo
 
-Follow [the frontend setup guide](../../frontend/README.md) after starting the local Django API. Donor and Recipient accounts can be registered from the sign-in page. The public registration form does not create a Donor eligibility profile; donor appointment and history APIs require a profile created through an approved staff workflow or local seed fixture. Staff and Admin accounts must be managed through the protected Admin API.
+Follow [the frontend setup guide](../../frontend/README.md) after starting the local Django API. Donor and Recipient accounts can be registered from the sign-in page. Public registration creates the Donor account but does not set verified eligibility details. After a Donor registers, an authorized Staff member searches for the account and records the initial donor profile from the approved verification process. The Donor can then sign in again, refresh the workspace, and use appointment and history views. Profile creation is one-time; duplicate submissions are rejected. A verified profile does not mean the donor is eligible for a particular appointment or donation: the shared eligibility rules are still evaluated. Local seed fixtures remain available for repeatable automated demos. Staff and Admin accounts must be managed through the protected Admin API.
 
 ## Donor
 
@@ -22,6 +22,7 @@ Follow [the frontend setup guide](../../frontend/README.md) after starting the l
 - Review requests, approve/reject/hold with a reason, reserve compatible stock, and issue reserved units.
 - Search unit-level inventory, create a unit from a completed donation, and return or discard eligible units with a reason.
 - Record completed donations.
+- Search active donor accounts by name or email, verify the initial donor eligibility profile, and select an existing profiled donor for donation recording. The lookup is Staff-only and returns limited account details.
 - Staff cannot manage accounts, thresholds, audit records, or delivery failures.
 
 ## Admin

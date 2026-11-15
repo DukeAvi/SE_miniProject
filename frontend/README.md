@@ -25,6 +25,8 @@ This is the accessible, role-based Next.js interface for the BBMS classroom demo
 
 4. Open `http://localhost:3000`. Donor and Recipient demo accounts can be registered from the sign-in page. Staff and Admin accounts are created by an Admin through the API; do not grant these roles from the public registration form.
 
+New Donor accounts need an authorized Staff member to complete the initial eligibility profile before the donor can use appointment and donation-history views. Staff can search active donors by name or email from the Staff workspace, record verified profile details, and select a profiled donor when recording a completed donation. Use synthetic details only. Profile verification is not an eligibility approval; the backend checks eligibility for each appointment and donation action.
+
 ## Checks
 
 ```bash
