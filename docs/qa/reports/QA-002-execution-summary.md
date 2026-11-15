@@ -1,64 +1,64 @@
-# QA-002 — Sprint 2 test execution summary
+# QA-002 — Final test execution summary (preliminary baseline)
 
-## Current rerun — 2026-11-09
+**Status:** Issue #183 is in progress. This report records a fresh baseline, not final release evidence. The current issue #182 requires the final suite, coverage and refreshed browser evidence to use its merged application revision; #182 was still open and assigned to ANDYGAMER4321 when these checks ran.
 
-Backend baseline: `fd0e96f` (merged audit-retention PR #176 and deterministic report-fixture PR #178). Run from the repository root with `.venv/bin/pytest -q`: **650 passed, 0 failed, 5 skipped in 99.86 seconds**. Executed-test pass rate is 100%; 650/655 collected cases passed (99.24%). The five skips require PostgreSQL and are not counted as passes. The original failure evidence below is preserved; #174 is resolved by #178.
+## Revision, date and environment
 
-The 84-cell role policy matrix and full component compatibility matrix pass in this rerun. Audit retention is now integrated and its 67-test audit suite passed during PR review. The current dashboard checks and exported screenshots are recorded in [TC-UX-01](../TC-UX-01.md).
+- Repository: `DukeAvi/SE_miniProject`
+- Tested application revision: `f913fa70a5c6e3b50e07c7f00fc579928508c0ba` (`main` / `origin/main` at test time)
+- Execution date: 2026-11-15 (Asia/Calcutta)
+- Local environment: Windows x64; Python 3.12.7; Django 5.2.18; pytest 9.1.1; Coverage.py 7.17.0; Ruff installed
+- Default backend tests: SQLite in-memory, `bbms.settings_test`
+- PostgreSQL concurrency tests: disposable PostgreSQL 16.16 instance, loopback 127.0.0.1:55432, local trust authentication, pytest-created isolated test database; no shared or production database
 
-CI now includes a PostgreSQL low-stock concurrency check, a TLS deployment check, and an encrypted backup/restore drill. Their workflow results provide reproducible deployment evidence; the historical statements below about missing CI coverage describe the old execution only. Remaining PostgreSQL concurrency cases, representative-user UAT, actual screen-reader verification, measured monthly availability, and release-owner sign-off are still outstanding. Issue #96 stays open for those exit criteria. This evidence PR can be merged without declaring the release frozen.
+## Backend test results
 
-Historical coverage percentages below apply only to the original baseline and have not been relabeled as measurements of this revision.
+| Run | Command | Outcome |
+|---|---|---|
+| Full backend suite | `python -m pytest -q` | 649 passed, 1 failed, 5 skipped; 54.15s; exit 1 |
+| Full suite with coverage | `python -m coverage run --data-file=$cov --branch --source=apps -m pytest -q` | 649 passed, 1 failed, 5 skipped; 62.05s; exit 1 |
+| Focused PostgreSQL concurrency set | `python -m pytest --ds=bbms.settings -q` plus the five node IDs listed in [unit-test-report.md](unit-test-report.md) | 2 passed, 3 failed; 11.38s; exit 1 |
+| Lint | `python -m ruff check .` | Passed: all checks passed |
+| Django checks | `python manage.py check --settings=bbms.settings_test` | Passed: 0 issues |
+| Migration consistency | `python manage.py makemigrations --check --dry-run --settings=bbms.settings_test` | Passed: no changes detected |
+| Whitespace check | `git diff --check` | Run during report validation before handoff |
 
-## Original execution
+The five SQLite skips are explicitly PostgreSQL-only row-lock/concurrency checks and are not passes. On PostgreSQL, duplicate appointment and booking capacity passed; same-unit inventory transition failed because both workers returned conflict instead of one success; request reservation errored because the required stock-threshold row was absent; and low-stock crossing failed because its threshold fixture was absent. A separate CI execution of the fifth test passed on the same baseline in [run 42607673691](https://github.com/DukeAvi/SE_miniProject/actions/runs/42607673691). The full suite's one failure is `test_raising_threshold_can_trigger_alert_and_lowering_it_can_clear_active_state`, which observed `alert_active=True` after lowering the threshold. These failures were not altered or suppressed.
 
-**Execution date:** 2026-11-05 (Asia/Kolkata)
-**Tested baseline:** `main` at `f693371ba0fce6d5d7d57e03ff2aa6dfff47d8f2`
-**Environment:** Linux, Python 3.14.6, Django 5.2.18, pytest 9.1.1, SQLite in-memory test database (`bbms.settings_test`).
-**Data:** the automated suite uses its isolated synthetic fixtures. No production or personal donor/recipient records were used.
+## Coverage
 
-## Execution result
+Fresh Coverage.py 7.17.0 branch measurement on this exact revision and test suite:
 
-| Measure | Result |
-| --- | ---: |
-| Collected | 645 / 645 (100%) |
-| Passed | 639 |
-| Failed | 1 |
-| Skipped / blocked by SQLite backend | 5 |
-| Pass rate among executed tests | 639 / 640 = 99.84% |
-| Pass rate among all collected tests | 639 / 645 = 99.07% |
+- Statements/executable lines: 2,913 / 3,170 = **91.89%**.
+- Branch outcomes: 517 / 624 = **82.85%**; 107 branch outcomes unexecuted.
+- Exclusions: 0 configured statements/branches.
+- Scope: Python under `apps/` only; no frontend coverage is implied.
+- Combined Coverage.py `Cover` metric: 90.41%, distinct from line and branch percentages.
 
-The five skipped cases explicitly require PostgreSQL row locking or concurrent transaction behavior. They are not counted as passes. The failed case is `tests/integration/adminops/test_operational_reports.py::test_admin_gets_grouped_summaries_without_staff_level_record_access`; isolated reproduction also failed. It expects an inventory transaction dated 2026-11-04, but its fixture lets `occurred_at` default to the current time (2026-11-05). The report correctly filters the requested prior-day window, so the test sees zero rows. Tracking issue [#174](https://github.com/DukeAvi/SE_miniProject/issues/174) records the failure. This is currently classified as a time-dependent test-fixture defect; it does not alone demonstrate an endpoint defect. Severity and owner triage remain pending.
+Detailed methods and commands are in [coverage-report.md](coverage-report.md) and [branch-coverage-report.md](branch-coverage-report.md).
 
-The initial full run and isolated reproduction were retained as the first failed outcomes. The second full run under coverage reproduced the same failure; no code or test was modified between runs.
+## Existing evidence and test matrices
 
-## Role and compatibility matrices
+- Role policy: 21 protected operations × four roles (84 cells); included in the full suite.
+- Blood compatibility: 64 ABO/Rh pairings × four components (256 combinations); included in the full suite.
+- Latest baseline CI: [run 42607673691](https://github.com/DukeAvi/SE_miniProject/actions/runs/42607673691) succeeded on commit `f913fa70a5c6e3b50e07c7f00fc579928508c0ba`. Its PostgreSQL low-stock, TLS edge/PostgreSQL TLS and encrypted backup/restore jobs succeeded. Its JMeter install, normal-load profile and result artifact steps were skipped by workflow conditions; this run does not provide fresh JMeter results.
+- Existing browser evidence: [TC-UX-01](../TC-UX-01.md) is historical relative to #182 and must be refreshed after its merge.
+- Procedures: [performance/JMeter](../../operations/performance.md), [secure transport](../../operations/secure-transport.md), and [database backup/restore](../../operations/database-backups.md). CI checks are not evidence of an external production TLS scan, production restore with measured RPO/RTO, or a production monthly availability measurement.
+- Historical report evidence: prior `f693371` and `fd0e96f` results remain historical and are not relabeled as current. The old report-fixture issue #174 was corrected by merged PR #178; the current low-stock failure is separate.
 
-- Server role permissions: `tests/unit/core/test_permissions.py::test_role_matrix_matches_sad_and_is_enforced_for_every_role_cell` checks 21 protected operation codes against Donor, Recipient, Staff, and Admin (84 role-operation cells), compares the configured policy with the expected SAD matrix, and checks access-denial audit records. **Pass** on this baseline.
-- Blood compatibility: `tests/unit/requests/test_compatibility.py` exercises all 64 ABO/Rh donor-recipient pairings for each of four components (256 component/pair combinations), invalid values, and incompatible fulfillment rejection. **Pass** on this baseline.
-- Browser role checks and responsive evidence are recorded in [TC-UX-01](../TC-UX-01.md). Those checks are **partial**: screen-reader and full keyboard-only passes and screenshot files remain outstanding.
+### Earlier report results (historical)
 
-## Candidate revisions outside the baseline
+| Revision / date | Earlier result | Disposition |
+|---|---|---|
+| `fd0e96f`, 2026-11-09 | 650 passed, 0 failed, 5 SQLite-only skips in 99.86s (historically reported). | Superseded by this fresh 2026-11-15 run; its counts are not attributed to `f913fa7`. |
+| `f693371`, 2026-11-05 | 639 passed, 1 failed, 5 skipped; the failure was the date-sensitive operational-report fixture tracked as #174. | #174 was corrected by merged PR #178. This is not the current failure. |
 
-The tested baseline does not include either open dashboard/retention PR. Keep these results separate from the baseline result:
+## Requirement coverage and disposition
 
-- Audit-retention candidate: PR [#172](https://github.com/DukeAvi/SE_miniProject/pull/172), head `0aba4807f882e8e9c95430f845a9028d64cd173d`. Its prior branch run reported 650 passed and 5 SQLite skips. It is unmerged; this is candidate evidence, not evidence that `main` contains the change.
-- Dashboard candidate: PR [#173](https://github.com/DukeAvi/SE_miniProject/pull/173), head `0af92d6d8d477c73bce15875689314618078ce6f`. Frontend lint, typecheck, production build, and dependency audit passed; local browser checks and remaining accessibility limits are in [TC-UX-01](../TC-UX-01.md). It is an open draft and not integrated into this baseline.
+Automated role and compatibility matrices are represented in the suite. The local PostgreSQL results explicitly cover all five named row-lock cases, but three failures remain unresolved. System check, migration consistency and lint pass. The backend suite does not pass because of one failure. Fresh final-evaluation measures still require the merged #182 revision, as do refreshed donor onboarding/Staff-selection browser flows. Manual UAT and screen-reader execution remain unperformed here. JMeter was not run in the latest baseline CI; no production TLS scan, production restore drill/RPO/RTO, or observed monthly 99.5% availability period is claimed.
 
-## Defect and release disposition
+No product code or tests were changed for this reporting task, so no product defect was silently fixed. Defect age/severity and release sign-off are not asserted without owner triage and approval. QA-002 acceptance is **not complete** until #182 is merged, all final runs are repeated, and the failing tests are dispositioned. Issue #181 / RTM files were not modified.
 
-One test-fixture defect is open (#174), first observed and filed on 2026-11-05. Defect aging is 0 calendar days at this report timestamp. The ratio 1/645 (0.16%) is a **test-case failure ratio**, not a product defect-density estimate; no valid size denominator or triaged product-defect inventory exists. No critical product defect was demonstrated by this run, but a complete critical-defect review has not been signed off.
+## Reproduction
 
-UAT, external TLS inspection, the performance/load target, monthly availability evidence, and final owner sign-off have not been evidenced here. The QA exit criteria therefore remain **not satisfied**. Do not treat this as a release recommendation or freeze approval.
-
-## Reproduction commands
-
-Run from the repository root with the project QA virtual environment:
-
-```text
-/tmp/bbms-sprint2-venv/bin/python -m pytest --collect-only -q
-/tmp/bbms-sprint2-venv/bin/python -m pytest -q
-/tmp/bbms-sprint2-venv/bin/python -m pytest -q tests/integration/adminops/test_operational_reports.py::test_admin_gets_grouped_summaries_without_staff_level_record_access -vv
-```
-
-The full baseline run took 136.24 seconds without coverage and 146.24 seconds with coverage. The isolated reproduction took 1.29 seconds.
+See the exact full-suite, PostgreSQL, Ruff, Django, migration and coverage commands in [unit-test-report.md](unit-test-report.md), [coverage-report.md](coverage-report.md), and [system-validation-report.md](system-validation-report.md). All results above refer to revision `f913fa70a5c6e3b50e07c7f00fc579928508c0ba` only.

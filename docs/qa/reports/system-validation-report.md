@@ -1,39 +1,32 @@
-# System Validation Report — Sprint 2 QA
+# System Validation Report — Issue #183 baseline
 
-## Current rerun — 2026-11-09
+**Status:** Preliminary baseline. Final application and browser validation must use the merged revision of #182. At execution time, #182 was open and assigned to ANDYGAMER4321; this report does not claim validation of its changes.
 
-Backend baseline `fd0e96f`: 650 passed, zero failed, five PostgreSQL-only skips (`.venv/bin/pytest -q`, 99.86 seconds). The fixture defect #174 is resolved by merged PR #178. Audit retention is integrated through #176. The current browser review in [TC-UX-01](../TC-UX-01.md) covers four real API-backed role dashboards, axe checks, mobile keyboard navigation, exported desktop/mobile images, and failed-request input preservation.
+## Revision and environment
 
-The workflow includes PostgreSQL low-stock concurrency, TLS deployment, and encrypted backup/restore checks. The original statement below that CI provides no PostgreSQL coverage is superseded. Complete representative-user UAT, actual screen-reader checks, the remaining PostgreSQL concurrency cases, monthly uptime evidence, and owner release sign-off remain unverified. Those are tracked by #96/#77; this report does not invent their outcomes.
+- Tested application revision: `f913fa70a5c6e3b50e07c7f00fc579928508c0ba`
+- Execution date: 2026-11-15 (Asia/Calcutta)
+- Environment: Windows x64, Python 3.12.7, Django 5.2.18, PostgreSQL 16.16 disposable local instance for the concurrency tests; default backend suite used SQLite in-memory.
+- CI evidence: [main CI run 42607673691](https://github.com/DukeAvi/SE_miniProject/actions/runs/42607673691), head `f913fa70a5c6e3b50e07c7f00fc579928508c0ba`, completed successfully 2026-11-09.
 
-## Original execution
-
-**Execution date:** 2026-11-05 (Asia/Kolkata)
-**Backend baseline:** `main` `f693371ba0fce6d5d7d57e03ff2aa6dfff47d8f2`
-**Dashboard candidate:** PR #177, tree `07039fcf69578034e7bfb966de3e29a9a8ef7375` (same tree as tested dashboard commit `8366159b92f89609fc2845f7864a67e02a639d53`).
-**Environment:** Local Django with synthetic SQLite seed data, Next.js 16.4.5 / React 19.3.0, Node 22.23.2, in-app Chromium browser. No personal or clinical production data was used.
-
-## System-level scenarios
+## System checks and scenarios
 
 | Scenario | Result | Evidence / limitation |
-| --- | --- | --- |
-| Login, role redirect, session/CSRF proxy, logout for Donor, Recipient, Staff, Admin | Pass (smoke) | Each synthetic role reached its dashboard; protected reads used the Django API. Detailed steps/results: [TC-UX-01](../TC-UX-01.md). |
-| Recipient availability privacy | Pass (smoke) | Browser showed aggregate quantity and nearest expiry; no unit or donor identifiers were exposed in the UI response. |
-| Donor appointments/history | Partial | Seeded donor profile worked. New public registration does not create a DonorProfile in the current API; this causes the documented profile-not-found response on appointment/history endpoints. |
-| Staff work views | Partial | Request/inventory/donation views rendered. No mutating operation was performed in this visual pass. The API currently lacks a staff donor-lookup endpoint. |
-| Admin views and reports | Pass (read smoke) | Accounts, thresholds, date-filtered reports, audit and delivery-failure views loaded. No Admin mutation was performed. |
-| Responsive/accessibility behavior | Partial | Mobile dashboard navigation and layout were inspected; labels, names, focus token and accessibility tree were reviewed. Full keyboard-only, actual screen-reader, full rendered contrast, and exported screenshot evidence remain outstanding. |
-| Automated backend integration | Partial | Full suite on baseline: 506 passed, 1 failed, 5 SQLite-only concurrency tests skipped. Failure is #174. |
-| Compatibility safety matrix | Pass (automated) | 64 ABO/Rh pairings for each of four components passed in the automated test suite. |
-| Role authorization matrix | Pass (automated) | 84 operation/role cells across 21 operations and four roles passed in the automated test suite. |
-| PostgreSQL transaction/concurrency behavior | Not run | Five targeted cases require PostgreSQL row locks and are skipped on SQLite. CI also uses SQLite and does not close this gap. |
-| Performance target / availability window | Not run | No controlled JMeter/load sample or monthly uptime measurement was produced. |
-| Deployed TLS inspection | Not run | Configuration tests ran; no external endpoint handshake inspection was performed. |
-| Backup restore and measured RPO/RTO | Partial | Automated backup/restore-related tests exist and ran; no separately witnessed restore with measured RPO/RTO is attached here. |
-| Representative-user UAT | Not run | No UAT participants or acceptance record were provided. |
+|---|---|---|
+| Django system check | Pass | `python manage.py check --settings=bbms.settings_test`; zero issues. |
+| Migration consistency | Pass | `python manage.py makemigrations --check --dry-run --settings=bbms.settings_test`; no changes detected. |
+| Ruff | Pass | `python -m ruff check .`; all checks passed. |
+| Backend regression suite | Fail | 649 passed, 1 failed, 5 PostgreSQL-only skips on SQLite; see [unit report](unit-test-report.md). |
+| PostgreSQL concurrency | Partial / failed | All five targeted cases executed on PostgreSQL 16.16: two passed, three failed. The fifth case passed in the baseline GitHub Actions PostgreSQL job; see [run](https://github.com/DukeAvi/SE_miniProject/actions/runs/42607673691). |
+| Role permission matrix | Pass (automated baseline) | Existing automated test covers 21 protected operations × four roles (84 cells); included in the full suite. |
+| Blood compatibility matrix | Pass (automated baseline) | Existing tests cover 64 ABO/Rh pairings across four components (256 combinations); included in the full suite. |
+| Browser and four-role end-to-end flows | Pending #182 | Existing [TC-UX-01 evidence](../TC-UX-01.md) is prior work and is not evidence for #182's donor onboarding or Staff donor-selection changes. Refresh after #182 merges. |
+| JMeter performance profile (TC-Perf-01) | Not executed in this run | In CI run 42607673691, JMeter install/profile/artifact steps were skipped by workflow conditions. Successful overall CI is not a performance measurement. Existing [performance procedure](../../operations/performance.md) is procedural documentation, not fresh results. |
+| TLS deployment / external endpoint | CI configuration check passed; external production scan unverified | CI job “Verify TLS edge and PostgreSQL TLS deployment” passed in run 42607673691. No public production hostname scan was performed. See [secure transport procedure](../../operations/secure-transport.md). |
+| Encrypted backup / restore drill | CI drill passed; production RPO/RTO unverified | CI job “Run encrypted PostgreSQL backup and restore drill” passed in run 42607673691. No production restore or measured production RPO/RTO was performed. See [backup procedure](../../operations/database-backups.md). |
+| Monthly 99.5% availability | Not measured | No observed complete month of monitoring data was provided. |
+| Human UAT / screen reader | Not performed here | Record only after participants perform and supply results. #182 specifies an updated reproducible UAT/screen-reader checklist. |
 
-## Defect and readiness
+## Disposition
 
-The one automated failure is the date-sensitive inventory report fixture documented as [#174](https://github.com/DukeAvi/SE_miniProject/issues/174). The GitHub CI run for PR #177 reproduced the same assertion (`inventory_report["count"]` observed `0`, expected `1`). This remains a test/fixture issue pending owner triage; do not treat this report as a green integration build.
-
-This report records smoke and automated evidence only. It does not establish complete system acceptance, UAT, a release recommendation, or freeze approval. System exit criteria remain open pending #174 disposition, PostgreSQL concurrency evidence, external performance/availability/security checks, full accessibility evidence, UAT, and owner sign-off.
+This is baseline evidence, not release acceptance. The full suite has one failure, three PostgreSQL cases failed locally, #182's application/browser changes remain unmerged, and production/manual checks remain unverified. No UAT, production TLS scan, production restore drill, or monthly availability claim is made.
