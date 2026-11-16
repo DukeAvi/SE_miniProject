@@ -110,3 +110,7 @@ Sprint work is assigned by the Scrum Master. Before coding, acknowledge the assi
 ## Notifications
 
 The classroom demo uses `NOTIFICATION_PROVIDER=console` and does not send email or SMS. Automated tests use a deterministic mock adapter. Do not add provider credentials for the demo. Console output must omit message content, contact details, tokens, and clinical information. See `docs/decisions/OI-7-notification-provider.md` for the provider decision and failure-handling contract.
+
+## Container Releases & Continuous Delivery
+
+Tagged releases (`v*`) are automatically validated, built, and published to GitHub Container Registry via `.github/workflows/release-image.yml`. See [docs/operations/container-release.md](docs/operations/container-release.md) for release tagging, deployment, and rollback instructions.

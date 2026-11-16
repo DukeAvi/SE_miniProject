@@ -1,0 +1,21 @@
+# Production Compose override pulling pre-built images from GHCR.
+# Usage:
+#   BBMS_IMAGE_TAG=v1.0.0 docker compose -f compose.yaml -f compose.secure.yaml -f deployment/compose.ghcr.yaml up -d
+
+services:
+  web:
+    image: ghcr.io/dukeavi/se_miniproject:${BBMS_IMAGE_TAG:-latest}
+    pull_policy: always
+    build: null
+  worker:
+    image: ghcr.io/dukeavi/se_miniproject:${BBMS_IMAGE_TAG:-latest}
+    pull_policy: always
+    build: null
+  beat:
+    image: ghcr.io/dukeavi/se_miniproject:${BBMS_IMAGE_TAG:-latest}
+    pull_policy: always
+    build: null
+  monitoring-config-check:
+    image: ghcr.io/dukeavi/se_miniproject:${BBMS_IMAGE_TAG:-latest}
+    pull_policy: always
+    build: null
