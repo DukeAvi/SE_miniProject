@@ -1,0 +1,36 @@
+{
+  "checks": [
+    "Fresh donor registration and actionable incomplete-profile screen",
+    "Staff searches for and verifies fresh donor through real UI",
+    "Verified donor books and cancels own appointment",
+    "donor: axe WCAG A/AA scan",
+    "Staff records completed donation for selected donor",
+    "Staff creates verified inventory unit from actual donation",
+    "staff: axe WCAG A/AA scan",
+    "Invalid request preserves input and exposes accessibility alert node",
+    "Recipient checks aggregate availability and submits request",
+    "recipient: axe WCAG A/AA scan",
+    "Mobile keyboard navigation and responsive width",
+    "Staff approves, reserves and issues request through real API-backed UI",
+    "Admin creates managed Staff account",
+    "admin: axe WCAG A/AA scan"
+  ],
+  "axe": [
+    {
+      "role": "donor",
+      "violations": []
+    },
+    {
+      "role": "staff",
+      "violations": []
+    },
+    {
+      "role": "recipient",
+      "violations": []
+    },
+    {
+      "role": "admin",
+      "violations": []
+    }
+  ]
+}

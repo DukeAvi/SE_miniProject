@@ -76,6 +76,26 @@
     {
       "key": "slotId",
       "value": "00000000-0000-4000-8000-000000000055"
+    },
+    {
+      "key": "donorSearch",
+      "value": "demo",
+      "type": "string"
+    },
+    {
+      "key": "donorBirthDate",
+      "value": "1990-01-15",
+      "type": "string"
+    },
+    {
+      "key": "donorWeightKg",
+      "value": "62.00",
+      "type": "string"
+    },
+    {
+      "key": "donorBloodGroup",
+      "value": "O+",
+      "type": "string"
     }
   ],
   "item": [
@@ -902,7 +922,7 @@
         },
         {
           "name": "Issue reserved blood units",
-          "description": "Allowed roles: STAFF. Implementation status: implemented. Requires Idempotency-Key (1\u2013128 non-whitespace characters); retry with the same key to receive the original result safely.",
+          "description": "Allowed roles: STAFF. Implementation status: implemented. Requires Idempotency-Key (1–128 non-whitespace characters); retry with the same key to receive the original result safely.",
           "request": {
             "method": "POST",
             "header": [
@@ -1209,6 +1229,73 @@
                 "exec": [
                   "pm.test('Expected status 200', function () { pm.response.to.have.status(200); });",
                   "pm.test('Response contains sanitized failures', function () { const body = pm.response.json(); pm.expect(body.results).to.be.an('array'); body.results.forEach((row) => pm.expect(row).to.have.property('code')); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Search donors for Staff",
+          "description": "Staff only. Search by a synthetic donor name or email; the result omits clinical fields.",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/donors/staff/donors?q={{donorSearch}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Expected status 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create verified donor profile",
+          "description": "Staff only. Synthetic data only. Creates a profile once; eligibility is checked separately.",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-CSRFToken",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/donors/staff/donor-profiles",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"donor_id\": \"{{donorId}}\",\n  \"birth_date\": \"{{donorBirthDate}}\",\n  \"weight_kg\": \"{{donorWeightKg}}\",\n  \"blood_group\": \"{{donorBloodGroup}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Expected status 201', function () { pm.response.to.have.status(201); });"
                 ]
               }
             }
