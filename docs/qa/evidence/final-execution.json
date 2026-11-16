@@ -1,0 +1,101 @@
+{
+  "date": "2026-11-16",
+  "tested_revision": "827819fa6b17d283c0886a5a71005935c3aaeddc",
+  "application_pr": 186,
+  "collected": 671,
+  "unit_collected": 133,
+  "integration_collected": 538,
+  "sqlite": {
+    "passed": 666,
+    "failed": 0,
+    "skipped": 5,
+    "duration_seconds": 68.29
+  },
+  "postgresql": {
+    "passed": 5,
+    "failed": 0,
+    "skipped": 0,
+    "disposable": true,
+    "teardown_warnings": 0
+  },
+  "coverage": {
+    "tool": "Coverage.py 7.17.3",
+    "scope": "apps/",
+    "covered_lines": 3036,
+    "num_statements": 3297,
+    "percent_covered": 90.48947501902104,
+    "percent_covered_display": "90",
+    "missing_lines": 261,
+    "excluded_lines": 0,
+    "percent_statements_covered": 92.08371246587807,
+    "percent_statements_covered_display": "92",
+    "num_branches": 646,
+    "num_partial_branches": 94,
+    "covered_branches": 532,
+    "missing_branches": 114,
+    "percent_branches_covered": 82.3529411764706,
+    "percent_branches_covered_display": "82"
+  },
+  "packages": {
+    "__init__.py": {
+      "covered_lines": 0,
+      "num_statements": 0,
+      "covered_branches": 0,
+      "num_branches": 0
+    },
+    "accounts": {
+      "covered_lines": 390,
+      "num_statements": 413,
+      "covered_branches": 80,
+      "num_branches": 94
+    },
+    "adminops": {
+      "covered_lines": 332,
+      "num_statements": 358,
+      "covered_branches": 72,
+      "num_branches": 88
+    },
+    "audit": {
+      "covered_lines": 252,
+      "num_statements": 258,
+      "covered_branches": 36,
+      "num_branches": 38
+    },
+    "core": {
+      "covered_lines": 344,
+      "num_statements": 357,
+      "covered_branches": 86,
+      "num_branches": 98
+    },
+    "donors": {
+      "covered_lines": 518,
+      "num_statements": 551,
+      "covered_branches": 66,
+      "num_branches": 88
+    },
+    "inventory": {
+      "covered_lines": 510,
+      "num_statements": 620,
+      "covered_branches": 87,
+      "num_branches": 108
+    },
+    "notifications": {
+      "covered_lines": 252,
+      "num_statements": 274,
+      "covered_branches": 30,
+      "num_branches": 38
+    },
+    "requests": {
+      "covered_lines": 438,
+      "num_statements": 466,
+      "covered_branches": 75,
+      "num_branches": 94
+    }
+  },
+  "versions": {
+    "python": "3.13.5",
+    "django": "5.2.18",
+    "pytest": "9.1.1"
+  },
+  "recording_included": false
+}

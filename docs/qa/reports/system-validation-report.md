@@ -1,33 +1,31 @@
-# System Validation Report — Issue #183 baseline
+# Final system validation report
 
-**Status:** Fresh baseline validation. Evaluation-final application and browser validation must use the merged revision of #182. At execution time, #182 was open and assigned to ANDYGAMER4321; this report does not claim validation of its changes.
+Execution date: 2026-11-16. Tested source: `827819fa6b17d283c0886a5a71005935c3aaeddc` (final donor application plus QA-only fixture/connection corrections). Application source matches donor PR #186; subsequent documentation commits do not change that behavior.
 
-## Revision and environment
+Environment: Linux/WSL2, Python 3.13.5, Django 5.2.18, pytest 9.1.1, Coverage.py 7.17.3. Default suite: in-memory SQLite; concurrency checks: disposable PostgreSQL 16 sandbox on loopback, synthetic records only.
 
-- Tested code revision: `12b8e60ab99308fcbd3c92ce1898d952bc440408` (test fixtures/assertions only); application source baseline: `f913fa70a5c6e3b50e07c7f00fc579928508c0ba`
-- Execution date: 2026-11-15 (Asia/Calcutta)
-- Environment: Windows x64, Python 3.12.7, Django 5.2.18, PostgreSQL 16.16 disposable local instance for the concurrency tests; default backend suite used SQLite in-memory.
-- CI evidence: [main CI run 42607673691](https://github.com/DukeAvi/SE_miniProject/actions/runs/42607673691), head `f913fa70a5c6e3b50e07c7f00fc579928508c0ba`, completed successfully 2026-11-09.
+## Observed results
 
-## System checks and scenarios
+| Area | Result and evidence |
+| --- | --- |
+| Backend regression | 666 passed, zero failed, five SQLite skips; all five separately passed on PostgreSQL |
+| Django / migration consistency | System checks passed, no migration drift; audit migration 0007 applied in the disposable browser database |
+| API contract | Validated 36 documented operations and 37 Postman requests; 35 operations resolve in Django. The legacy donor-detail design route is superseded by Staff lookup/profile workflows, as recorded in the final SAD amendments. |
+| Donor onboarding | Real browser registration, Staff lookup/verification, donor booking/cancellation passed |
+| Staff operations | Actual donation, linked unit creation, request approval/reservation/issue passed through the browser and Django API |
+| Recipient / privacy | Aggregate availability and request submission passed; invalid form input was preserved and announced in the accessibility tree |
+| Admin | Managed Staff-account creation passed through the real UI |
+| Accessibility / mobile | All four tested workspaces had zero axe WCAG A/AA violations; keyboard-operated mobile navigation and viewport width checks passed |
+| Compatibility / permissions | Full 256 component/pair matrix and 84 role/operation policy cells passed |
+| TLS / restart / backup-restore | Existing CI exercises isolated TLS 1.2/1.3, database TLS, process recovery, monitoring rules and encrypted restore. Final successful PR/main run links are retained in the release record. |
+| Performance | Existing TC-Perf-01 20-user synthetic benchmark measured search p95 18ms and report p95 16ms, zero failed/non-200 samples; original run 41807600683 and environment are retained in the performance guide. No new benchmark is claimed by this report. |
 
-| Scenario | Result | Evidence / limitation |
-|---|---|---|
-| Django system check | Pass | `python manage.py check --settings=bbms.settings_test`; zero issues. |
-| Migration consistency | Pass | `python manage.py makemigrations --check --dry-run --settings=bbms.settings_test`; no changes detected. |
-| Ruff | Pass | `python -m ruff check .`; all checks passed. |
-| Backend regression suite | Pass with documented backend skips | 650 passed, 0 failed, 5 PostgreSQL-only skips on SQLite; all five concurrency cases separately passed on PostgreSQL 16.16. See [unit report](unit-test-report.md). |
-| Historical GitHub Actions failures | Fixed test-fixture root cause | All three runs on report-only heads failed the same stale-date fixture assertion. After correction in `12b8e60ab99308fcbd3c92ce1898d952bc440408`, [run 43739824521](https://github.com/DukeAvi/SE_miniProject/actions/runs/43739824521) passed the suite (650 passed, 5 skipped) and configured deployment checks; no application code changed. |
-| PostgreSQL concurrency | Pass with teardown warnings | All five targeted cases passed when executed in separate pytest processes against fresh PostgreSQL test databases. The worker-thread tests emitted pytest database teardown warnings; the disposable test DB was dropped between runs. The GitHub PostgreSQL low-stock step also passed in run 43739824521 with a teardown warning. |
-| Role permission matrix | Pass (automated baseline) | Existing automated test covers 21 protected operations × four roles (84 cells); included in the full suite. |
-| Blood compatibility matrix | Pass (automated baseline) | Existing tests cover 64 ABO/Rh pairings across four components (256 combinations); included in the full suite. |
-| Browser and four-role end-to-end flows | Pending #182 | Existing [TC-UX-01 evidence](../TC-UX-01.md) is prior work and is not evidence for #182's donor onboarding or Staff donor-selection changes. Refresh after #182 merges. |
-| JMeter performance profile (TC-Perf-01) | Not executed in this run | In CI run 42607673691, JMeter install/profile/artifact steps were skipped by workflow conditions. Successful overall CI is not a performance measurement. Existing [performance procedure](../../operations/performance.md) is procedural documentation, not fresh results. |
-| TLS deployment / external endpoint | CI configuration check passed; external production scan unverified | CI job “Verify TLS edge and PostgreSQL TLS deployment” passed in run 42607673691. No public production hostname scan was performed. See [secure transport procedure](../../operations/secure-transport.md). |
-| Encrypted backup / restore drill | CI drill passed; production RPO/RTO unverified | CI job “Run encrypted PostgreSQL backup and restore drill” passed in run 42607673691. No production restore or measured production RPO/RTO was performed. See [backup procedure](../../operations/database-backups.md). |
-| Monthly 99.5% availability | Not measured | No observed complete month of monitoring data was provided. |
-| Human UAT / screen reader | Not performed here | Record only after participants perform and supply results. #182 specifies an updated reproducible UAT/screen-reader checklist. |
+Browser results: [TC-UX-01](../TC-UX-01.md) and [sanitized browser checks](../evidence/browser-2026-11-16.json). The walkthrough used application source `aca01be`, equivalent to the final donor source after documentation-only additions.
 
-## Disposition
+## Explicit limits
 
-This is fresh baseline evidence, not evaluation-final release evidence. The corrected full suite passes and all five PostgreSQL cases passed in isolated runs. The #182 application/browser changes remain unmerged, and production/manual checks remain unverified. No UAT, production TLS scan, production restore drill, or monthly availability claim is made.
+Automated accessibility-tree/axe results are not human screen-reader testing or representative-user UAT. A complete month of uptime, production offsite durability/restore timing, and a public production TLS scan were not measured. The existing owner classroom exceptions remain visible in the final RTM and release record, without claiming evaluator approval. No recording is included.
+
+## Historical evidence
+
+The teammate's original preliminary report is preserved at [2026-11-15-system-validation-report.md](history/2026-11-15-system-validation-report.md). Historical failures, skips and measurements are not the current result.
