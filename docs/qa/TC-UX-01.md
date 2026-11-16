@@ -1,5 +1,17 @@
 # TC-UX-01 — Role dashboards and responsive accessibility
 
+## Final workflow rerun — 2026-11-16
+
+Application revision: `aca01be032edce62cbe92524dea42c21857c760e` (donor workflow PR #186). Chromium ran against the real local Django API with disposable synthetic accounts and the Next.js production build. The [sanitized browser result](evidence/browser-2026-11-16.json) records the observed checks.
+
+- Fresh public donor registration shows actionable profile-verification guidance. Staff lookup and verified-profile creation work through the UI; public users cannot enter protected verified fields.
+- The verified donor books and cancels an appointment. Staff selects that donor, records a completed donation and creates a blood unit linked to the actual donation response.
+- Recipient aggregate availability and request submission work. An invalid date produces an accessibility alert node and preserves form input.
+- Staff approves, reserves and issues the submitted request. Admin creates a managed Staff account through the UI.
+- All four tested role workspaces returned zero axe WCAG 2 A/AA and 2.1 AA violations. Mobile navigation was exercised using the keyboard at 390×844, with no page-width overflow.
+
+These observed results supersede the earlier donor-provisioning, Staff-lookup and unexercised Admin-mutation gaps below. Historical runs remain preserved. Accessibility-tree/axe checks are not an actual human screen-reader session or representative-user UAT. No recording was made.
+
 ## Execution record
 
 - Project: BBMS, `BBMS-NF-005` / `DS-NF-005`
