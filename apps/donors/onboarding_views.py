@@ -42,7 +42,7 @@ class StaffDonorLookupView(APIView):
             return _error("invalid_query", "Provide only the q search parameter.")
         serializer = DonorLookupQuerySerializer(data=request.query_params)
         serializer.is_valid(raise_exception=True)
-        donors = find_donors(query=serializer.validated_data["q"])
+        donors = find_donors(actor=request.user, query=serializer.validated_data["q"])
         return Response({"results": DonorLookupSerializer(donors, many=True).data})
 
 

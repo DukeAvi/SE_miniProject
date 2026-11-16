@@ -23,8 +23,12 @@ class DonorOnboardingRejected(Exception):
         super().__init__(message)
 
 
-def find_donors(*, query: str):
+def find_donors(*, actor, query: str):
     """Find a small, minimal-information set of active donor accounts."""
+    if not actor.is_authenticated or not actor.is_active or actor.role != AccountRole.STAFF:
+        raise DonorOnboardingRejected(
+            "forbidden", "Only Staff can look up donors.", status_code=403
+        )
     normalized = query.strip()
     if len(normalized) < 2:
         return []

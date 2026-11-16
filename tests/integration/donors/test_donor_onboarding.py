@@ -10,6 +10,7 @@ from zoneinfo import ZoneInfo
 
 from apps.audit.models import AuditEvent
 from apps.donors.models import Appointment, DonationSlot, DonorProfile
+from apps.donors.onboarding import DonorOnboardingRejected, find_donors
 
 
 pytestmark = pytest.mark.django_db
@@ -106,6 +107,14 @@ def test_lookup_requires_a_bounded_search_query():
     assert staff.get(LOOKUP_URL).status_code == 400
     assert staff.get(LOOKUP_URL, {"q": "a"}).status_code == 400
     assert staff.get(LOOKUP_URL, {"q": "fresh", "page": "1"}).status_code == 400
+
+
+@pytest.mark.parametrize("role,active", [("DONOR", True), ("RECIPIENT", True), ("ADMIN", True), ("STAFF", False)])
+def test_lookup_service_rejects_unauthorized_actors_without_relying_on_view(role, active):
+    actor = make_user(role, 120, active=active)
+    with pytest.raises(DonorOnboardingRejected) as error:
+        list(find_donors(actor=actor, query="person"))
+    assert error.value.status_code == 403
 
 
 def test_staff_creates_verified_profile_and_audits_without_exposing_medical_fields():
