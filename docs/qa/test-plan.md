@@ -3,8 +3,8 @@
 ## Document control
 
 - **Project:** Blood Bank Management System (BBMS), Team 9
-- **Version:** 1.1
-- **Date:** 2026-11-14
+- **Version:** 1.2
+- **Date:** 2026-11-16
 - **Status:** Final classroom handoff plan; verification gaps and owner-approved waivers are explicit
 - **Plan owner:** Avaneesh Ganesh Aroor, QA Lead
 - **Frozen application snapshot:** `7b66a31c9550b4c7c2135aa6bc02b3c22290bab9`
@@ -12,6 +12,15 @@
 - **Change record:** Version 1.1 replaces the date, tool, schedule and structure assumptions from the submitted v1.0 draft; it aligns the test strategy with the implemented Django API and Next.js interface, moves Security Validation to §5.1, retains compatibility coverage as §5.4, and records current evidence and limitations.
 
 This document describes the verification approach and the latest evidence available on 2026-11-14. It does not claim that the entire frozen application was re-tested on this document's date. The current RTM is [RTM-execution.md](reports/RTM-execution.md).
+
+
+## Final execution update — 2026-11-16
+
+This update controls execution dispositions in the earlier case examples below. Application PR #186 is merged. Final measured source `827819fa6b17d283c0886a5a71005935c3aaeddc` is byte-identical in `apps/`, `bbms/` and `frontend/` to merged application revision `daa75f5864ab9e56b53b8c3c735f14c53c349681`. The coverage run produced 666 passed, zero failed and five SQLite skips in 68.29s; all five concurrency cases separately passed on PostgreSQL without teardown warnings. Statements: 3036/3297 (92.08%); branches: 532/646 (82.35%).
+
+The final four-role browser walkthrough exercised registration, Staff verification, appointment booking/cancellation, donation/unit creation, request approval/reservation/issue and Admin account creation. All four tested screens passed axe A/AA scans. See the final reports and browser evidence for exact scope. Earlier case-specific baseline results remain historical and do not override these newer executions. Human acceptance, monthly observation and production-specific limits remain explicit exceptions.
+
+The final SRS and SAD, including preserved original UML diagrams, are published under `docs/specifications/` by release follow-up #187. Their controlling amendments reconcile STP 5.1 security / 5.4 compatibility. No faculty approval is implied.
 
 ## 1. Introduction
 
@@ -71,7 +80,7 @@ Representative test specifications with preconditions, steps, expected results, 
 
 ### 4.2 In-scope checks with incomplete or waived evidence
 
-These remain in scope and are not reclassified as out of scope: four remaining PostgreSQL-only row-lock cases; actual screen-reader/manual accessibility verification; representative-user UAT; a measured monthly availability window; an external deployed-endpoint TLS inspection; and an operational restore with measured RPO/RTO. The 2026-11-09 release record says the owner accepted the classroom handoff with the stated human-check limitations. That disposition is a waiver for this handoff, not test execution or evaluator approval.
+These remain in scope and are not reclassified as out of scope: actual screen-reader/manual accessibility verification; representative-user UAT; a measured monthly availability window; an external deployed-endpoint TLS inspection; and an operational restore with measured RPO/RTO. The 2026-11-09 release record says the owner accepted the classroom handoff with the stated human-check limitations. That disposition is a waiver for this handoff, not test execution or evaluator approval.
 
 ## 5. Test approach and strategy
 
@@ -137,7 +146,7 @@ The original September/October schedule is superseded by the implemented Sprint 
 - 2026-11-09: backend rerun at `fd0e96f`; 650 passed, 0 failed, 5 skipped in 99.86 seconds. Dashboard review, CI deployment checks, release record and owner disposition were updated.
 - 2026-11-14: this Test Plan/RTM/index revision prepared from the merged evidence. No application tests were rerun for this documentation change.
 
-Actual UAT, screen-reader, four remaining PostgreSQL concurrency cases, monthly availability, and operational RPO/RTO dates are not available because those executions did not occur.
+Actual UAT, screen-reader, monthly availability, and operational RPO/RTO dates are not available because those executions did not occur.
 
 ## 8. Test deliverables
 
@@ -152,8 +161,8 @@ Actual UAT, screen-reader, four remaining PostgreSQL concurrency cases, monthly 
 
 - **QA Lead - Avaneesh Ganesh Aroor:** maintain this plan and RTM, coordinate evidence, distinguish current results from history, and record gaps without converting them to passes.
 - **Test Engineer - Ayush Kumar:** owns final test execution and the Unit, System Validation, Code Coverage and Branch Coverage reports; provides exact revision, commands, environment and explicit skips.
-- **Development Lead / review owner - Avrit Sharma (@DukeAvi):** reviews requirement/design deviations, triages defects, owns SRS/SAD revisions and approves any waiver or release disposition.
-- **Product Owner - Ayushman Dey:** defines product acceptance and UAT/waiver disposition.
+- **Product Owner / Scrum Master / review owner - Avrit Sharma (@DukeAvi):** owns SRS/SAD, review, planning and release disposition.
+- **Development Lead - Ayushman Dey:** owns application integration and developer verification.
 - **Contributors:** execute only their assigned issue/branch and provide reproducible evidence through its PR.
 
 ## 10. Risks and mitigations
