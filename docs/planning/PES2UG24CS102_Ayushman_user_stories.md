@@ -3,7 +3,7 @@
 - **SRN:** PES2UG24CS102
 - **GitHub:** [@ANDYGAMER4321](https://github.com/ANDYGAMER4321)
 
-Issue points below remain the original issue estimates. Co-assigned issue estimates are not split between contributors.
+Issue points below remain the original issue estimates. Issues #54, #55, #76, #77, #95, #96, and #98 are co-assigned with DukeAvi; their estimates are not split between contributors.
 
 ## Sprint 1
 
@@ -72,7 +72,7 @@ As a BBMS user, I want a responsive workspace for my role, and as a newly regist
 - Browser checks covered the four role workflows, keyboard-operated mobile navigation, form error announcements, and axe WCAG A/AA scans with no reported violations.
 - A human screen-reader session and representative-user UAT were not performed; the classroom handoff records them as waived/unperformed.
 
-**Traceability:** SRS BBMS-F-004, BBMS-F-010, BBMS-F-011, BBMS-NF-005; SAD DS-004, DS-010, DS-011, DS-NF-005; STP TC-Profile-01, TC-Don-01, TC-Don-02, TC-UX-01.
+**Traceability:** SRS BBMS-F-001, BBMS-F-004, BBMS-F-010, BBMS-F-011, BBMS-F-013, BBMS-NF-005, BBMS-SR-002, BBMS-SR-003; SAD DS-001, DS-004, DS-010, DS-011, DS-013, DS-NF-005; STP TC-Auth-01, TC-Profile-01, TC-Don-01, TC-Don-02, TC-Don-04, TC-UX-01, TC-Sec-02, TC-Sec-03.
 
 ### S2-US2: Protected audit history and retention
 
