@@ -157,7 +157,7 @@ def test_concurrent_duplicate_requests_create_at_most_one_active_appointment():
         user = get_user_model().objects.get(pk=donor.user_id)
         barrier.wait()
         response = client_for(user).post(APPOINTMENTS_URL, {"slot_id": str(slot.pk)}, format="json")
-        close_old_connections()
+        connection.close()
         return response.status_code
 
     with ThreadPoolExecutor(max_workers=2) as pool:
@@ -251,7 +251,7 @@ def test_concurrent_bookings_cannot_exceed_slot_capacity():
         user = get_user_model().objects.get(pk=donor_id)
         barrier.wait()
         response = client_for(user).post(APPOINTMENTS_URL, {"slot_id": str(slot.pk)}, format="json")
-        close_old_connections()
+        connection.close()
         return response.status_code
 
     with ThreadPoolExecutor(max_workers=2) as pool:

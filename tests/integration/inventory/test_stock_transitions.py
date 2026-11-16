@@ -266,7 +266,7 @@ def test_concurrent_reservation_cannot_change_the_same_unit_twice():
             result = "ok"
         except BloodUnitRejected:
             result = "conflict"
-        close_old_connections()
+        connection.close()
         return result
 
     with ThreadPoolExecutor(max_workers=2) as pool:
