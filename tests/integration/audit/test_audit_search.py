@@ -38,6 +38,7 @@ def test_event_catalogue_contains_every_required_sad_action():
         "USER_DISABLED",
         "ROLE_CHANGED",
         "DONOR_UPDATED",
+        "DONOR_PROFILE_CREATED",
         "APPOINTMENT_BOOKED",
         "APPOINTMENT_CANCELLED",
         "DONATION_RECORDED",

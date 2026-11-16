@@ -94,6 +94,10 @@ a { color: inherit; }
 .inline-form { display: flex; align-items: end; flex-wrap: wrap; gap: 10px; }
 .inline-form .field { min-width: 190px; }
 .slot-list { display: grid; gap: 8px; margin-top: 12px; }
+.donor-results { display: grid; gap: 10px; margin: 12px 0 0; padding: 0; list-style: none; }
+.donor-results li { display: grid; gap: 4px; min-width: 0; }
+.donor-results .button { justify-content: flex-start; max-width: 100%; text-align: left; white-space: normal; overflow-wrap: anywhere; }
+.donor-results .button[aria-pressed="true"] { border-color: var(--gold-deep); box-shadow: 0 0 0 2px color-mix(in srgb, var(--gold-deep) 24%, transparent); }
 .slot-row, .action-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding: 12px; border: 1px solid var(--line); border-radius: 11px; }
 .record-count { color: var(--muted); font-size: 12px; }
 .table-wrap { position: relative; max-width: 100%; overflow: auto; border: 1px solid var(--line); border-radius: 12px; }

@@ -7006,7 +7006,16 @@
             "required": false,
             "schema": {
               "type": "string",
-              "enum": ["O-", "O+", "A-", "A+", "B-", "B+", "AB-", "AB+"]
+              "enum": [
+                "O-",
+                "O+",
+                "A-",
+                "A+",
+                "B-",
+                "B+",
+                "AB-",
+                "AB+"
+              ]
             },
             "description": "Optional resource-specific blood-group filter."
           },
@@ -7016,7 +7025,12 @@
             "required": false,
             "schema": {
               "type": "string",
-              "enum": ["WHOLE_BLOOD", "RBC", "PLASMA", "PLATELETS"]
+              "enum": [
+                "WHOLE_BLOOD",
+                "RBC",
+                "PLASMA",
+                "PLATELETS"
+              ]
             },
             "description": "Optional resource-specific component filter."
           },
@@ -7035,7 +7049,14 @@
             "required": false,
             "schema": {
               "type": "string",
-              "enum": ["RESERVE", "RELEASE", "ISSUE", "EXPIRE", "DISCARD", "RETURN"]
+              "enum": [
+                "RESERVE",
+                "RELEASE",
+                "ISSUE",
+                "EXPIRE",
+                "DISCARD",
+                "RETURN"
+              ]
             },
             "description": "Optional inventory transaction action filter."
           },
@@ -7045,7 +7066,11 @@
             "required": false,
             "schema": {
               "type": "string",
-              "enum": ["ROUTINE", "URGENT", "EMERGENCY"]
+              "enum": [
+                "ROUTINE",
+                "URGENT",
+                "EMERGENCY"
+              ]
             },
             "description": "Optional request urgency filter."
           },
@@ -7074,7 +7099,10 @@
             "required": false,
             "schema": {
               "type": "string",
-              "enum": ["json", "csv"]
+              "enum": [
+                "json",
+                "csv"
+              ]
             },
             "description": "Select json (default) or csv. CSV exports all filtered records and does not apply page parameters."
           }
@@ -9237,6 +9265,305 @@
         },
         "security": []
       }
+    },
+    "/api/v1/donors/staff/donors": {
+      "get": {
+        "operationId": "searchDonorsForStaff",
+        "summary": "Search active donor accounts for Staff workflows",
+        "description": "Returns at most 20 active donor accounts and only the minimum identity and profile-completion fields needed for staff selection. Search by name or email; a query of at least two characters is required.",
+        "tags": [
+          "donors"
+        ],
+        "x-allowed-roles": [
+          "STAFF"
+        ],
+        "x-implementation-status": "implemented",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 2,
+              "maxLength": 100
+            },
+            "description": "Case-insensitive donor name or email search."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Matching donors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "results"
+                  ],
+                  "properties": {
+                    "results": {
+                      "type": "array",
+                      "maxItems": 20,
+                      "items": {
+                        "$ref": "#/components/schemas/DonorLookupResult"
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "results": [
+                    {
+                      "id": 101,
+                      "email": "donor@example.invalid",
+                      "first_name": "Demo",
+                      "last_name": "Donor",
+                      "has_donor_profile": false
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or query",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated or session expired",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Role not permitted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Donor not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Profile already exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Domain validation failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Request throttled",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ]
+      }
+    },
+    "/api/v1/donors/staff/donor-profiles": {
+      "post": {
+        "operationId": "createVerifiedDonorProfile",
+        "summary": "Create an initial verified donor profile",
+        "description": "Staff only. Creates a profile once for an active donor account. Profile creation records staff verification but does not mark the donor eligible; the shared eligibility rules still apply.",
+        "tags": [
+          "donors"
+        ],
+        "x-allowed-roles": [
+          "STAFF"
+        ],
+        "x-implementation-status": "implemented",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DonorProfileCreate"
+              },
+              "example": {
+                "donor_id": 101,
+                "birth_date": "1990-01-15",
+                "weight_kg": "62.00",
+                "blood_group": "O+"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Verified donor profile created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DonorProfileResult"
+                },
+                "example": {
+                  "donor_id": 101,
+                  "profile_status": "VERIFIED"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or query",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated or session expired",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Role not permitted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Donor not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Profile already exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Domain validation failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Request throttled",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": [],
+            "CsrfHeader": []
+          }
+        ]
+      }
     }
   },
   "components": {
@@ -10089,10 +10416,19 @@
             "type": "object",
             "description": "Totals over the matching source records before pagination or Admin grouping.",
             "properties": {
-              "records": {"type": "integer", "minimum": 0},
-              "quantity_units": {"type": "integer", "minimum": 0}
+              "records": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "quantity_units": {
+                "type": "integer",
+                "minimum": 0
+              }
             },
-            "required": ["records", "quantity_units"],
+            "required": [
+              "records",
+              "quantity_units"
+            ],
             "additionalProperties": false
           },
           "results": {
@@ -10683,6 +11019,97 @@
           "status_history"
         ],
         "additionalProperties": false
+      },
+      "DonorLookupResult": {
+        "type": "object",
+        "required": [
+          "id",
+          "email",
+          "first_name",
+          "last_name",
+          "has_donor_profile"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "readOnly": true
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "readOnly": true
+          },
+          "first_name": {
+            "type": "string",
+            "readOnly": true
+          },
+          "last_name": {
+            "type": "string",
+            "readOnly": true
+          },
+          "has_donor_profile": {
+            "type": "boolean",
+            "readOnly": true
+          }
+        }
+      },
+      "DonorProfileCreate": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "donor_id",
+          "birth_date",
+          "weight_kg",
+          "blood_group"
+        ],
+        "properties": {
+          "donor_id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "birth_date": {
+            "type": "string",
+            "format": "date"
+          },
+          "weight_kg": {
+            "type": "string",
+            "pattern": "^\\d{1,3}(\\.\\d{1,2})?$",
+            "example": "62.00"
+          },
+          "blood_group": {
+            "type": "string",
+            "enum": [
+              "O-",
+              "O+",
+              "A-",
+              "A+",
+              "B-",
+              "B+",
+              "AB-",
+              "AB+"
+            ]
+          }
+        }
+      },
+      "DonorProfileResult": {
+        "type": "object",
+        "required": [
+          "donor_id",
+          "profile_status"
+        ],
+        "properties": {
+          "donor_id": {
+            "type": "integer",
+            "readOnly": true
+          },
+          "profile_status": {
+            "type": "string",
+            "enum": [
+              "VERIFIED"
+            ],
+            "readOnly": true
+          }
+        }
       }
     }
   }
