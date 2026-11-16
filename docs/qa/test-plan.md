@@ -7,11 +7,11 @@
 - **Date:** 2026-11-16
 - **Status:** Final classroom handoff plan; verification gaps and owner-approved waivers are explicit
 - **Plan owner:** Avaneesh Ganesh Aroor, QA Lead
-- **Frozen application snapshot:** `7b66a31c9550b4c7c2135aa6bc02b3c22290bab9`
-- **Latest backend test baseline:** `fd0e96f81c49013c6a26fcfd7e6a811e4b97055b` (2026-11-09)
+- **Classroom freeze snapshot:** `7b66a31c9550b4c7c2135aa6bc02b3c22290bab9`
+- **Final measured application source:** `827819fa6b17d283c0886a5a71005935c3aaeddc` (2026-11-16); its application source is identical to merged PR #186 at `daa75f5864ab9e56b53b8c3c735f14c53c349681`
 - **Change record:** Version 1.1 replaces the date, tool, schedule and structure assumptions from the submitted v1.0 draft; it aligns the test strategy with the implemented Django API and Next.js interface, moves Security Validation to §5.1, retains compatibility coverage as §5.4, and records current evidence and limitations.
 
-This document describes the verification approach and the latest evidence available on 2026-11-14. It does not claim that the entire frozen application was re-tested on this document's date. The current RTM is [RTM-execution.md](reports/RTM-execution.md).
+This document describes the verification approach, final execution evidence, and explicit classroom limits. The current RTM is [RTM-execution.md](reports/RTM-execution.md).
 
 
 ## Final execution update — 2026-11-16
@@ -32,7 +32,7 @@ This plan defines how the BBMS requirements are tested, who owns each activity, 
 
 The plan covers the Django REST Framework API, PostgreSQL persistence and scheduled services, the Next.js role dashboards, and security and operational controls. It traces all 34 functional, non-functional and security requirement IDs present in `backlog/issues.json` to their SAD design IDs and test IDs. It records automated, integration, browser, performance, security, reliability and recovery evidence, including explicit gaps.
 
-The frozen classroom application snapshot is `7b66a31c9550b4c7c2135aa6bc02b3c22290bab9`. The final backend suite evidence was produced at `fd0e96f81c49013c6a26fcfd7e6a811e4b97055b`; UI evidence was produced against the dashboard candidate `8366159b92f89609fc2845f7864a67e02a639d53` and reviewed again before the freeze. Those revisions are identified separately in the RTM.
+The classroom freeze snapshot is `7b66a31c9550b4c7c2135aa6bc02b3c22290bab9`. Final backend evidence was produced at `827819fa6b17d283c0886a5a71005935c3aaeddc`; its application source is identical to merged PR #186. Final UI evidence was produced at `aca01be032edce62cbe92524dea42c21857c760e`. Those revisions are identified separately in the RTM.
 
 ### 1.3 References and traceability sources
 
@@ -111,7 +111,7 @@ Expiry tests use the `as_of_date` hook and cover exact expiry boundaries, alread
 
 ### 5.3 Role-based access and permission matrix
 
-The test oracle is the SAD permission matrix. The automated policy suite checks 21 protected operations against Donor, Recipient, Staff and Admin (84 role-operation cells), including expected allow/deny behavior. UI visibility is convenience only; authorization remains enforced by Django. Browser review did not execute Admin or Staff mutations, so those UI mutation paths are not marked fully accepted solely from read-path evidence.
+The test oracle is the SAD permission matrix. The automated policy suite checks 21 protected operations against Donor, Recipient, Staff and Admin (84 role-operation cells), including expected allow/deny behavior. UI visibility is convenience only; authorization remains enforced by Django. The final browser walkthrough also exercised Staff donation/unit/request mutations and Admin Staff-account creation; the automated policy suite remains the authorization evidence.
 
 ### 5.4 Blood type compatibility matrix
 
@@ -121,10 +121,10 @@ Compatibility remains safety-critical and retains the existing `TC-Req-05` ident
 
 ### 6.1 Backend
 
-- Python 3.14.6, Django 5.2.18 and pytest 9.1.1 for the 2026-11-09 backend run.
-- SQLite in-memory database (`bbms.settings_test`) for the 650-pass suite. Five PostgreSQL-specific tests are skipped under SQLite and are not counted as passes.
-- PostgreSQL 16 CI service for deployment/TLS, encrypted backup/restore, process-recovery, performance and the dedicated low-stock concurrency workflow steps. The final CI run #42578040297 passed; only the low-stock concurrency check is among the five SQLite-skipped cases with a separate PostgreSQL result. Four other row-lock cases remain without PostgreSQL execution evidence.
-- Django checks/migration validation, Ruff, GitHub Actions, Docker Compose, Coverage.py 7.17.2 and Apache JMeter 5.6.3 as listed in the execution records.
+- Python 3.13.5, Django 5.2.18, pytest 9.1.1 and Coverage.py 7.17.3 for the final 2026-11-16 backend run.
+- SQLite in-memory database for the 666-pass coverage suite; five PostgreSQL-specific cases are skipped under SQLite and are not counted as SQLite passes.
+- Disposable PostgreSQL 16 databases for all five skipped concurrency cases; each passed independently without teardown warnings. PostgreSQL CI also covers deployment/TLS, encrypted backup/restore and process recovery.
+- Django checks/migration validation, Ruff, GitHub Actions, Docker Compose, Chromium, axe and Apache JMeter 5.6.3 as listed in the execution records.
 
 ### 6.2 Web client
 
@@ -138,13 +138,14 @@ Use synthetic `.example.test` identities and generated inventory/request records
 
 ## 7. Test schedule and actual execution dates
 
-The original September/October schedule is superseded by the implemented Sprint 1/Sprint 2 delivery dates. Actual evidence dates are:
+The original September/October schedule is superseded by the implemented Sprint 1/Sprint 2 delivery dates. Earlier dates below are retained as history; the final evidence date is 2026-11-16.
 
 - 2026-11-05: initial QA baseline on `f693371`; 639 passed, 1 failed, 5 SQLite skips. The report fixture failure was filed as #174.
 - 2026-11-04: audit-retention checks (67 passed) and JMeter profile (20 synthetic users) produced separate evidence; dates reflect each run's recorded timestamp, not this plan's publication date.
 - 2026-11-06: #178 fixed the date-dependent report fixture; #176 merged audit retention.
 - 2026-11-09: backend rerun at `fd0e96f`; 650 passed, 0 failed, 5 skipped in 99.86 seconds. Dashboard review, CI deployment checks, release record and owner disposition were updated.
-- 2026-11-14: this Test Plan/RTM/index revision prepared from the merged evidence. No application tests were rerun for this documentation change.
+- 2026-11-14: Test Plan/RTM/index revision prepared from then-available merged evidence.
+- 2026-11-16: final application regression at `827819f`: 671 collected, 666 SQLite passes, zero failures and five SQLite skips in 68.29 seconds; all five skips passed independently on PostgreSQL. Final browser walkthrough exercised all four roles and the donor onboarding flow.
 
 Actual UAT, screen-reader, monthly availability, and operational RPO/RTO dates are not available because those executions did not occur.
 
@@ -167,7 +168,7 @@ Actual UAT, screen-reader, monthly availability, and operational RPO/RTO dates a
 
 ## 10. Risks and mitigations
 
-- **Concurrency masked by SQLite:** keep all five SQLite skips explicit; run PostgreSQL-specific cases. The dedicated low-stock case passed in CI; four other cases remain open as evidence gaps.
+- **Concurrency masked by SQLite:** keep all five SQLite skips explicit in the coverage run and retain their independent PostgreSQL results. All five PostgreSQL cases passed.
 - **Compatibility error:** preserve full 256-cell component-aware coverage and recheck compatibility during fulfillment.
 - **Time/date flakiness:** freeze dates and use explicit `as_of_date`; #174 is preserved as a historical failure and #178 as its fix.
 - **Inaccurate security numbering:** align this plan with issue #181, retain compatibility, and flag the stale SAD §3.8.2 references for owner revision.
@@ -176,7 +177,7 @@ Actual UAT, screen-reader, monthly availability, and operational RPO/RTO dates a
 
 ## 11. Assumptions and dependencies
 
-- The frozen classroom application revision is `7b66a31c9550b4c7c2135aa6bc02b3c22290bab9`; the latest backend automated evidence is `fd0e96f81c49013c6a26fcfd7e6a811e4b97055b`.
+- The classroom freeze snapshot is `7b66a31c9550b4c7c2135aa6bc02b3c22290bab9`; the final backend automated evidence is `827819fa6b17d283c0886a5a71005935c3aaeddc`, whose application source matches merged PR #186.
 - PostgreSQL is the deployment database. SQLite is suitable for ordinary deterministic tests but cannot establish row-lock correctness.
 - Test accounts and records are synthetic; the notification provider is console/mock.
 - SRS v1.0 is referenced by the SAD but its file is not present in this repository. Until its owner supplies/publishes it, the RTM keys/design/test IDs are reconciled against the manifest and SAD, and the missing SRS is an explicit review input.
@@ -188,7 +189,7 @@ Suspend execution when the isolated environment is unavailable for more than fou
 
 ## 13. Test case specifications and traceability
 
-The following representative cases include reproducible preconditions, steps, expected outcomes and evidence references. Result labels refer to the evidence listed, not to a new execution on 2026-11-14.
+The following representative cases include reproducible preconditions, steps, expected outcomes and evidence references. Their original case-level observations remain preserved; the final 2026-11-16 execution update at the beginning of this plan controls any later result or revision difference.
 
 ### TC-Auth-01 - Public registration
 
@@ -336,8 +337,8 @@ The following representative cases include reproducible preconditions, steps, ex
 
 ## 14. Test metrics and reporting
 
-- **Backend final rerun:** 655 collected; 650 passed, 0 failed, 5 skipped in 99.86 seconds at `fd0e96f`. The five skipped PostgreSQL row-lock tests are not passes. Four still lack PostgreSQL execution evidence; the low-stock concurrency path passed separately in CI run #42578040297.
-- **Historical coverage only:** 90.32% line and 82.74% branch coverage were measured at `f693371ba0fce6d5d7d57e03ff2aa6dfff47d8f2` on 2026-11-05. No fresh coverage run is reported for the frozen application snapshot; do not present those percentages as fresh `7b66a31` coverage.
+- **Final backend execution:** 671 collected; 666 passed, 0 failed, 5 skipped in 68.29 seconds at `827819f` on SQLite. The five skipped PostgreSQL row-lock tests were each rerun on PostgreSQL and all passed.
+- **Final coverage:** 3,036/3,297 statements (92.08%) and 532/646 branch outcomes (82.35%) at `827819f`. The measurement covers Python `apps/` only. Frontend coverage is not claimed by this Python measurement.
 - **Performance:** approved 20-user synthetic profile p95 was 18 ms for inventory search and 16 ms for dashboard report; zero failed/non-200 samples. This is not a production-capacity measurement.
 - **Availability:** no complete monthly observation window or 99.5% monthly result is attached.
 - **Defects:** original date fixture failure #174 is historical; #178 corrected it. Current backend rerun has zero test failures.
