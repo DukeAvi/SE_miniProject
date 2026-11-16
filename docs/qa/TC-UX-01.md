@@ -1,5 +1,17 @@
 # TC-UX-01 — Role dashboards and responsive accessibility
 
+## Final workflow rerun — 2026-11-16
+
+Application revision: `aca01be032edce62cbe92524dea42c21857c760e` (donor workflow PR #186). Chromium ran against the real local Django API with disposable synthetic accounts and the Next.js production build. The [sanitized browser result](evidence/browser-2026-11-16.json) records the observed checks.
+
+- Fresh public donor registration shows actionable profile-verification guidance. Staff lookup and verified-profile creation work through the UI; public users cannot enter protected verified fields.
+- The verified donor books and cancels an appointment. Staff selects that donor, records a completed donation and creates a blood unit linked to the actual donation response.
+- Recipient aggregate availability and request submission work. An invalid date produces an accessibility alert node and preserves form input.
+- Staff approves, reserves and issues the submitted request. Admin creates a managed Staff account through the UI.
+- All four tested role workspaces returned zero axe WCAG 2 A/AA and 2.1 AA violations. Mobile navigation was exercised using the keyboard at 390×844, with no page-width overflow.
+
+These observed results supersede the earlier donor-provisioning, Staff-lookup and unexercised Admin-mutation gaps below. Historical runs remain preserved. Accessibility-tree/axe checks are not an actual human screen-reader session or representative-user UAT. No recording was made.
+
 ## Execution record
 
 - Project: BBMS, `BBMS-NF-005` / `DS-NF-005`
@@ -40,6 +52,28 @@ The app was started with the local synthetic SQLite settings; migrations and `se
 - Donor self-registration and donor-profile provisioning are separate in the current API. New public registrations cannot use donor appointment/history endpoints until an approved workflow creates a profile.
 - `donor_detail` is present in the backend role policy matrix, but no staff donor lookup endpoint is currently registered. Staff donation entry consequently accepts a numeric donor account ID and lets Django validate eligibility; a discoverable donor roster/verification workflow is not implemented in the current API contract.
 - Screenshot files and a full keyboard/screen-reader pass remain required before marking the accessibility verification complete.
+
+## Donor onboarding and Staff selection checklist for #182
+
+This checklist describes manual checks to perform on the merged #182 revision. It is a procedure, not an execution record; leave results unmarked until a person runs it against the named revision.
+
+### Functional UAT
+
+1. Register a new synthetic Donor account through the public registration screen and sign in.
+2. Open the Donor work area. Confirm the page explains that Staff verification is needed, while the rest of the dashboard remains usable.
+3. Sign in as Staff. Search the donor by a partial name and then by email. Confirm the result is the intended active Donor and does not expose birth date, weight, or other unnecessary fields.
+4. Select the donor and complete the profile using authorized synthetic values. Confirm the profile is created once and the success message is announced.
+5. Search for the same donor again and confirm the UI marks the profile verified. Use the documented API/Postman request once more; confirm the duplicate is rejected and existing details are not changed.
+6. Sign in again as the Donor and refresh. Confirm appointments and donation history load, and use an available synthetic slot if the local demo has one.
+7. As Staff, select a profiled donor and record a valid synthetic donation. Confirm invalid dates, mismatched blood group, and ineligible weight are rejected without creating a donation.
+8. Try the lookup and profile-creation requests as Donor, Recipient, and Admin accounts. Confirm the server denies each operation.
+
+### Keyboard and screen-reader pass
+
+1. Complete the lookup and profile forms using only Tab, Shift+Tab, Enter, and Space; confirm visible focus and that result selection is keyboard-operable.
+2. With NVDA, VoiceOver, or another named screen reader, inspect labels for search and profile fields, selected donor state, no-match feedback, validation errors, and profile-created status.
+3. At a 390×844 viewport, confirm results and forms remain in the viewport or scroll in their intended region without horizontal page overflow.
+4. Record the tester, tool/browser, date, tested commit, and observed outcome. If not run, keep the result as not executed.
 
 ## Review rerun — 2026-11-09
 

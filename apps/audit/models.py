@@ -24,6 +24,7 @@ class AuditEvent(models.Model):
         USER_ENABLED = "USER_ENABLED", "User enabled"
         ROLE_CHANGED = "ROLE_CHANGED", "Role changed"
         DONOR_UPDATED = "DONOR_UPDATED", "Donor updated"
+        DONOR_PROFILE_CREATED = "DONOR_PROFILE_CREATED", "Donor profile created"
         APPOINTMENT_BOOKED = "APPOINTMENT_BOOKED", "Appointment booked"
         APPOINTMENT_CANCELLED = "APPOINTMENT_CANCELLED", "Appointment cancelled"
         DONATION_RECORDED = "DONATION_RECORDED", "Donation recorded"
@@ -88,7 +89,7 @@ class AuditEvent(models.Model):
                     action__in=(
                         "LOGIN_SUCCESS", "LOGIN_FAILED", "SESSION_EXPIRED",
                         "USER_CREATED", "USER_DISABLED", "USER_ENABLED",
-                        "ROLE_CHANGED", "DONOR_UPDATED", "APPOINTMENT_BOOKED",
+                        "ROLE_CHANGED", "DONOR_UPDATED", "DONOR_PROFILE_CREATED", "APPOINTMENT_BOOKED",
                         "APPOINTMENT_CANCELLED", "DONATION_RECORDED",
                         "UNIT_CREATED", "UNIT_RESERVED", "UNIT_RELEASED",
                         "UNIT_ISSUED", "UNIT_EXPIRED", "UNIT_DISCARDED",

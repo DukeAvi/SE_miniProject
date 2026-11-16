@@ -24,7 +24,9 @@ export default function RegisterPage() {
       await refreshCsrfToken();
       const user = await api<RegisteredUser>("/auth/register", { method: "POST", body: JSON.stringify(form) });
       setForm({ ...form, password: "" });
-      setError(`Account created for the ${user.role.toLowerCase()} role. Sign in to continue.`);
+      setError(user.role === "DONOR"
+        ? "Account created for the donor role. Sign in to continue; a Staff member must verify your donor profile before appointments and history are available."
+        : "Account created for the recipient role. Sign in to continue.");
       setBusy(false);
     } catch (reason) {
       setError(friendlyError(reason));
