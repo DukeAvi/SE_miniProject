@@ -486,7 +486,7 @@ def test_concurrent_requests_cannot_reserve_the_same_unit():
                 format="json",
             ).status_code
         finally:
-            close_old_connections()
+            connection.close()
 
     with ThreadPoolExecutor(max_workers=2) as executor:
         statuses = list(executor.map(

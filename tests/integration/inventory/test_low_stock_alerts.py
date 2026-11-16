@@ -346,7 +346,7 @@ def test_concurrent_stock_reductions_create_one_crossing_alert():
             action=InventoryTransaction.Action.DISCARD,
             reason="Concurrent stock reduction",
         )
-        close_old_connections()
+        connection.close()
 
     with ThreadPoolExecutor(max_workers=2) as pool:
         list(pool.map(discard, [units[0].pk, units[1].pk]))

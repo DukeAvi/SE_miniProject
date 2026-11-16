@@ -1,24 +1,43 @@
-# Code Coverage Report — Sprint 2 QA
+# Final code coverage report
 
-**Revision:** `f693371ba0fce6d5d7d57e03ff2aa6dfff47d8f2` (`main`)
-**Date:** 2026-11-05 (Asia/Kolkata)
-**Scope:** Python application package `apps/`; frontend JavaScript/TypeScript is excluded.
-**Tool:** Coverage.py 7.17.2 with branch measurement; pytest ran on the SQLite test backend.
+Execution date: 2026-11-16. Tested source: `827819fa6b17d283c0886a5a71005935c3aaeddc` (final donor application plus QA-only fixture/connection corrections). Application source matches donor PR #186; subsequent documentation commits do not change that behavior.
 
-## Results
+Environment: Linux/WSL2, Python 3.13.5, Django 5.2.18, pytest 9.1.1, Coverage.py 7.17.3. Default suite: in-memory SQLite; concurrency checks: disposable PostgreSQL 16 sandbox on loopback, synthetic records only.
 
-| Measure | Covered | Total | Coverage |
+## Measurement
+
+Scope: executable Python under `apps/`. Frontend JavaScript/TypeScript, operational scripts and the test suite itself are excluded from this Python measurement. No exclusion directives were configured; no new coverage threshold is invented.
+
+| Metric | Covered | Total | Coverage |
 | --- | ---: | ---: | ---: |
-| Executable statements / lines | 2,864 | 3,119 | 90.32% |
-| Branches | 513 | 620 | 82.74% |
+| Statements / executable lines | 3036 | 3297 | 92.08% |
+| Branch outcomes | 532 | 646 | 82.35% |
 
-The run produced 639 passed, 1 failed, and 5 skipped tests. Coverage includes the executed paths from that run, including the failing test up to its assertion. The result is a repository-wide Python baseline, not proof that each requirement is covered or that unexecuted branches are safe.
+Coverage.py's combined statement/branch figure is 90.49%; it is not the line-only percentage. The measurement run produced 666 passed and five SQLite skips in 68.29 seconds; all five skipped cases separately passed on PostgreSQL.
+
+| Package | Statements | Statement coverage | Branches | Branch coverage |
+| --- | ---: | ---: | ---: | ---: |
+| accounts | 390/413 | 94.43% | 80/94 | 85.11% |
+| adminops | 332/358 | 92.74% | 72/88 | 81.82% |
+| audit | 252/258 | 97.67% | 36/38 | 94.74% |
+| core | 344/357 | 96.36% | 86/98 | 87.76% |
+| donors | 518/551 | 94.01% | 66/88 | 75.00% |
+| inventory | 510/620 | 82.26% | 87/108 | 80.56% |
+| notifications | 252/274 | 91.97% | 30/38 | 78.95% |
+| requests | 438/466 | 93.99% | 75/94 | 79.79% |
 
 ## Reproduction
 
-```text
-COVERAGE_FILE=/tmp/bbms-main-qa.coverage /tmp/bbms-sprint2-venv/bin/python -m coverage run --branch --source=apps -m pytest -q
-COVERAGE_FILE=/tmp/bbms-main-qa.coverage /tmp/bbms-sprint2-venv/bin/python -m coverage report --data-file=/tmp/bbms-main-qa.coverage
+Run with the documented development dependencies and Coverage.py 7.17.3 available in the local QA environment:
+
+```bash
+python -m coverage run --branch --source=apps -m pytest -q
+python -m coverage json -o /tmp/bbms-coverage.json
+python -m coverage report
 ```
 
-The raw data and JSON summary were kept in `/tmp` and are not committed; the percentages above are copied from Coverage.py's generated total (`2864/3119` statements and `513/620` branches). No external coverage threshold was specified in the SRS, STP, or repository CI.
+The verification run used the repository virtual environment and temporary Coverage.py installation, with `COVERAGE_FILE=/tmp/bbms-final.coverage`. Durable sanitized counts are committed in [final-execution.json](../evidence/final-execution.json). No database or credential is included.
+
+## Historical evidence
+
+The teammate's original preliminary report is preserved at [2026-11-15-coverage-report.md](history/2026-11-15-coverage-report.md). Historical failures, skips and measurements are not the current result.
