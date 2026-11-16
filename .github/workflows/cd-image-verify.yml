@@ -62,10 +62,12 @@ jobs:
           docker run -d --name bbms-smoke \
             -e DJANGO_SECRET_KEY=ci-smoke-test-secret-key \
             -e DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1 \
+            -e SECURE_SSL_REDIRECT=false \
             -e POSTGRES_HOST=127.0.0.1 \
             -e POSTGRES_DB=bbms_ci \
             -e POSTGRES_USER=bbms_ci \
             -e POSTGRES_PASSWORD=ci-only-password \
+            -e POSTGRES_SSLMODE=disable \
             --network host bbms:pr-verify
           trap 'docker rm -f bbms-smoke >/dev/null 2>&1 || true' EXIT
           curl --fail --retry 10 --retry-delay 2 --retry-connrefused http://127.0.0.1:8000/healthz
