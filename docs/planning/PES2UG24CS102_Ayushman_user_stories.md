@@ -1,68 +1,108 @@
-# Ayushman Dey — Sprint User Stories
+# Ayushman Dey User Stories
 
-- **Name:** Ayushman Dey
 - **SRN:** PES2UG24CS102
 - **GitHub:** [@ANDYGAMER4321](https://github.com/ANDYGAMER4321)
 
+Issue points below remain the original issue estimates. Co-assigned issue estimates are not split between contributors.
+
 ## Sprint 1
 
-### S1-US1: Safe donor appointments and completed donation records
+### S1-US1: Safe donor appointment and donation workflows
 
-As a Donor, I want to book and manage eligible donation appointments, and as Staff, I want to record completed donations accurately, so that donation eligibility, appointment capacity, and donor history remain reliable.
+As a Donor, I want to find and book an eligible appointment and manage my own bookings, and as Staff, I want to record a completed donation against the correct donor, so that appointment capacity and donation history stay accurate.
 
-**Supporting issues: 17 points**
+**Issues: 17 points**
 
-| Issue | Work | Points |
+| Issue | Delivered work | Points |
 | --- | --- | ---: |
-| [#54](https://github.com/DukeAvi/SE_miniProject/issues/54) | Schedule, view, and cancel donation appointments | 5 |
-| [#55](https://github.com/DukeAvi/SE_miniProject/issues/55) | Record immutable completed donations and update donor history | 5 |
-| [#56](https://github.com/DukeAvi/SE_miniProject/issues/56) | Prevent duplicate active appointments | 2 |
-| [#57](https://github.com/DukeAvi/SE_miniProject/issues/57) | Apply shared donor eligibility rules | 5 |
+| [#54](https://github.com/DukeAvi/SE_miniProject/issues/54) | List slots; book, view, and cancel the signed-in donor's appointments | 5 |
+| [#55](https://github.com/DukeAvi/SE_miniProject/issues/55) | Record completed donations, update donor history, and record the audit event | 5 |
+| [#56](https://github.com/DukeAvi/SE_miniProject/issues/56) | Prevent duplicate active bookings while allowing a valid new booking after cancellation | 2 |
+| [#57](https://github.com/DukeAvi/SE_miniProject/issues/57) | Apply shared age, weight, and configured donation-interval eligibility rules | 5 |
 
-**Acceptance criteria**
+**Delivered behavior**
 
-- Appointment booking uses the shared eligibility engine and does not exceed slot capacity, including under concurrent bookings.
-- Donors can view their own appointments and cancel only their own eligible booked appointments.
-- Duplicate active appointments are rejected without changing capacity; a cancelled appointment may be booked again where the state rules allow it.
-- Only Staff can record a completed donation, and eligibility, required fields, and donation details are validated.
-- Donation records are immutable; the donor's last-donation date and audit event are saved atomically with the donation.
-- Donors can see their own accurate donation history. Failed or unauthorized operations leave no partial changes.
+- Booking enforces eligibility, ownership, slot capacity, and duplicate-booking rules.
+- Donation recording is Staff-authorized, rechecks eligibility, and saves the immutable donation, donor's last-donation date, and audit event together.
+- Donors can view their own appointment and donation history. The browser workflow was completed in Sprint 2 with the donor dashboards and onboarding work.
 
-**Traceability:** DS-010, DS-011, DS-012, DS-013; TC-Don-01, TC-Don-02, TC-Don-03, TC-Don-04.
+**Traceability:** SRS BBMS-F-010 through BBMS-F-013; SAD DS-010 through DS-013; STP TC-Don-01 through TC-Don-04.
+
+### S1-US2: Component-aware blood compatibility
+
+As Staff, I want the system to determine donor-recipient compatibility for each supported blood component, so that incompatible combinations are rejected before fulfillment.
+
+**Issue: [#67](https://github.com/DukeAvi/SE_miniProject/issues/67) — 5 points**
+
+**Delivered behavior**
+
+- A shared lookup-driven engine provides component-aware compatibility checks and acceptable donor groups.
+- Invalid groups and components fail closed; incompatible combinations return the documented error.
+- Automated checks cover all eight ABO/Rh groups against each other for each supported component. Reservation selection, locked rechecks, and rollback remain part of the separate fulfillment workflow.
+
+**Traceability:** SRS BBMS-F-034; SAD DS-034; STP TC-Req-05.
 
 ### Supporting Sprint 1 work
 
-| Issue | Work | Points |
+| Issue | Delivered work | Points |
 | --- | --- | ---: |
-| [#84](https://github.com/DukeAvi/SE_miniProject/issues/84) | Decide compatibility rules by blood component | 2 |
-| [#85](https://github.com/DukeAvi/SE_miniProject/issues/85) | Approve donation intervals by donation type | 2 |
-| [#90](https://github.com/DukeAvi/SE_miniProject/issues/90) | Select the notification provider mode | 2 |
-| [#94](https://github.com/DukeAvi/SE_miniProject/issues/94) | Publish and validate the OpenAPI contract and Postman collection | 5 |
-| [#95](https://github.com/DukeAvi/SE_miniProject/issues/95) | Seed synthetic test data and notification mocks | 3 |
+| [#84](https://github.com/DukeAvi/SE_miniProject/issues/84) | Approve component-specific compatibility rules used by the compatibility engine | 2 |
+| [#85](https://github.com/DukeAvi/SE_miniProject/issues/85) | Approve/configure donation intervals used by eligibility checks | 2 |
+| [#90](https://github.com/DukeAvi/SE_miniProject/issues/90) | Select the console/mock notification mode for the classroom demo | 2 |
+| [#94](https://github.com/DukeAvi/SE_miniProject/issues/94) | Publish the OpenAPI contract and matching Postman collection | 5 |
+| [#95](https://github.com/DukeAvi/SE_miniProject/issues/95) | Provide repeatable synthetic test data and deterministic notification/request mocks | 3 |
 
 ## Sprint 2
 
-### S2-US1: Donor onboarding and Staff donor selection
+### S2-US1: Role dashboards and completed donor onboarding
 
-As a newly registered Donor, I want a supported way to complete my donor profile and continue to appointments and history, and as Staff, I want to find and select the correct donor, so that onboarding works for new accounts and donation records are associated with the right person.
+As a BBMS user, I want a responsive workspace for my role, and as a newly registered Donor I want to complete the required profile steps with Staff help, so that I can use appointments and history while Staff can select the correct donor when recording a donation.
 
-**Supporting issue: [#182](https://github.com/DukeAvi/SE_miniProject/issues/182) — 8 points**
+**Issues: 13 points**
 
-**Acceptance criteria**
+| Issue | Delivered work | Points |
+| --- | --- | ---: |
+| [#77](https://github.com/DukeAvi/SE_miniProject/issues/77) | Build Donor, Recipient, Staff, and Admin browser workspaces with responsive layouts and accessible form/navigation patterns | 5 |
+| [#182](https://github.com/DukeAvi/SE_miniProject/issues/182) | Add Staff donor lookup and verified-profile creation; connect a newly registered donor to appointments and donation history | 8 |
 
-- A new synthetic donor can complete an authorized profile workflow and reach their own appointment and donation views without fixture-only intervention.
-- Incomplete profiles receive clear next steps; the system does not invent medical or eligibility information.
-- Protected medical fields and roles cannot be changed through public registration or ordinary profile updates. Eligibility continues to use the shared rules.
-- Staff can look up and select the intended donor through the interface, record a donation for that account, and handle invalid or no-match input safely.
-- Donor details are exposed only to authorized roles and only as needed for the workflow.
-- Regression checks cover success, validation, ownership, authorization, and relevant failure cases; API documentation and user instructions match the implementation.
-- Four-role workflow evidence identifies the tested revision. Manual UAT or screen-reader checks are described as complete only when people have actually performed them.
+**Delivered behavior**
 
-**Traceability:** BBMS-F-001, BBMS-F-004, BBMS-F-010, BBMS-F-011, BBMS-F-013, BBMS-NF-005, BBMS-SR-002, BBMS-SR-003; DS-001, DS-004, DS-010, DS-011, DS-013, DS-NF-005; TC-Auth-01, TC-Profile-01, TC-Don-01, TC-Don-02, TC-Don-04, TC-UX-01, TC-Sec-02, TC-Sec-03.
+- The four role workspaces use the Django session/CSRF API; authorization, ownership, and domain validation remain on the server.
+- A new donor receives clear profile-completion guidance. Staff can find the donor, create the verified donor profile, and select the correct donor for donation recording. The donor can then access their own appointment and donation views.
+- Browser checks covered the four role workflows, keyboard-operated mobile navigation, form error announcements, and axe WCAG A/AA scans with no reported violations.
+- A human screen-reader session and representative-user UAT were not performed; the classroom handoff records them as waived/unperformed.
+
+**Traceability:** SRS BBMS-F-004, BBMS-F-010, BBMS-F-011, BBMS-NF-005; SAD DS-004, DS-010, DS-011, DS-NF-005; STP TC-Profile-01, TC-Don-01, TC-Don-02, TC-UX-01.
+
+### S2-US2: Protected audit history and retention
+
+As an Administrator, I want protected audit events to remain searchable and retained for the approved period, so that important actions can be reviewed without allowing ordinary users or application paths to erase recent records.
+
+**Issue: [#76](https://github.com/DukeAvi/SE_miniProject/issues/76) — 5 points**
+
+**Delivered behavior**
+
+- Audit records use UTC timestamps and indexed search fields.
+- A controlled purge command supports dry-run and explicit execution, preserves records within the one-year retention window, and records purge outcomes.
+- Ordinary model and queryset deletion are blocked. Retention uses indexed queries and controlled deletion rather than physical monthly table partitioning.
+- Retention-specific automated checks passed using synthetic records.
+
+**Traceability:** SRS BBMS-NF-004; SAD DS-NF-004; STP TC-Audit-02.
 
 ### Supporting Sprint 2 work
 
-| Issue | Work | Points |
+| Issue | Delivered work | Points |
 | --- | --- | ---: |
-| [#96](https://github.com/DukeAvi/SE_miniProject/issues/96) | Execute the test plan and publish release evidence | 8 |
-| [#98](https://github.com/DukeAvi/SE_miniProject/issues/98) | Finalize the demonstration, documentation, and release freeze | 3 |
+| [#96](https://github.com/DukeAvi/SE_miniProject/issues/96) | Execute the test plan and publish the final QA reports and release evidence | 8 |
+| [#98](https://github.com/DukeAvi/SE_miniProject/issues/98) | Record final documentation, demo, and freeze disposition for the classroom handoff | 3 |
+
+The final QA report records 666 passed tests and five PostgreSQL-only skips on SQLite; all five concurrency cases also passed in the PostgreSQL run. The repository owner waived the Sprint 2 recording and remaining human acceptance checks for the classroom handoff; they are not described here as performed.
+
+## Project references
+
+- [Sprint 1 summary](../demos/sprint-1-summary.md)
+- [Sprint 2 handoff](../demos/sprint-2-summary.md)
+- [Software Test Plan](../qa/test-plan.md)
+- [UX workflow and accessibility evidence](../qa/TC-UX-01.md)
+- [Audit retention evidence](../qa/audit-retention.md)
+- [API contract and usage guide](../api/README.md)
