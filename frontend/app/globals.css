@@ -283,3 +283,30 @@ body {
 }
 
 .auth-card > p { max-width: 38ch; line-height: 1.65; }
+
+/* Issue #198, commit 4: make form controls easier to scan and operate. */
+.field { gap: 8px; margin: 18px 0; }
+.field label { color: #34352f; font-size: 14px; }
+.field input,
+.field select,
+.field textarea,
+.toolbar select,
+.toolbar input,
+.compact-input {
+  border-color: #c9c4b8;
+  border-radius: 12px;
+  background-color: #fffefa;
+  transition: border-color 140ms ease, box-shadow 140ms ease, background-color 140ms ease;
+}
+.field input:hover,
+.field select:hover,
+.field textarea:hover { border-color: #8b8065; }
+.field input:focus-visible,
+.field select:focus-visible,
+.field textarea:focus-visible {
+  border-color: var(--gold-deep);
+  box-shadow: 0 0 0 3px rgba(231, 184, 63, 0.2);
+}
+.field input:user-invalid,
+.field select:user-invalid,
+.field textarea:user-invalid { border-color: var(--crimson); }
