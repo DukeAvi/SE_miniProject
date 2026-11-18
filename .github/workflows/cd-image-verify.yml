@@ -8,6 +8,7 @@ on:
       - "Dockerfile"
       - ".dockerignore"
       - "compose*.yaml"
+      - "deployment/compose.ghcr.yaml"
       - "gunicorn.conf.py"
       - "requirements.txt"
       - "requirements-dev.txt"
@@ -45,7 +46,7 @@ jobs:
         run: |
           cp .env.example .env
           docker compose -f compose.yaml config --quiet
-          docker compose -f compose.secure.yaml config --quiet
+          docker compose -f compose.yaml -f compose.secure.yaml -f deployment/compose.ghcr.yaml config --quiet
 
       - name: Build container image
         uses: docker/build-push-action@v6

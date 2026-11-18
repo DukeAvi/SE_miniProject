@@ -19,3 +19,7 @@ services:
     image: ghcr.io/dukeavi/se_miniproject:${BBMS_IMAGE_TAG:-latest}
     pull_policy: always
     build: null
+  alert-receiver:
+    image: ghcr.io/dukeavi/se_miniproject:${BBMS_IMAGE_TAG:-latest}
+    pull_policy: always
+    build: null

@@ -156,7 +156,7 @@ jobs:
       - name: Attest image build provenance
         uses: actions/attest-build-provenance@v2
         with:
-          subject-name: ghcr.io/${{ github.repository }}
+          subject-name: ghcr.io/dukeavi/se_miniproject
           subject-digest: ${{ steps.push.outputs.digest }}
           push-to-registry: true
 
