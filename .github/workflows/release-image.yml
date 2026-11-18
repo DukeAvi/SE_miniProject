@@ -4,7 +4,6 @@ on:
   push:
     tags:
       - "v*"
-  workflow_dispatch:
 
 permissions:
   contents: read
@@ -21,6 +20,11 @@ jobs:
     steps:
       - name: Check out source
         uses: actions/checkout@v4
+
+      - name: Validate semantic version tag
+        env:
+          GITHUB_REF: ${{ github.ref }}
+        run: bash scripts/validate_release_tag.sh
 
       - name: Set up Python 3.12
         uses: actions/setup-python@v5
