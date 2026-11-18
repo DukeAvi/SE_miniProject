@@ -1,5 +1,7 @@
 # Blood Bank Management System
 
+[![Release image](https://github.com/DukeAvi/SE_miniProject/actions/workflows/release-image.yml/badge.svg)](https://github.com/DukeAvi/SE_miniProject/actions/workflows/release-image.yml)
+
 The project uses a Django REST Framework API (Python 3.12+, Django 5.2, PostgreSQL, Celery for scheduled inventory expiry) and a Next.js browser interface in `frontend/`. Django remains authoritative for authentication, role permissions, validation, workflows and persistence. Use the local SQLite demo for a quick start, or PostgreSQL and Redis for the full runtime.
 
 ## Install dependencies
