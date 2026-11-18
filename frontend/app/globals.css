@@ -363,3 +363,21 @@ body {
   box-shadow: inset 3px 0 0 var(--gold), 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 .user-chip { border-color: rgba(255, 255, 255, 0.14); }
+
+/* Issue #198, commit 8: clarify the dashboard heading and metric cards. */
+.topbar {
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line-soft);
+}
+.crumb { font-weight: 550; }
+.page-heading { margin-bottom: 30px; }
+.page-heading h1 { line-height: 1.08; }
+.page-heading p { line-height: 1.65; }
+.heading-meta { padding: 8px 11px; border: 1px solid var(--line-soft); border-radius: 999px; background: rgba(255, 255, 255, 0.66); }
+.stat-card {
+  border-color: var(--line-soft);
+  box-shadow: var(--shadow-card);
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+.stat-card:hover { transform: translateY(-2px); box-shadow: 0 14px 30px rgba(38, 36, 27, 0.09); }
+.stat-icon { width: 36px; height: 36px; border: 1px solid rgba(118, 83, 0, 0.08); }
