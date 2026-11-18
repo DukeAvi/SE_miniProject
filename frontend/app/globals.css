@@ -381,3 +381,18 @@ body {
 }
 .stat-card:hover { transform: translateY(-2px); box-shadow: 0 14px 30px rgba(38, 36, 27, 0.09); }
 .stat-icon { width: 36px; height: 36px; border: 1px solid rgba(118, 83, 0, 0.08); }
+
+/* Issue #198, commit 9: add hierarchy to workspace panels and data tables. */
+.panel {
+  border-color: var(--line-soft);
+  border-radius: 18px;
+  box-shadow: var(--shadow-card);
+}
+.panel-heading { padding-bottom: 13px; border-bottom: 1px solid var(--line-soft); }
+.panel-heading h2 { font-size: 17px; }
+.table-wrap:focus-visible { outline: 3px solid #946300; outline-offset: 3px; }
+thead th { position: sticky; top: 0; z-index: 1; }
+tbody tr { transition: background-color 120ms ease; }
+tbody tr:hover td { background: #fcfaf3; }
+.quick-action { transition: border-color 140ms ease, background-color 140ms ease, transform 140ms ease; }
+.quick-action:hover { transform: translateY(-1px); }
