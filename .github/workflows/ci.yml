@@ -77,8 +77,7 @@ jobs:
         working-directory: frontend
         run: npm run build
       - name: Audit web dependencies
-        working-directory: frontend
-        run: npm audit
+        run: python scripts/audit_frontend_dependencies.py
       - name: Install and verify Apache JMeter
         if: github.event_name == 'workflow_dispatch'
         run: bash scripts/performance/install_jmeter.sh "$RUNNER_TEMP"
