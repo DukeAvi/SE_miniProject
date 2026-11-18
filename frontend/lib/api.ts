@@ -19,15 +19,23 @@ export class ApiError extends Error {
 let csrfToken: string | null = null;
 
 export async function refreshCsrfToken() {
-  const response = await fetch("/api/v1/auth/csrf", {
-    method: "GET",
-    credentials: "same-origin",
-    cache: "no-store",
-    headers: { Accept: "application/json" },
-  });
-  const body = (await response.json()) as { csrfToken?: string };
-  if (!response.ok || !body.csrfToken) {
-    throw new Error("Could not start a secure session. Refresh the page and try again.");
+  let response: Response;
+  try {
+    response = await fetch("/api/v1/auth/csrf", {
+      method: "GET",
+      credentials: "same-origin",
+      cache: "no-store",
+      headers: { Accept: "application/json" },
+    });
+  } catch {
+    throw new Error("Could not reach the server. Check that the API is running and try again.");
+  }
+  if (!response.ok) {
+    throw new Error("Could not start a secure session. Check that the API is running and try again.");
+  }
+  const body = (await response.json().catch(() => ({}))) as { csrfToken?: string };
+  if (!body.csrfToken) {
+    throw new Error("Could not start a secure session. Check that the API is running and try again.");
   }
   csrfToken = body.csrfToken;
   return csrfToken;
@@ -66,6 +74,11 @@ export function friendlyError(error: unknown) {
     return firstFieldError ?? error.message;
   }
   return error instanceof Error ? error.message : "Something went wrong. Please try again.";
+}
+
+export function loginError(error: unknown) {
+  if (error instanceof ApiError && error.status === 401) return error.message;
+  return friendlyError(error);
 }
 
 export type Page<T> = { count: number; page: number; page_size: number; results: T[] };

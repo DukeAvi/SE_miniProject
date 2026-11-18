@@ -3,7 +3,7 @@
 import { ArrowRight, Droplet, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { FormEvent, useState } from "react";
-import { api, friendlyError, refreshCsrfToken } from "@/lib/api";
+import { api, loginError, refreshCsrfToken } from "@/lib/api";
 
 type LoginResponse = {
   user: { id: number; name: string; role: string };
@@ -30,7 +30,7 @@ export default function Home() {
       await refreshCsrfToken();
       window.location.assign(result.redirect);
     } catch (reason) {
-      setError(friendlyError(reason));
+      setError(loginError(reason));
       setBusy(false);
     }
   }

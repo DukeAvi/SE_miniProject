@@ -73,6 +73,7 @@ jobs:
         run: |
           npm run lint
           npm run typecheck
+          node --experimental-strip-types --test tests/api-errors.test.mjs
       - name: Build web interface
         working-directory: frontend
         run: npm run build
