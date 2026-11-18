@@ -115,4 +115,4 @@ The classroom demo uses `NOTIFICATION_PROVIDER=console` and does not send email 
 
 ## Container Releases & Continuous Delivery
 
-Tagged releases (`v*`) are automatically validated, built, and published to GitHub Container Registry via `.github/workflows/release-image.yml`. See [docs/operations/container-release.md](docs/operations/container-release.md) for release tagging, deployment, and rollback instructions.
+Push an annotated `vMAJOR.MINOR.PATCH` tag to run release checks, build and smoke-test the container, then publish the verified image to GitHub Container Registry. The workflow badge above shows its status. See [docs/operations/container-release.md](docs/operations/container-release.md) for release tagging, host setup, deployment, and rollback instructions.

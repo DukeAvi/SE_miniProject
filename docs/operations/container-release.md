@@ -8,15 +8,27 @@ automatically deploy to a hosted production environment.
 
 ## Triggering a Release
 
-1. Ensure `main` is green and all issue checks pass.
-2. Create and push an annotated semantic version tag matching `v*`:
+1. Merge the intended release code to `main` and confirm its checks pass.
+2. Create and push an annotated `vMAJOR.MINOR.PATCH` tag. For example:
 
 ```bash
 git tag -a v1.0.0 -m "Release v1.0.0"
 git push origin v1.0.0
 ```
 
+The workflow rejects tags that do not contain all three numeric version parts.
+It runs the release checks, builds the image, and checks `/healthz` against its
+PostgreSQL service before publishing the verified image and provenance to GHCR.
+The release workflow status is shown by the badge at the top of the README.
+
 ## Deploying a Release Image to a Compose host
+
+Prepare the host using the required settings and TLS files described in
+`compose.yaml`, `compose.secure.yaml`, and `.env.example`. The rollout helper
+pulls the selected web, worker, Beat, and monitoring images, applies database
+migrations, starts the Compose stack, waits for its services to become healthy,
+and probes `/healthz` inside the web container with the configured public host
+and HTTPS proxy header.
 
 Authenticate on the target host using a token with `read:packages` scope:
 
