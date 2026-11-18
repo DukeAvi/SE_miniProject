@@ -324,3 +324,23 @@ body {
 .button-primary:hover:not(:disabled) { box-shadow: 0 6px 18px rgba(190, 143, 22, 0.22); }
 .button:disabled { opacity: 0.68; }
 .button-small { min-height: 44px; }
+
+/* Issue #198, commit 6: make messages and empty states easier to distinguish. */
+.error-box,
+.success-box,
+.info-box,
+.callout {
+  border-radius: 14px;
+  padding: 14px 16px;
+  line-height: 1.55;
+}
+.error-box { border-left: 4px solid #b64250; }
+.success-box { border-left: 4px solid #4d8353; }
+.info-box { border-left: 4px solid #bb8b1d; }
+.empty-state {
+  min-height: 150px;
+  border: 1px dashed #d9d3c5;
+  border-radius: 14px;
+  background: #fffefa;
+}
+.loading { border-radius: 12px; background: rgba(255, 255, 255, 0.62); }
