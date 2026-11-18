@@ -261,3 +261,25 @@ body {
 }
 
 .story-copy p { line-height: 1.75; }
+
+/* Issue #198, commit 3: strengthen the sign-in and registration card hierarchy. */
+.auth-panel {
+  min-width: 0;
+  padding: clamp(24px, 4vw, 56px);
+}
+
+.auth-card {
+  width: min(100%, 470px);
+  padding: clamp(30px, 4vw, 54px);
+  border-radius: 28px;
+  box-shadow: 0 24px 64px rgba(38, 36, 27, 0.09);
+}
+
+.auth-card h2 {
+  max-width: 13ch;
+  margin: 12px 0 10px;
+  font-size: clamp(35px, 3.2vw, 44px);
+  line-height: 1.12;
+}
+
+.auth-card > p { max-width: 38ch; line-height: 1.65; }
