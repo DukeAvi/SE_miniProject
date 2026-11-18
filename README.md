@@ -1,5 +1,7 @@
 # Blood Bank Management System
 
+[![Release image](https://github.com/DukeAvi/SE_miniProject/actions/workflows/release-image.yml/badge.svg)](https://github.com/DukeAvi/SE_miniProject/actions/workflows/release-image.yml)
+
 The project uses a Django REST Framework API (Python 3.12+, Django 5.2, PostgreSQL, Celery for scheduled inventory expiry) and a Next.js browser interface in `frontend/`. Django remains authoritative for authentication, role permissions, validation, workflows and persistence. Use the local SQLite demo for a quick start, or PostgreSQL and Redis for the full runtime.
 
 ## Install dependencies
@@ -110,3 +112,7 @@ Sprint work is assigned by the Scrum Master. Before coding, acknowledge the assi
 ## Notifications
 
 The classroom demo uses `NOTIFICATION_PROVIDER=console` and does not send email or SMS. Automated tests use a deterministic mock adapter. Do not add provider credentials for the demo. Console output must omit message content, contact details, tokens, and clinical information. See `docs/decisions/OI-7-notification-provider.md` for the provider decision and failure-handling contract.
+
+## Container Releases & Continuous Delivery
+
+Tagged releases (`v*`) are automatically validated, built, and published to GitHub Container Registry via `.github/workflows/release-image.yml`. See [docs/operations/container-release.md](docs/operations/container-release.md) for release tagging, deployment, and rollback instructions.
