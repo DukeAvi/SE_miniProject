@@ -310,3 +310,17 @@ body {
 .field input:user-invalid,
 .field select:user-invalid,
 .field textarea:user-invalid { border-color: var(--crimson); }
+
+/* Issue #198, commit 5: make actions feel consistent across role workspaces. */
+.button {
+  min-height: 48px;
+  border-radius: 12px;
+  transition: transform 150ms ease, box-shadow 150ms ease, background-color 150ms ease, border-color 150ms ease;
+}
+.button:hover:not(:disabled) {
+  box-shadow: 0 5px 14px rgba(38, 36, 27, 0.12);
+}
+.button:active:not(:disabled) { transform: translateY(0); box-shadow: none; }
+.button-primary:hover:not(:disabled) { box-shadow: 0 6px 18px rgba(190, 143, 22, 0.22); }
+.button:disabled { opacity: 0.68; }
+.button-small { min-height: 44px; }
