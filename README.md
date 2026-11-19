@@ -16,28 +16,47 @@ python -m pip install -r requirements-dev.txt
 
 For runtime-only dependencies, install `requirements.txt` instead. The commands below assume the virtual environment is active.
 
-## Quick local demo (SQLite)
+## Run the GUI demo locally
 
-The `bbms.settings_seed` settings use a disposable, Git-ignored SQLite database with DEBUG enabled. Migrate it, create synthetic Sprint 1 records, and start the API:
+The demo uses a Git-ignored SQLite database and synthetic data. You need Python 3.12 or later and Node.js 22. Install the Python dependencies above, then run the following commands from the repository root with the virtual environment active:
 
 ```bash
-test -f .env || cp .env.example .env
 python manage.py migrate --noinput --settings=bbms.settings_seed
-python manage.py seed_test_data --settings=bbms.settings_seed --as-of-date 2026-10-30
-python manage.py runserver --settings=bbms.settings_seed
+python manage.py seed_test_data --settings=bbms.settings_seed
 ```
 
-In another terminal, check `http://127.0.0.1:8000/healthz`. API routes are under `/api/v1/`; see the [API contract and Postman collection](docs/api/README.md). The seed accounts have unusable passwords. For a repeatable authenticated workflow using separate synthetic accounts, run:
+On a fresh demo database, create an Admin account. Choose a password when prompted:
+
+```bash
+python manage.py createsuperuser --username gui-demo-admin --email gui-admin@example.test --settings=bbms.settings_seed
+python manage.py shell --settings=bbms.settings_seed -c 'from django.contrib.auth import get_user_model; u = get_user_model().objects.get(username="gui-demo-admin", is_superuser=True); u.role = "ADMIN"; u.save(update_fields=["role"])'
+```
+
+Run the Admin setup once per demo database. The seed accounts have unusable passwords; sign in with the Admin email above and the password you chose. Use the Admin workspace to create a Staff account. Donors and recipients can register from the sign-in page. A Staff member must verify a new donor's profile before appointments and donation history are available.
+
+Start the API from the repository root and leave it running:
+
+```bash
+CSRF_TRUSTED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000 python manage.py runserver 127.0.0.1:8000 --settings=bbms.settings_seed
+```
+
+In another terminal, start the frontend:
+
+```bash
+cd frontend
+npm ci
+npm run dev
+```
+
+Open **http://localhost:3000**. The API health check is at http://127.0.0.1:8000/healthz. The demo does not require PostgreSQL or Redis. For alternate ports and more details, see the [frontend setup guide](frontend/README.md).
+
+The seed command is safe to repeat with the same date; see the [seed-data guide](docs/qa/seed-test-data.md) for its record counts. For a repeatable authenticated API walkthrough using separate synthetic accounts, run:
 
 ```bash
 DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,testserver python manage.py demo_sprint_one --settings=bbms.settings_seed
 ```
 
-The seed command is safe to repeat with the same date. Its record counts and in-memory request/notification mocks are documented in the [seed-data guide](docs/qa/seed-test-data.md). The demo database does not require PostgreSQL or Redis.
-
 The [Sprint 2 handoff](docs/demos/sprint-2-summary.md) summarizes the integrated role dashboards. The [release record](docs/qa/release-readiness.md) documents verified behavior and accepted classroom-demo limitations.
-
-For the browser demo, follow the [frontend setup guide](frontend/README.md), including the one-time local Admin bootstrap. Register synthetic Donor or Recipient accounts in the browser. New Donor accounts need an authorized Staff member to complete the initial eligibility profile before appointments and donation history are available; use only synthetic details. Profile verification does not itself make a donor eligible. The local Admin can create Staff and other Admin accounts. Seeded donor records include their donor profile but have no usable passwords; public registration does not collect verified eligibility fields. The frontend uses the same-origin Next.js API proxy and Django's session/CSRF cookies.
 
 ## PostgreSQL runtime
 
