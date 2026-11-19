@@ -1,7 +1,5 @@
 # Sprint 2 handoff
 
-For the exact local setup and browser recording sequence, see the [GUI demonstration recording guide](gui-recording-guide.md).
-
 Application revision: `7b66a31`, integrating the role dashboards through PR #177. The repository owner requested final closure with the remaining manual checks recorded as limitations. No recording is included, per the owner's instruction.
 
 ## Delivered workflows
