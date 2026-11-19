@@ -2,7 +2,7 @@
 
 import { ArrowRight, Droplet, ShieldCheck } from "lucide-react";
 import Link from "next/link";
-import { FormEvent, useState } from "react";
+import { FormEvent, useRef, useState } from "react";
 import { api, loginError, refreshCsrfToken } from "@/lib/api";
 
 type LoginResponse = {
@@ -16,9 +16,16 @@ export default function Home() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const credentialsVersion = useRef(0);
+
+  function clearPreviousError() {
+    credentialsVersion.current += 1;
+    setError("");
+  }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const submittedVersion = credentialsVersion.current;
     setError("");
     setBusy(true);
     try {
@@ -30,7 +37,7 @@ export default function Home() {
       await refreshCsrfToken();
       window.location.assign(result.redirect);
     } catch (reason) {
-      setError(loginError(reason));
+      if (credentialsVersion.current === submittedVersion) setError(loginError(reason));
       setBusy(false);
     }
   }
@@ -54,11 +61,11 @@ export default function Home() {
           <form onSubmit={submit}>
             <div className="field">
               <label htmlFor="email">Email address</label>
-              <input id="email" name="email" type="email" autoComplete="username" required value={email} onChange={(event) => setEmail(event.target.value)} />
+              <input id="email" name="email" type="email" autoComplete="username" required value={email} onChange={(event) => { setEmail(event.target.value); clearPreviousError(); }} />
             </div>
             <div className="field">
               <label htmlFor="password">Password</label>
-              <input id="password" name="password" type="password" autoComplete="current-password" required value={password} onChange={(event) => setPassword(event.target.value)} />
+              <input id="password" name="password" type="password" autoComplete="current-password" required value={password} onChange={(event) => { setPassword(event.target.value); clearPreviousError(); }} />
             </div>
             {error && <div className="error-box" role="alert">{error}</div>}
             <button className="button button-primary full-width" disabled={busy} type="submit">
